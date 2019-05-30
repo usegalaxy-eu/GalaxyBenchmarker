@@ -5,13 +5,13 @@ galaxy:
 destinations:
   - name: LocalPulsar
     type: PulsarMQ
-    mq_url: "user:password@rabbitmq.uni.andreas-sk.de"
+    amqp_url: "user:password@rabbitmq.uni.andreas-sk.de"
   - name: Freiburg
     type: PulsarMQ
-    mq_url: "user:password@pulsar.galaxy.uni-freiburg.de"
+    amqp_url: "user:password@pulsar.galaxy.uni-freiburg.de"
   - name: Italy
     type: PulsarMQ
-    mq_url: "user:password@pulsar.galaxy.italy"
+    amqp_url: "user:password@pulsar.galaxy.italy"
   - name: LocalCondor
     type: CondorDirect
   - name: CondorWithGalaxy
@@ -19,9 +19,11 @@ destinations:
 
 workflows:
   - name: gromacs
+    type: Galaxy
     path: training/computational-chemistry/bio3danalysis/gromacs.ga
     description: BlaBlaBla
   - name: mapping_by_sequencing
+    type: Galaxy
     path: training/variant-analysis/mapping-by-sequencing/mapping_by_sequencing.ga
     description: BlaBlaHahaha
 
