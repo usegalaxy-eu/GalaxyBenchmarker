@@ -1,6 +1,7 @@
 galaxy:
   url: "http://galaxy.uni.andreas-sk.de"
-  user_key: "supersecrtetuserkey"
+  admin_key: "supersecrtetadminkey"
+  ssh_key: /Users/ASkorczyk/...
 
 destinations:
   - name: LocalPulsar
@@ -13,9 +14,9 @@ destinations:
     type: PulsarMQ
     amqp_url: "user:password@pulsar.galaxy.italy"
   - name: LocalCondor
-    type: CondorDirect
+    type: Condor
   - name: CondorWithGalaxy
-    type: CondorGalaxy
+    type: GalaxyCondor
 
 workflows:
   - name: gromacs
@@ -32,7 +33,7 @@ benchmarks:
     type: ColdvsWarm
     destinations:
       - LocalPulsar
-    run_per_workflow: 5
+    runs_per_workflow: 5
     workflows:
       - gromacs
       - mapping_by_sequencing
