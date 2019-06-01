@@ -23,7 +23,7 @@ class Benchmarker:
 
         self.destinations = dict()
         for dest_config in config["destinations"]:
-            self.destinations[dest_config["name"]] = destination.configure_destination(dest_config)
+            self.destinations[dest_config["name"]] = destination.configure_destination(dest_config, glx)
 
         self.benchmarks = dict()
         for bm_config in config["benchmarks"]:

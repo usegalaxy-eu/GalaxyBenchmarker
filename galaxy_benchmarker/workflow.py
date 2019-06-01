@@ -5,6 +5,7 @@ import planemo_bridge
 import os
 import logging
 from glx import Galaxy
+from destination import BaseDestination, PulsarMQDestination
 
 log = logging.getLogger(__name__)
 
@@ -15,7 +16,7 @@ class BaseWorkflow:
     def __init__(self, name):
         self.name = name
 
-    def run(self, glx: Galaxy):
+    def run(self, glx: Galaxy, dest: BaseDestination):
         """
         Starts workflow
         """
@@ -31,9 +32,9 @@ class GalaxyWorkflow(BaseWorkflow):
         self.path = path
         super().__init__(name)
 
-    def run(self, glx: Galaxy):
+    def run(self, glx: Galaxy, dest: PulsarMQDestination):
         log.info("Running workflow '{wf_name}' using Planemo".format(wf_name=self.name))
-        return planemo_bridge.run_planemo(glx, self.path)
+        return planemo_bridge.run_planemo(glx, dest, self.path)
 
 
 def configure_workflow(wf_config):

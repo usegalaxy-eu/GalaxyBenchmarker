@@ -80,10 +80,10 @@ def run_galaxy_benchmark(galaxy, destinations: List[PulsarMQDestination],
             for i in range(0, runs_per_workflow + 1):
                 if run_type == "warm" and i == 0:
                     log.info("First run! Warming up. Results won't be considered for the first time")
-                    workflow.run(galaxy)
+                    workflow.run(galaxy, destination)
                 else:
                     log.info("Running {workflow} for the {i}th time".format(workflow=workflow.name, i=i + 1))
-                    workflow.run(galaxy)
+                    workflow.run(galaxy, destination)
                 if run_type == "cold":
                     log.info("Cleaning up")
                     # TODO: Clean Up
