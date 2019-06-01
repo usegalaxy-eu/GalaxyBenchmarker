@@ -1,6 +1,6 @@
 galaxy:
   url: "http://galaxy.uni.andreas-sk.de"
-  admin_key: "supersecrtetadminkey"
+  admin_key: ""
   ssh_key: /Users/ASkorczyk/...
 
 destinations:
@@ -21,11 +21,11 @@ destinations:
 workflows:
   - name: gromacs
     type: Galaxy
-    path: training/computational-chemistry/bio3danalysis/gromacs.ga
+    path: workflow-testing/training/computational-chemistry/bio3danalysis/gromacs.ga
     description: BlaBlaBla
   - name: mapping_by_sequencing
     type: Galaxy
-    path: training/variant-analysis/mapping-by-sequencing/mapping_by_sequencing.ga
+    path: workflow-testing/training/variant-analysis/mapping-by-sequencing/mapping_by_sequencing.ga
     description: BlaBlaHahaha
 
 benchmarks:
@@ -40,16 +40,16 @@ benchmarks:
     additional_settings:
       cold_pre_task: "ansible-playbook cleanup-pulsar.yml" # CleanUp Pulsar for cold test
       warm_pre_task: "ansible-playbook cleanup-pulsar.yml"
-  - name: Benchmark2
-    type: DestinationsComparison
-    pre_task: "./benchmark2_pre-task.sh" # Call some script before starting benchmark
-    post_task: "./benchmark2_post-task.sh" # Call some script after ending benchmark (like for cleaning up)
-    destinations:
-      - LocalPulsar
-      - Freiburg
-      - Italy
-    workflows:
-      - gromacs
-      - mapping_by_sequencing
-  - name: Benchmark3
-    type: Burst
+#  - name: Benchmark2
+#    type: DestinationComparison
+#    pre_task: "./benchmark2_pre-task.sh" # Call some script before starting benchmark
+#    post_task: "./benchmark2_post-task.sh" # Call some script after ending benchmark (like for cleaning up)
+#    destinations:
+#      - LocalPulsar
+#      - Freiburg
+#      - Italy
+#    workflows:
+#      - gromacs
+#      - mapping_by_sequencing
+#  - name: Benchmark3
+#    type: Burst
