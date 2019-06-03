@@ -25,7 +25,6 @@ class BaseWorkflow:
 
 class GalaxyWorkflow(BaseWorkflow):
     def __init__(self, name, path):
-        # TODO: Check, if path is existing
         if not os.path.isfile(path):
             raise IOError("Workflow-File at '{path}' in workflow '{wf_name}' could not be found".format(path=path,
                                                                                                         wf_name=name))
