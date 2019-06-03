@@ -1,12 +1,16 @@
 galaxy:
   url: "http://galaxy.uni.andreas-sk.de"
-  admin_key: ""
-  ssh_key: /Users/ASkorczyk/...
+  admin_key: "a4d46fe353a30230b9ade20417b08e54"
+  ssh_key: /Users/askorczyk/Dropbox/Studium/5-WS18-19/Bachelorprojekt - Galaxy/bwcloud.cert
 
 destinations:
   - name: LocalPulsar
     type: PulsarMQ
     amqp_url: "user:password@rabbitmq.uni.andreas-sk.de"
+    host: pulsar.uni.andreas-sk.de
+    host_user: centos
+    ssh_key: /Users/askorczyk/Dropbox/Studium/5-WS18-19/Bachelorprojekt - Galaxy/bwcloud.cert
+    tool_dependency_dir: /data/share/tools
   - name: Freiburg
     type: PulsarMQ
     amqp_url: "user:password@pulsar.galaxy.uni-freiburg.de"
@@ -27,19 +31,26 @@ workflows:
     type: Galaxy
     path: workflow-testing/training/variant-analysis/mapping-by-sequencing/mapping_by_sequencing.ga
     description: BlaBlaHahaha
+  - name: adaboost
+    type: Galaxy
+    path: workflow-testing/sklearn/adaboost/adaboost.ga
 
 benchmarks:
   - name: Benchmark1
     type: ColdvsWarm
     destinations:
       - LocalPulsar
-    runs_per_workflow: 5
+    runs_per_workflow: 1
     workflows:
+      - adaboost
       - gromacs
       - mapping_by_sequencing
-    additional_settings:
-      cold_pre_task: "ansible-playbook cleanup-pulsar.yml" # CleanUp Pulsar for cold test
-      warm_pre_task: "ansible-playbook cleanup-pulsar.yml"
+#    cold_pre_task:
+#      type: "ansible-playbook"
+#      playbook: "cleanup-pulsar.yml"
+#    warm_pre_task:
+#      type: "ansible-playbook"
+#      playbook: "cleanup-pulsar.yml"
 #  - name: Benchmark2
 #    type: DestinationComparison
 #    pre_task: "./benchmark2_pre-task.sh" # Call some script before starting benchmark

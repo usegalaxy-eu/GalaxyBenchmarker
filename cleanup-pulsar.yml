@@ -1,0 +1,34 @@
+- hosts: all
+  tasks:
+    - name: Stop Pulsar
+      service:
+        name: pulsar
+        state: stopped
+      become: yes
+    - name: Check if base dependencies folder already exists
+      stat:
+        path: "{{tool_dependency_dir}}/_conda-base"
+      register: conda_base_directory
+    - name: Delete _conda in tool_dependency_dir
+      file:
+        path: "{{tool_dependency_dir}}/_conda"
+        state: absent
+    - name: Delete conda.lock in tool_dependency_dir
+      file:
+        path: "{{tool_dependency_dir}}/conda.lock"
+        state: absent
+    - name: Copy _conda-base to _conda (to speed up Pulsar-Startup)
+      command: "cp {{tool_dependency_dir}}/_conda-base/ {{tool_dependency_dir}}/_conda/ -R"
+      when: conda_base_directory.stat.exists and conda_base_directory.stat.isdir
+    - name: Start Pulsar
+      service:
+        name: pulsar
+        state: started
+      become: yes
+    - name: Pause for 10 minutes, so Pulsar has time to install all base dependencies
+      pause:
+        minutes: 10
+      when: conda_base_directory.stat.exists == False
+    - name: Copy _conda to _conda-base to speedup future Pulsar-Startups
+      command: "cp {{tool_dependency_dir}}/_conda/ {{tool_dependency_dir}}/_conda-base/ -R"
+      when: conda_base_directory.stat.exists == False

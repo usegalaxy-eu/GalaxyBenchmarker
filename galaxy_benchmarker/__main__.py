@@ -4,8 +4,13 @@ import sys
 from benchmarker import Benchmarker
 import logging
 
-log = logging.getLogger(__name__)
-logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+logging.basicConfig()
+log = logging.getLogger("GalaxyBenchmarker")
+log.setLevel(logging.INFO)
+log_handler = logging.StreamHandler(sys.stdout)
+log_handler.setLevel(logging.DEBUG)
+
+logging.getLogger("ephemeris").setLevel(logging.WARNING)
 
 
 def main():
@@ -23,6 +28,8 @@ def main():
 
             log.info("Starting to run benchmarks")
             benchmarker.run()
+
+            benchmarker.get_results()
 
         except yaml.YAMLError as exc:
             print(exc)

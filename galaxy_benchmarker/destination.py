@@ -1,22 +1,46 @@
 """
 Definition of different destination-types for workflows.
 """
+import ansible_bridge
+from task import BaseTask, AnsiblePlaybookTask
+from galaxy_bridge import Galaxy
 
 
 class BaseDestination:
     def __init__(self, name):
         self.name = name
 
+    def run_task(self, task: BaseTask):
+        if task is None:
+            return
+        if type(task) is AnsiblePlaybookTask:
+            self._run_ansible_playbook_task(task)
+
+    def _run_ansible_playbook_task(self, task: AnsiblePlaybookTask):
+        raise NotImplementedError
+
 
 class PulsarMQDestination(BaseDestination):
-    def __init__(self, name, amqp_url):
-        self.amqp_url = amqp_url
-        self.galaxy_user_key = "08d3b7a532947c7fb5af27281381c485"
-        super().__init__(name)
+    host = ""
+    host_user = ""
+    ssh_key = ""
+    tool_dependency_dir = ""
+    galaxy_user_name = ""
+    galaxy_user_id = ""
+    galaxy_user_key = ""
 
-    def create_galaxy_destination_user(self, glx):
-        # TODO
-        return
+    def __init__(self, name, glx: Galaxy, amqp_url):
+        super().__init__(name)
+        self.amqp_url = amqp_url
+        self._create_galaxy_destination_user(glx)
+
+    def _create_galaxy_destination_user(self, glx):
+        self.galaxy_user_name = str.lower("dest_user_" + self.name)
+        self.galaxy_user_id, self.galaxy_user_key = glx.create_user(self.galaxy_user_name)
+
+    def _run_ansible_playbook_task(self, task: AnsiblePlaybookTask):
+        ansible_bridge.run_playbook(task.playbook, self.host, self.host_user, self.ssh_key,
+                                    [("tool_dependency_dir", self.tool_dependency_dir)])
 
 
 class CondorDestination(BaseDestination):
@@ -34,7 +58,12 @@ def configure_destination(dest_config, glx):
         raise ValueError("Destination-Type '{type}' not valid".format(type=dest_config["type"]))
 
     if dest_config["type"] == "PulsarMQ":
-        destination = PulsarMQDestination(dest_config["name"], dest_config["amqp_url"])
+        destination = PulsarMQDestination(dest_config["name"], glx, dest_config["amqp_url"])
+        if "host" in dest_config:
+            destination.host = dest_config["host"]
+            destination.host_user = dest_config["host_user"]
+            destination.ssh_key = dest_config["ssh_key"]
+            destination.tool_dependency_dir = dest_config["tool_dependency_dir"]
 
     if dest_config["type"] == "Condor":
         destination = CondorDestination(dest_config["name"])

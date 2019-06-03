@@ -4,10 +4,10 @@ Definition of different workflow-types.
 import planemo_bridge
 import os
 import logging
-from glx import Galaxy
+from galaxy_bridge import Galaxy
 from destination import BaseDestination, PulsarMQDestination
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("GalaxyBenchmarker")
 
 
 class BaseWorkflow:
