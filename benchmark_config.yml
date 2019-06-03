@@ -1,26 +1,32 @@
 galaxy:
   url: "http://galaxy.uni.andreas-sk.de"
   admin_key: "a4d46fe353a30230b9ade20417b08e54"
+  ssh_user: ubuntu
   ssh_key: /Users/askorczyk/Dropbox/Studium/5-WS18-19/Bachelorprojekt - Galaxy/bwcloud.cert
+  galaxy_root_path: /srv/galaxy
+  galaxy_config_dir: /srv/galaxy/server/config
+  galaxy_user: galaxy
 
 destinations:
   - name: LocalPulsar
     type: PulsarMQ
-    amqp_url: "user:password@rabbitmq.uni.andreas-sk.de"
+    amqp_url: "pyamqp://pulsar_test:password@rabbitmq.uni.andreas-sk.de:5672//"
     host: pulsar.uni.andreas-sk.de
     host_user: centos
     ssh_key: /Users/askorczyk/Dropbox/Studium/5-WS18-19/Bachelorprojekt - Galaxy/bwcloud.cert
     tool_dependency_dir: /data/share/tools
+    jobs_directory_dir: /data/share/staging
+    persistence_dir: /data/share/persisted_data
   - name: Freiburg
     type: PulsarMQ
-    amqp_url: "user:password@pulsar.galaxy.uni-freiburg.de"
+    amqp_url: "pyamqp://pulsar_test:password@rabbitmq.uni.andreas-sk.de:5672//"
   - name: Italy
     type: PulsarMQ
-    amqp_url: "user:password@pulsar.galaxy.italy"
-  - name: LocalCondor
-    type: Condor
-  - name: CondorWithGalaxy
-    type: GalaxyCondor
+    amqp_url: "pyamqp://pulsar_test:password@rabbitmq.uni.andreas-sk.de:5672//"
+#  - name: LocalCondor
+#    type: Condor
+#  - name: CondorWithGalaxy
+#    type: GalaxyCondor
 
 workflows:
   - name: gromacs

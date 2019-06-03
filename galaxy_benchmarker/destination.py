@@ -2,9 +2,10 @@
 Definition of different destination-types for workflows.
 """
 import ansible_bridge
+from typing import Dict
 from task import BaseTask, AnsiblePlaybookTask
 from galaxy_bridge import Galaxy
-
+from jinja2 import Template
 
 class BaseDestination:
     def __init__(self, name):
@@ -24,7 +25,9 @@ class PulsarMQDestination(BaseDestination):
     host = ""
     host_user = ""
     ssh_key = ""
-    tool_dependency_dir = ""
+    tool_dependency_dir = "/data/share/tools"
+    jobs_directory_dir = "/data/share/staging"
+    persistence_dir = "/data/share/persisted_data"
     galaxy_user_name = ""
     galaxy_user_id = ""
     galaxy_user_key = ""
@@ -40,7 +43,7 @@ class PulsarMQDestination(BaseDestination):
 
     def _run_ansible_playbook_task(self, task: AnsiblePlaybookTask):
         ansible_bridge.run_playbook(task.playbook, self.host, self.host_user, self.ssh_key,
-                                    [("tool_dependency_dir", self.tool_dependency_dir)])
+                                    {"tool_dependency_dir": self.tool_dependency_dir})
 
 
 class CondorDestination(BaseDestination):
@@ -72,3 +75,11 @@ def configure_destination(dest_config, glx):
         destination = GalaxyCondorDestination(dest_config["name"])
 
     return destination
+
+
+def create_galaxy_job_conf(glx: Galaxy, destinations: Dict[str, BaseDestination]):
+    with open('job_conf.xml') as file_:
+        template = Template(file_.read())
+    job_conf = template.render(galaxy=glx, destinations=destinations.values())
+    with open("job_conf.xml.tmp", "w") as fh:
+        fh.write(job_conf)

@@ -1,0 +1,22 @@
+- hosts: all
+  become: yes
+  handlers:
+    - name: restart galaxy
+      supervisorctl:
+        name: galaxy
+        state: restarted
+  tasks:
+    - name: Copy job_conf.xml
+      copy:
+        src: job_conf.xml.tmp
+        dest: "{{ galaxy_config_dir }}/job_conf.xml"
+        owner: "{{ galaxy_user }}"
+        group: "{{ galaxy_user }}"
+      notify: restart galaxy
+    - name: Copy dynamic_destination.py
+      copy:
+        src: dynamic_destination.py
+        dest: "{{ galaxy_root_path }}/server/lib/galaxy/jobs/rules/dynamic_destination.py"
+        owner: "{{ galaxy_user }}"
+        group: "{{ galaxy_user }}"
+      notify: restart galaxy

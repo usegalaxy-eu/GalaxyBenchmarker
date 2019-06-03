@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<job_conf>
+    <plugins workers="2">
+        <plugin id="local" type="runner" load="galaxy.jobs.runners.local:LocalJobRunner"/>
+        {% for destination in destinations %}
+            <plugin id="{{ destination.name|lower }}_runner" type="runner" load="galaxy.jobs.runners.pulsar:PulsarMQJobRunner">
+                <param id="galaxy_url">{{ galaxy.url }}</param>
+                <param id="amqp_url">{{ destination.amqp_url }}</param>
+            </plugin>
+        {% endfor %}
+    </plugins>
+    <destinations default="dynamic_runner">
+        <destination id="dynamic_runner" runner="dynamic">
+          <param id="type">python</param>
+          <param id="function">dynamic_destination</param>
+        </destination>
+        <destination id="local" runner="local"/>
+        {% for destination in destinations %}
+            <destination id="{{ destination.name|lower }}" runner="{{ destination.name|lower }}_runner">
+                <param id="jobs_directory">{{ destination.jobs_directory_dir }}</param>
+                <param id="dependency_resolution">remote</param>
+                <param id="default_file_action">remote_transfer</param>
+                <param id="amqp_acknowledge">True</param>
+                <param id="persistence_directory">{{ destination.persistence_dir }}</param>
+                <param id="amqp_ack_republish_time">30</param>
+                <param id="manager">_default_</param>
+            </destination>
+        {% endfor %}
+    </destinations>
+    <tools>
+        <tool id="upload1" destination="local" />
+        <tool id="toolshed.g2.bx.psu.edu/repos/iuc/snpeff/snpEff_download/4.1.0" destination="local" />
+        <tool id="toolshed.g2.bx.psu.edu/repos/iuc/snpeff/snpEff_download/4.3r.1" destination="local" />
+    </tools>
+</job_conf>

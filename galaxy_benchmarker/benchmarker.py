@@ -15,7 +15,10 @@ class Benchmarker:
     benchmarks: Dict[str, benchmark.BaseBenchmark]
 
     def __init__(self, config):
-        self.glx = Galaxy(config["galaxy"]["url"], config["galaxy"]["admin_key"], config["galaxy"]["ssh_key"])
+        self.glx = Galaxy(config["galaxy"]["url"], config["galaxy"]["admin_key"],
+                          config["galaxy"]["ssh_user"], config["galaxy"]["ssh_key"],
+                          config["galaxy"]["galaxy_root_path"], config["galaxy"]["galaxy_config_dir"],
+                          config["galaxy"]["galaxy_user"])
 
         self.workflows = dict()
         for wf_config in config["workflows"]:
@@ -29,6 +32,10 @@ class Benchmarker:
         for bm_config in config["benchmarks"]:
             self.benchmarks[bm_config["name"]] = benchmark.configure_benchmark(bm_config, self.destinations,
                                                                                self.workflows, self.glx)
+        log.info("Creating job_conf for Galaxy and deploying it")
+        destination.create_galaxy_job_conf(self.glx, self.destinations)
+        self.glx.deploy_job_conf()
+
 
     def run(self):
         for bm in self.benchmarks.values():
