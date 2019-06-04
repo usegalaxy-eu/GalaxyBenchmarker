@@ -4,6 +4,7 @@ import destination
 import benchmark
 from galaxy_bridge import Galaxy
 import logging
+import json
 
 log = logging.getLogger("GalaxyBenchmarker")
 
@@ -36,7 +37,6 @@ class Benchmarker:
         destination.create_galaxy_job_conf(self.glx, self.destinations)
         self.glx.deploy_job_conf()
 
-
     def run(self):
         for bm in self.benchmarks.values():
             log.info("Running benchmark '{bm_name}'".format(bm_name=bm.name))
@@ -45,3 +45,12 @@ class Benchmarker:
     def get_results(self):
         for bm in self.benchmarks.values():
             print(bm.benchmark_results)
+
+    def save_results(self, filename="results"):
+        results = list()
+        for bm in self.benchmarks.values():
+            results.append(bm.benchmark_results)
+
+        json_results = json.dumps(results)
+        with open(filename+".json", "w") as fh:
+            fh.write(json_results)

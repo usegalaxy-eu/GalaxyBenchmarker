@@ -110,22 +110,14 @@ def run_galaxy_benchmark(benchmark, galaxy, destinations: List[PulsarMQDestinati
                     start_time = time.monotonic()
                     result = workflow.run(galaxy, destination)
                     result["run_time"] = time.monotonic() - start_time
+                    result["jobs"] = destination.get_jobs(result["history_name"])
+                    result["metrics_summary"] = destination.get_job_metrics_summary(result["jobs"])
 
-                    log.info("Finished running '{workflow}' with status {status} in {time} seconds."
+                    log.info("Finished running '{workflow}' with status '{status}' in {time} seconds."
                              .format(workflow=workflow.name, status=result["status"], time=result["run_time"]))
                     benchmark_results[destination.name][workflow.name].append(result)
 
     return benchmark_results
-
-
-def get_job_ids_from_history_name(history_name, glx_instance: GalaxyInstance):
-    history_id = glx_instance.histories.get_histories(name=history_name)[0]["id"]
-    dataset_ids = glx_instance.histories.show_history(history_id)["state_ids"]["ok"]
-    job_ids = list()
-    for dataset_id in dataset_ids:
-        job_ids.append(glx_instance.histories.show_dataset(history_id, dataset_id)["creating_job"])
-
-    return job_ids
 
 
 def configure_benchmark(bm_config: Dict, destinations: Dict, workflows: Dict, glx):

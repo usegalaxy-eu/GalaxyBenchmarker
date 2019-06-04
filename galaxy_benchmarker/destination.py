@@ -5,7 +5,10 @@ import ansible_bridge
 from typing import Dict
 from task import BaseTask, AnsiblePlaybookTask
 from galaxy_bridge import Galaxy
+from bioblend.galaxy import GalaxyInstance
 from jinja2 import Template
+import re
+
 
 class BaseDestination:
     def __init__(self, name):
@@ -35,6 +38,7 @@ class PulsarMQDestination(BaseDestination):
     def __init__(self, name, glx: Galaxy, amqp_url):
         super().__init__(name)
         self.amqp_url = amqp_url
+        self.galaxy = glx
         self._create_galaxy_destination_user(glx)
 
     def _create_galaxy_destination_user(self, glx):
@@ -44,6 +48,32 @@ class PulsarMQDestination(BaseDestination):
     def _run_ansible_playbook_task(self, task: AnsiblePlaybookTask):
         ansible_bridge.run_playbook(task.playbook, self.host, self.host_user, self.ssh_key,
                                     {"tool_dependency_dir": self.tool_dependency_dir})
+
+    def get_jobs(self, history_name):
+        """
+        Get all jobs together with their details from a given history_name
+        """
+        glx_instance = self.galaxy.impersonate(user_key=self.galaxy_user_key)
+        job_ids = get_job_ids_from_history_name(history_name, glx_instance)
+
+        infos = dict()
+        for job_id in job_ids:
+            infos[job_id] = self.galaxy.instance.jobs.show_job(job_id, full_details=True)
+
+        return infos
+
+    def get_job_metrics_summary(self, jobs: Dict):
+        summary = {
+            "cpuacct.usage": float(0)
+        }
+
+        for job in jobs.values():
+            for metric in job["job_metrics"]:
+                if metric["name"] == "cpuacct.usage":
+                    cpuacct_usage = float(re.sub(r'[^\d.]+', "", metric["value"]))
+                    summary["cpuacct.usage"] += cpuacct_usage
+
+        return summary
 
 
 class CondorDestination(BaseDestination):
@@ -83,3 +113,14 @@ def create_galaxy_job_conf(glx: Galaxy, destinations: Dict[str, BaseDestination]
     job_conf = template.render(galaxy=glx, destinations=destinations.values())
     with open("job_conf.xml.tmp", "w") as fh:
         fh.write(job_conf)
+
+
+def get_job_ids_from_history_name(history_name, impersonated_instance: GalaxyInstance):
+    history_id = impersonated_instance.histories.get_histories(name=history_name)[0]["id"]
+    dataset_ids = impersonated_instance.histories.show_history(history_id)["state_ids"]["ok"]
+    job_ids = list()
+    for dataset_id in dataset_ids:
+        job_ids.append(impersonated_instance.histories.show_dataset(history_id, dataset_id)["creating_job"])
+
+    return job_ids
+

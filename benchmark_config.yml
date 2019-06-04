@@ -42,30 +42,32 @@ workflows:
     path: workflow-testing/sklearn/adaboost/adaboost.ga
 
 benchmarks:
-  - name: Benchmark1
-    type: ColdvsWarm
-    destinations:
-      - LocalPulsar
-    runs_per_workflow: 1
-    workflows:
-      - adaboost
-      - gromacs
-      - mapping_by_sequencing
+#  - name: Benchmark1
+#    type: ColdvsWarm
+#    destinations:
+#      - LocalPulsar
+#    runs_per_workflow: 1
+#    workflows:
+#      - adaboost
+#      - gromacs
+#      - mapping_by_sequencing
 #    cold_pre_task:
 #      type: "ansible-playbook"
 #      playbook: "cleanup-pulsar.yml"
 #    warm_pre_task:
 #      type: "ansible-playbook"
 #      playbook: "cleanup-pulsar.yml"
-#  - name: Benchmark2
-#    type: DestinationComparison
+  - name: Benchmark2
+    type: DestinationComparison
 #    pre_task: "./benchmark2_pre-task.sh" # Call some script before starting benchmark
 #    post_task: "./benchmark2_post-task.sh" # Call some script after ending benchmark (like for cleaning up)
-#    destinations:
-#      - LocalPulsar
+    destinations:
+      - LocalPulsar
 #      - Freiburg
 #      - Italy
-#    workflows:
+    runs_per_workflow: 5
+    workflows:
+      - adaboost
 #      - gromacs
 #      - mapping_by_sequencing
 #  - name: Benchmark3

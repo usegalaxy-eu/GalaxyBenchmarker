@@ -3,6 +3,7 @@ import argparse
 import sys
 from benchmarker import Benchmarker
 import logging
+import time
 
 logging.basicConfig()
 log = logging.getLogger("GalaxyBenchmarker")
@@ -29,7 +30,7 @@ def main():
             log.info("Starting to run benchmarks")
             benchmarker.run()
 
-            benchmarker.get_results()
+            benchmarker.save_results("results_{time}".format(time=time.time()))
 
         except yaml.YAMLError as exc:
             print(exc)
