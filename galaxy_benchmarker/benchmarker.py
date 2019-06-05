@@ -51,6 +51,6 @@ class Benchmarker:
         for bm in self.benchmarks.values():
             results.append(bm.benchmark_results)
 
-        json_results = json.dumps(results)
+        json_results = json.dumps(results, indent=2)
         with open(filename+".json", "w") as fh:
             fh.write(json_results)
