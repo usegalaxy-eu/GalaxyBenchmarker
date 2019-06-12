@@ -30,7 +30,7 @@ def main():
             log.info("Starting to run benchmarks")
             benchmarker.run()
 
-            benchmarker.save_results("results_{time}".format(time=time.time()))
+            benchmarker.save_results("results/results_{time}".format(time=time.time()))
             benchmarker.send_results_to_influxdb()
 
         except yaml.YAMLError as exc:
@@ -41,6 +41,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-
-
