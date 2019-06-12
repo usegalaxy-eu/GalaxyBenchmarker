@@ -3,9 +3,8 @@ Definition of different benchmark-types.
 """
 import logging
 import time
-from destination import BaseDestination, PulsarMQDestination
-from workflow import BaseWorkflow, GalaxyWorkflow
-from galaxy_bridge import GalaxyInstance
+from destination import BaseDestination, PulsarMQDestination, CondorDestination
+from workflow import BaseWorkflow, GalaxyWorkflow, CondorWorkflow
 from task import BaseTask, AnsiblePlaybookTask
 from typing import List, Dict
 
@@ -67,24 +66,32 @@ class DestinationComparisonBenchmark(BaseBenchmark):
         self.workflows = workflows
 
     def run(self, benchmarker):
+        # TODO: Run Pre-Task
         self.benchmark_results = run_galaxy_benchmark(self, benchmarker.glx, self.destinations, self.workflows,
                                                       self.runs_per_workflow, "warm")
+        # TODO: Run Post-Task
 
 
 class BurstBenchmark(BaseBenchmark):
-    def __init__(self, name, destinations: List[BaseDestination],
-                 workflows: List[BaseWorkflow], runs_per_workflow=1):
+    allowed_dest_types = [CondorDestination]
+    allowed_workflow_types = [CondorWorkflow]
 
+    def __init__(self, name, destinations: List[BaseDestination],
+                 workflows: List[BaseWorkflow], runs_per_workflow=1, burst_rate=0):
         super().__init__(name, destinations, workflows, runs_per_workflow)
+        self.burst_rate = burst_rate
 
     def run(self, benchmarker):
+        # TODO: Make sure that workflows are uploaded to Condor-Manager
+
+        # TODO: Run burst_rate workflow at the same time until runs_per_workflows ran
         raise NotImplementedError
 
 
 def run_galaxy_benchmark(benchmark, galaxy, destinations: List[PulsarMQDestination],
                          workflows: List[GalaxyWorkflow], runs_per_workflow=1, run_type="warm"):
     if run_type not in ["cold", "warm"]:
-        raise ValueError("run_type must be either 'cold' or 'warm'")
+        raise ValueError("'run_type' must be either 'cold' or 'warm'")
 
     benchmark_results = dict()
 
@@ -95,20 +102,23 @@ def run_galaxy_benchmark(benchmark, galaxy, destinations: List[PulsarMQDestinati
     log.info("Starting to run {type} benchmarks".format(type=run_type))
     for destination in destinations:
         benchmark_results[destination.name] = dict()
+
         log.info("Running {type} benchmark for destination: {dest}".format(type=run_type, dest=destination.name))
         for workflow in workflows:
             benchmark_results[destination.name][workflow.name] = list()
             for i in range(0, runs_per_workflow):
                 if run_type == "warm" and i == 0:
                     log.info("First run! Warming up. Results won't be considered for the first time")
-                    workflow.run(galaxy, destination)
+                    workflow.run(destination, galaxy)
                 else:
                     if run_type == "cold" and benchmark.cold_pre_task is not None:
                         log.info("Running cold pre-task for Cleanup")
                         destination.run_task(benchmark.cold_pre_task)
-                    log.info("Running '{workflow}' for the {i} time".format(workflow=workflow.name, i=i + 1))
+
+                    log.info("Running {type} '{workflow}' for the {i} time".format(type=run_type,
+                                                                                   workflow=workflow.name, i=i + 1))
                     start_time = time.monotonic()
-                    result = workflow.run(galaxy, destination)
+                    result = workflow.run(destination, galaxy)
                     result["run_time"] = time.monotonic() - start_time
                     result["jobs"] = destination.get_jobs(result["history_name"])
                     result["metrics_summary"] = destination.get_job_metrics_summary(result["jobs"])

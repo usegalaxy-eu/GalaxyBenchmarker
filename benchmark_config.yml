@@ -23,8 +23,12 @@ destinations:
   - name: Italy
     type: PulsarMQ
     amqp_url: "pyamqp://pulsar_test:password@rabbitmq.uni.andreas-sk.de:5672//"
-#  - name: LocalCondor
-#    type: Condor
+  - name: CondorManager
+    type: Condor
+    host: pulsar.uni.andreas-sk.de
+    host_user: centos
+    ssh_key: /Users/askorczyk/Dropbox/Studium/5-WS18-19/Bachelorprojekt - Galaxy/bwcloud.cert
+    jobs_directory_dir: /home/centos/jobs
 #  - name: CondorWithGalaxy
 #    type: GalaxyCondor
 
@@ -42,33 +46,41 @@ workflows:
     path: workflow-testing/sklearn/adaboost/adaboost.ga
 
 benchmarks:
-#  - name: Benchmark1
-#    type: ColdvsWarm
-#    destinations:
-#      - LocalPulsar
-#    runs_per_workflow: 1
-#    workflows:
-#      - adaboost
-#      - gromacs
-#      - mapping_by_sequencing
-#    cold_pre_task:
-#      type: "ansible-playbook"
-#      playbook: "cleanup-pulsar.yml"
-#    warm_pre_task:
-#      type: "ansible-playbook"
-#      playbook: "cleanup-pulsar.yml"
-  - name: Benchmark2
-    type: DestinationComparison
-#    pre_task: "./benchmark2_pre-task.sh" # Call some script before starting benchmark
-#    post_task: "./benchmark2_post-task.sh" # Call some script after ending benchmark (like for cleaning up)
+  - name: Benchmark1
+    type: ColdvsWarm
     destinations:
       - LocalPulsar
-#      - Freiburg
-#      - Italy
-    runs_per_workflow: 5
+    runs_per_workflow: 4
     workflows:
       - adaboost
 #      - gromacs
 #      - mapping_by_sequencing
+    cold_pre_task:
+      type: "ansible-playbook"
+      playbook: "cleanup-pulsar.yml"
+#    warm_pre_task:
+#      type: "ansible-playbook"
+#      playbook: "cleanup-pulsar.yml"
+#  - name: Benchmark2
+#    type: DestinationComparison
+##    pre_task:
+##      type: "ansible-playbook"
+##      playbook: "cleanup-pulsar.yml"
+##    post_task:
+##      - type: "shell-script"
+##      - script: "./benchmark2_post-task.sh" # Call some script after ending benchmark (like for cleaning up)
+#    destinations:
+#      - LocalPulsar
+##      - Freiburg
+##      - Italy
+#    runs_per_workflow: 5
+#    workflows:
+#      - adaboost
+##      - gromacs
+##      - mapping_by_sequencing
 #  - name: Benchmark3
 #    type: Burst
+#    runs_per_workflow: 100000
+#    burst_rate: 100
+#    workflows:
+#      - condor_workflows/sleep.job

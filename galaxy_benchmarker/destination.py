@@ -2,6 +2,7 @@
 Definition of different destination-types for workflows.
 """
 import ansible_bridge
+from datetime import datetime
 from typing import Dict
 from task import BaseTask, AnsiblePlaybookTask
 from galaxy_bridge import Galaxy
@@ -64,21 +65,38 @@ class PulsarMQDestination(BaseDestination):
 
     def get_job_metrics_summary(self, jobs: Dict):
         summary = {
-            "cpuacct.usage": float(0)
+            "cpuacct.usage": float(0),
+            "staging_time": float(0)
         }
 
         for job in jobs.values():
             for metric in job["job_metrics"]:
                 if metric["name"] == "cpuacct.usage":
-                    cpuacct_usage = float(re.sub(r'[^\d.]+', "", metric["value"]))
+                    cpuacct_usage = float(metric["raw_value"]) / 1000000000  # Convert to seconds
                     summary["cpuacct.usage"] += cpuacct_usage
+
+                if metric["plugin"] == "jobstatus" and metric["name"] == "queued":
+                    jobstatus_queued = datetime.strptime(metric["value"], "%Y-%m-%d %H:%M:%S.%f")
+                if metric["plugin"] == "jobstatus" and metric["name"] == "running":
+                    jobstatus_running = datetime.strptime(metric["value"], "%Y-%m-%d %H:%M:%S.%f")
+
+            # Calculate staging time
+            staging_time = float((jobstatus_running - jobstatus_queued).seconds +
+                                 (jobstatus_running - jobstatus_queued).microseconds * 0.000001)
+            job["job_metrics"].append({"name": "staging_time",
+                                       "value": staging_time})
+            summary["staging_time"] += staging_time
 
         return summary
 
 
 class CondorDestination(BaseDestination):
-    def __init__(self, name):
+    def __init__(self, name, host, host_user, ssh_key, jobs_directory_dir):
         super().__init__(name)
+        self.host = host
+        self.host_user = host_user
+        self.ssh_key = ssh_key
+        self.jobs_directory_dir = jobs_directory_dir
 
 
 class GalaxyCondorDestination(BaseDestination):
@@ -99,7 +117,8 @@ def configure_destination(dest_config, glx):
             destination.tool_dependency_dir = dest_config["tool_dependency_dir"]
 
     if dest_config["type"] == "Condor":
-        destination = CondorDestination(dest_config["name"])
+        destination = CondorDestination(dest_config["name"], dest_config["host"], dest_config["host_user"],
+                                        dest_config["ssh_key"], dest_config["jobs_directory_dir"])
 
     if dest_config["type"] == "GalaxyCondor":
         destination = GalaxyCondorDestination(dest_config["name"])
@@ -108,10 +127,17 @@ def configure_destination(dest_config, glx):
 
 
 def create_galaxy_job_conf(glx: Galaxy, destinations: Dict[str, BaseDestination]):
-    with open('job_conf.xml') as file_:
+    with open('galaxy_files/job_conf.xml') as file_:
         template = Template(file_.read())
-    job_conf = template.render(galaxy=glx, destinations=destinations.values())
-    with open("job_conf.xml.tmp", "w") as fh:
+
+    pulsar_destinations = list()
+
+    for dest in destinations.values():
+        if type(dest) is PulsarMQDestination:
+            pulsar_destinations.append(dest)
+
+    job_conf = template.render(galaxy=glx, destinations=pulsar_destinations)
+    with open("galaxy_files/job_conf.xml.tmp", "w") as fh:
         fh.write(job_conf)
 
 
