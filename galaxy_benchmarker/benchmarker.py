@@ -5,12 +5,15 @@ import benchmark
 from galaxy_bridge import Galaxy
 import logging
 import json
+from influxdb_bridge import InfluxDB
+
 
 log = logging.getLogger("GalaxyBenchmarker")
 
 
 class Benchmarker:
     glx: Galaxy
+    inflx_db: InfluxDB
     workflows: Dict[str, workflow.BaseWorkflow]
     destinations: Dict[str, destination.BaseDestination]
     benchmarks: Dict[str, benchmark.BaseBenchmark]
@@ -20,6 +23,10 @@ class Benchmarker:
                           config["galaxy"]["ssh_user"], config["galaxy"]["ssh_key"],
                           config["galaxy"]["galaxy_root_path"], config["galaxy"]["galaxy_config_dir"],
                           config["galaxy"]["galaxy_user"])
+
+        self.inflx_db = InfluxDB(config["influxdb"]["host"], config["influxdb"]["port"],
+                                 config["influxdb"]["username"], config["influxdb"]["password"],
+                                 config["influxdb"]["db_name"])
 
         self.workflows = dict()
         for wf_config in config["workflows"]:
@@ -54,3 +61,9 @@ class Benchmarker:
         json_results = json.dumps(results, indent=2)
         with open(filename+".json", "w") as fh:
             fh.write(json_results)
+
+    def send_results_to_influxdb(self):
+        for bm in self.benchmarks.values():
+            bm.save_results_to_influxdb(self.inflx_db)
+
+

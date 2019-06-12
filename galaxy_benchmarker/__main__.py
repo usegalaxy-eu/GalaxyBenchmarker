@@ -31,6 +31,7 @@ def main():
             benchmarker.run()
 
             benchmarker.save_results("results_{time}".format(time=time.time()))
+            benchmarker.send_results_to_influxdb()
 
         except yaml.YAMLError as exc:
             print(exc)

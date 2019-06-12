@@ -3,10 +3,13 @@ Definition of different benchmark-types.
 """
 import logging
 import time
+from datetime import datetime
 from destination import BaseDestination, PulsarMQDestination, CondorDestination
 from workflow import BaseWorkflow, GalaxyWorkflow, CondorWorkflow
 from task import BaseTask, AnsiblePlaybookTask
 from typing import List, Dict
+from influxdb_bridge import InfluxDB
+
 
 log = logging.getLogger("GalaxyBenchmarker")
 
@@ -22,12 +25,29 @@ class BaseBenchmark:
     def __init__(self, name, destinations: List[BaseDestination],
                  workflows: List[BaseWorkflow], runs_per_workflow=1):
         self.name = name
+        self.uuid = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
         self.destinations = destinations
         self.workflows = workflows
         self.runs_per_workflow = runs_per_workflow
 
     def run(self, benchmarker):
         raise NotImplementedError
+
+    def save_results_to_influxdb(self, inflxdb: InfluxDB):
+        for run_type, per_dest_results in self.benchmark_results.items():
+            for dest_name, workflows in per_dest_results.items():
+                for workflow_name, runs in workflows.items():
+                    for run in runs:
+                        for job in run["jobs"].values():
+                            tags = {
+                                "benchmark_name": self.name,
+                                "benchmark_uid": self.uuid,
+                                "destination_name": dest_name,
+                                "workflow_name": workflow_name,
+                                "history_name": run["history_name"],
+                                "run_type": run_type,
+                            }
+                            inflxdb.save_job_metrics(tags, job)
 
 
 class ColdWarmBenchmark(BaseBenchmark):
@@ -67,8 +87,8 @@ class DestinationComparisonBenchmark(BaseBenchmark):
 
     def run(self, benchmarker):
         # TODO: Run Pre-Task
-        self.benchmark_results = run_galaxy_benchmark(self, benchmarker.glx, self.destinations, self.workflows,
-                                                      self.runs_per_workflow, "warm")
+        self.benchmark_results["warm"] = run_galaxy_benchmark(self, benchmarker.glx, self.destinations, self.workflows,
+                                                              self.runs_per_workflow, "warm")
         # TODO: Run Post-Task
 
 

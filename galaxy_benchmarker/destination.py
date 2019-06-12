@@ -2,13 +2,12 @@
 Definition of different destination-types for workflows.
 """
 import ansible_bridge
-from datetime import datetime
+import metrics
 from typing import Dict
 from task import BaseTask, AnsiblePlaybookTask
 from galaxy_bridge import Galaxy
 from bioblend.galaxy import GalaxyInstance
 from jinja2 import Template
-import re
 
 
 class BaseDestination:
@@ -50,7 +49,7 @@ class PulsarMQDestination(BaseDestination):
         ansible_bridge.run_playbook(task.playbook, self.host, self.host_user, self.ssh_key,
                                     {"tool_dependency_dir": self.tool_dependency_dir})
 
-    def get_jobs(self, history_name):
+    def get_jobs(self, history_name) -> Dict:
         """
         Get all jobs together with their details from a given history_name
         """
@@ -60,32 +59,20 @@ class PulsarMQDestination(BaseDestination):
         infos = dict()
         for job_id in job_ids:
             infos[job_id] = self.galaxy.instance.jobs.show_job(job_id, full_details=True)
+            infos[job_id]["parsed_job_metrics"] = metrics.parse_galaxy_job_metrics(infos[job_id]["job_metrics"])
 
         return infos
 
-    def get_job_metrics_summary(self, jobs: Dict):
+    def get_job_metrics_summary(self, jobs: Dict) -> Dict:
         summary = {
             "cpuacct.usage": float(0),
             "staging_time": float(0)
         }
 
         for job in jobs.values():
-            for metric in job["job_metrics"]:
-                if metric["name"] == "cpuacct.usage":
-                    cpuacct_usage = float(metric["raw_value"]) / 1000000000  # Convert to seconds
-                    summary["cpuacct.usage"] += cpuacct_usage
-
-                if metric["plugin"] == "jobstatus" and metric["name"] == "queued":
-                    jobstatus_queued = datetime.strptime(metric["value"], "%Y-%m-%d %H:%M:%S.%f")
-                if metric["plugin"] == "jobstatus" and metric["name"] == "running":
-                    jobstatus_running = datetime.strptime(metric["value"], "%Y-%m-%d %H:%M:%S.%f")
-
-            # Calculate staging time
-            staging_time = float((jobstatus_running - jobstatus_queued).seconds +
-                                 (jobstatus_running - jobstatus_queued).microseconds * 0.000001)
-            job["job_metrics"].append({"name": "staging_time",
-                                       "value": staging_time})
-            summary["staging_time"] += staging_time
+            parsed_job_metrics = job["parsed_job_metrics"]
+            summary["cpuacct.usage"] += parsed_job_metrics["cpuacct.usage"]["value"]
+            summary["staging_time"] += parsed_job_metrics["staging_time"]["value"]
 
         return summary
 

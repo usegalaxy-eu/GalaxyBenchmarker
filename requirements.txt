@@ -2,3 +2,4 @@ planemo
 pyyaml
 bioblend
 Jinja2
+influxdb

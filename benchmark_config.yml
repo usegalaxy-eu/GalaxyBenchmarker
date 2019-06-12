@@ -7,6 +7,13 @@ galaxy:
   galaxy_config_dir: /srv/galaxy/server/config
   galaxy_user: galaxy
 
+influxdb:
+  host: localhost
+  port: 8086
+  username: root
+  password: root
+  db_name: glx_benchmarker
+
 destinations:
   - name: LocalPulsar
     type: PulsarMQ
@@ -46,11 +53,11 @@ workflows:
     path: workflow-testing/sklearn/adaboost/adaboost.ga
 
 benchmarks:
-  - name: Benchmark1
+  - name: ColdvsWarm
     type: ColdvsWarm
     destinations:
       - LocalPulsar
-    runs_per_workflow: 4
+    runs_per_workflow: 1
     workflows:
       - adaboost
 #      - gromacs
@@ -58,10 +65,10 @@ benchmarks:
     cold_pre_task:
       type: "ansible-playbook"
       playbook: "cleanup-pulsar.yml"
-#    warm_pre_task:
-#      type: "ansible-playbook"
-#      playbook: "cleanup-pulsar.yml"
-#  - name: Benchmark2
+    warm_pre_task:
+      type: "ansible-playbook"
+      playbook: "cleanup-pulsar.yml"
+#  - name: DestinationComparison
 #    type: DestinationComparison
 ##    pre_task:
 ##      type: "ansible-playbook"
@@ -73,7 +80,7 @@ benchmarks:
 #      - LocalPulsar
 ##      - Freiburg
 ##      - Italy
-#    runs_per_workflow: 5
+#    runs_per_workflow: 2
 #    workflows:
 #      - adaboost
 ##      - gromacs
