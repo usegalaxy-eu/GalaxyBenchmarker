@@ -42,6 +42,7 @@ class BaseBenchmark:
                             tags = {
                                 "benchmark_name": self.name,
                                 "benchmark_uid": self.uuid,
+                                "benchmark_type": type(self),
                                 "destination_name": dest_name,
                                 "workflow_name": workflow_name,
                                 "history_name": run["history_name"],
