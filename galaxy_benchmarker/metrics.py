@@ -35,13 +35,19 @@ def parse_galaxy_job_metrics(job_metrics: List) -> Dict[str, Dict]:
             "name": "staging_time",
             "type": "float",
             "value": float(0)
+        },
+        "runtime_seconds": {
+            "name": "runtime_seconds",
+            "type": "float",
+            "value": float(0)
         }
     }
 
     for metric in job_metrics:
         if metric["name"] == "cpuacct.usage":
             parsed_metrics["cpuacct.usage"]["value"] = float(metric["raw_value"]) / 1000000000  # Convert to seconds
-
+        if metric["name"] == "runtime_seconds":
+            parsed_metrics["runtime_seconds"]["value"] = float(metric["raw_value"])
         if metric["plugin"] == "jobstatus" and metric["name"] == "queued":
             jobstatus_queued = datetime.strptime(metric["value"], "%Y-%m-%d %H:%M:%S.%f")
         if metric["plugin"] == "jobstatus" and metric["name"] == "running":
