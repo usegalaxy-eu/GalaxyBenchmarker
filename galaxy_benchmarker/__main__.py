@@ -24,19 +24,19 @@ def main():
         try:
             config = yaml.safe_load(stream)
 
-            log.info("Initializing Benchmarker")
+            log.info("Initializing Benchmarker.")
             benchmarker = Benchmarker(config)
 
             benchmarker.run_pre_tasks()
 
-            log.info("Starting to run benchmarks")
+            log.info("Starting to run benchmarks.")
             benchmarker.run()
 
             results_filename = "results/results_{time}".format(time=time.time())
-            log.info("Saving results to file: {filename}".format(filename=results_filename))
+            log.info("Saving results to file: '{filename}.json'.".format(filename=results_filename))
             benchmarker.save_results(results_filename)
 
-            log.info("Sending results to influxDB")
+            log.info("Sending results to influxDB.")
             benchmarker.send_results_to_influxdb()
 
             benchmarker.run_post_tasks()

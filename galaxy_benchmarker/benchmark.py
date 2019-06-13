@@ -71,12 +71,12 @@ class ColdWarmBenchmark(BaseBenchmark):
 
     def run_pre_task(self):
         if self.pre_task is not None:
-            log.info("Running pre-task '{task}'".format(task=self.pre_task))
+            log.info("Running pre-task '{task}'.".format(task=self.pre_task))
             self.destinations[0].run_task(self.pre_task)
 
     def run_post_task(self):
         if self.post_task is not None:
-            log.info("Running post-task '{task}'".format(task=self.post_task))
+            log.info("Running post-task '{task}'.".format(task=self.post_task))
             self.destinations[0].run_task(self.post_task)
 
     def run(self, benchmarker):
@@ -126,7 +126,7 @@ class BurstBenchmark(BaseBenchmark):
 def run_galaxy_benchmark(benchmark, galaxy, destinations: List[PulsarMQDestination],
                          workflows: List[GalaxyWorkflow], runs_per_workflow=1, run_type="warm"):
     if run_type not in ["cold", "warm"]:
-        raise ValueError("'run_type' must be either 'cold' or 'warm'")
+        raise ValueError("'run_type' must be either 'cold' or 'warm'.")
 
     benchmark_results = dict()
 
@@ -134,25 +134,25 @@ def run_galaxy_benchmark(benchmark, galaxy, destinations: List[PulsarMQDestinati
     if run_type == "warm":
         runs_per_workflow += 1
 
-    log.info("Starting to run {type} benchmarks".format(type=run_type))
+    log.info("Starting to run {type} benchmarks.".format(type=run_type))
     for destination in destinations:
         benchmark_results[destination.name] = dict()
 
-        log.info("Running {type} benchmark for destination: {dest}".format(type=run_type, dest=destination.name))
+        log.info("Running {type} benchmark for destination: {dest}.".format(type=run_type, dest=destination.name))
         for workflow in workflows:
             benchmark_results[destination.name][workflow.name] = list()
             retries = 0
             i = 0
             while i < runs_per_workflow:
                 if run_type == "warm" and i == 0:
-                    log.info("First run! Warming up. Results won't be considered for the first time")
+                    log.info("First run! Warming up. Results won't be considered for the first time.")
                     workflow.run(destination, galaxy)
                 else:
                     if run_type == "cold" and benchmark.cold_pre_task is not None:
-                        log.info("Running cold pre-task for Cleanup")
+                        log.info("Running cold pre-task for Cleanup.")
                         destination.run_task(benchmark.cold_pre_task)
 
-                    log.info("Running {type} '{workflow}' for the {i} time".format(type=run_type,
+                    log.info("Running {type} '{workflow}' for the {i} time.".format(type=run_type,
                                                                                    workflow=workflow.name, i=i + 1))
                     start_time = time.monotonic()
                     result = workflow.run(destination, galaxy)
@@ -195,6 +195,10 @@ def configure_benchmark(bm_config: Dict, destinations: Dict, workflows: Dict, gl
 
         if "warm_pre_task" in bm_config:
             benchmark.warm_pre_task = AnsiblePlaybookTask(bm_config["warm_pre_task"]["playbook"])
+        if "pre_task" in bm_config:
+            benchmark.pre_task = AnsiblePlaybookTask(bm_config["pre_task"]["playbook"])
+        if "post_task" in bm_config:
+            benchmark.post_task = AnsiblePlaybookTask(bm_config["post_task"]["playbook"])
 
     if bm_config["type"] == "DestinationComparison":
         benchmark = DestinationComparisonBenchmark(bm_config["name"],

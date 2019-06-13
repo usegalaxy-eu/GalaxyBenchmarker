@@ -49,7 +49,7 @@ def cli(ctx, paths, glx, user_key, **kwds):
             test_data = engine.test(runnables)
             exit_code = handle_reports_and_summary(ctx, test_data.structured_data, kwds=kwds)
             status = "success" if exit_code == 0 else "error"
-    except bioblend.ConnectionError as err:
+    except bioblend.ConnectionError:
         log.error("There was an error with the connection.")
         status = "error"
 
