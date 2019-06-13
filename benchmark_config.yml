@@ -57,17 +57,20 @@ benchmarks:
     type: ColdvsWarm
     destinations:
       - LocalPulsar
-    runs_per_workflow: 1
+    runs_per_workflow: 3
     workflows:
       - adaboost
 #      - gromacs
 #      - mapping_by_sequencing
     cold_pre_task:
       type: "ansible-playbook"
-      playbook: "cleanup-pulsar.yml"
-    warm_pre_task:
+      playbook: "coldwarm_pretask.yml"
+    post_task:
       type: "ansible-playbook"
-      playbook: "cleanup-pulsar.yml"
+      playbook: "cleanup_pulsar.yml"
+#    warm_pre_task:
+#      type: "ansible-playbook"
+#      playbook: "cleanup-pulsar.yml"
 #  - name: DestinationComparison
 #    type: DestinationComparison
 ##    pre_task:
@@ -80,7 +83,7 @@ benchmarks:
 #      - LocalPulsar
 ##      - Freiburg
 ##      - Italy
-#    runs_per_workflow: 2
+#    runs_per_workflow: 1
 #    workflows:
 #      - adaboost
 ##      - gromacs

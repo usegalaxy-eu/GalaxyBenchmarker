@@ -44,6 +44,16 @@ class Benchmarker:
         destination.create_galaxy_job_conf(self.glx, self.destinations)
         self.glx.deploy_job_conf()
 
+    def run_pre_tasks(self):
+        log.info("Running pre-tasks for benchmarks")
+        for bm in self.benchmarks.values():
+            bm.run_pre_task()
+
+    def run_post_tasks(self):
+        log.info("Running post-tasks for benchmarks")
+        for bm in self.benchmarks.values():
+            bm.run_post_task()
+
     def run(self):
         for bm in self.benchmarks.values():
             log.info("Running benchmark '{bm_name}'".format(bm_name=bm.name))

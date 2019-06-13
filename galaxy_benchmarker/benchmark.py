@@ -30,6 +30,12 @@ class BaseBenchmark:
         self.workflows = workflows
         self.runs_per_workflow = runs_per_workflow
 
+    def run_pre_task(self):
+        pass
+
+    def run_post_task(self):
+        pass
+
     def run(self, benchmarker):
         raise NotImplementedError
 
@@ -41,7 +47,7 @@ class BaseBenchmark:
                         for job in run["jobs"].values():
                             tags = {
                                 "benchmark_name": self.name,
-                                "benchmark_uid": self.uuid,
+                                "benchmark_uuid": self.uuid,
                                 "benchmark_type": type(self),
                                 "destination_name": dest_name,
                                 "workflow_name": workflow_name,
@@ -63,17 +69,21 @@ class ColdWarmBenchmark(BaseBenchmark):
         self.destinations = destinations
         self.workflows = workflows
 
-    def run(self, benchmarker):
+    def run_pre_task(self):
         if self.pre_task is not None:
             log.info("Running pre-task '{task}'".format(task=self.pre_task))
             self.destinations[0].run_task(self.pre_task)
+
+    def run_post_task(self):
+        if self.post_task is not None:
+            log.info("Running post-task '{task}'".format(task=self.post_task))
+            self.destinations[0].run_task(self.post_task)
+
+    def run(self, benchmarker):
         for run_type in ["cold", "warm"]:
             self.benchmark_results[run_type] = run_galaxy_benchmark(self, benchmarker.glx, self.destinations,
                                                                     self.workflows,
                                                                     self.runs_per_workflow, run_type)
-        if self.post_task is not None:
-            log.info("Running post-task '{task}'".format(task=self.post_task))
-            self.destinations[0].run_task(self.post_task)
 
 
 class DestinationComparisonBenchmark(BaseBenchmark):
@@ -86,11 +96,15 @@ class DestinationComparisonBenchmark(BaseBenchmark):
         self.destinations = destinations
         self.workflows = workflows
 
+    def run_pre_task(self):
+        pass  # TODO
+
+    def run_post_task(self):
+        pass  # TODO
+
     def run(self, benchmarker):
-        # TODO: Run Pre-Task
         self.benchmark_results["warm"] = run_galaxy_benchmark(self, benchmarker.glx, self.destinations, self.workflows,
                                                               self.runs_per_workflow, "warm")
-        # TODO: Run Post-Task
 
 
 class BurstBenchmark(BaseBenchmark):
