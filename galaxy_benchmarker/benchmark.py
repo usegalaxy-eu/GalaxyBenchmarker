@@ -174,7 +174,7 @@ def run_galaxy_benchmark(benchmark, galaxy, destinations: List[PulsarMQDestinati
                         benchmark_results[destination.name][workflow.name].append(result)
                         retries = 0
 
-                    i += 1
+                i += 1
 
     return benchmark_results
 
