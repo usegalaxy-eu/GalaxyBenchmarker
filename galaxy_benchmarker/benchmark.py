@@ -141,7 +141,9 @@ def run_galaxy_benchmark(benchmark, galaxy, destinations: List[PulsarMQDestinati
         log.info("Running {type} benchmark for destination: {dest}".format(type=run_type, dest=destination.name))
         for workflow in workflows:
             benchmark_results[destination.name][workflow.name] = list()
-            for i in range(0, runs_per_workflow):
+            retries = 0
+            i = 0
+            while i < runs_per_workflow:
                 if run_type == "warm" and i == 0:
                     log.info("First run! Warming up. Results won't be considered for the first time")
                     workflow.run(destination, galaxy)
@@ -160,7 +162,19 @@ def run_galaxy_benchmark(benchmark, galaxy, destinations: List[PulsarMQDestinati
 
                     log.info("Finished running '{workflow}' with status '{status}' in {time} seconds."
                              .format(workflow=workflow.name, status=result["status"], time=result["run_time"]))
-                    benchmark_results[destination.name][workflow.name].append(result)
+
+                    # Handle possible errors and maybe retry
+                    if result["status"] == "error":
+                        log.info("Result won't be considered.")
+                        if retries < 2:
+                            log.info("Retrying..")
+                            retries += 1
+                            i -= 1
+                    else:
+                        benchmark_results[destination.name][workflow.name].append(result)
+                        retries = 0
+
+                    i += 1
 
     return benchmark_results
 
