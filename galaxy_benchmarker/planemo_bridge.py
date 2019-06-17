@@ -35,7 +35,7 @@ def cli(ctx, paths, glx, user_key, **kwds):
     See https://github.com/galaxyproject/planemo/blob/master/planemo/commands/cmd_test.py
     """
     kwds["engine"] = "external_galaxy"
-    kwds["shed_install"] = True
+    kwds["shed_install"] = glx.shed_install
     kwds["galaxy_url"] = glx.url
     kwds["galaxy_admin_key"] = glx.admin_key
     kwds["history_name"] = "galaxy_benchmarker-" + str(time.time_ns()) + str(random.randrange(0, 99999))

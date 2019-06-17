@@ -19,7 +19,7 @@ class Benchmarker:
     benchmarks: Dict[str, benchmark.BaseBenchmark]
 
     def __init__(self, config):
-        self.glx = Galaxy(config["galaxy"]["url"], config["galaxy"]["admin_key"],
+        self.glx = Galaxy(config["galaxy"]["url"], config["galaxy"]["admin_key"], config["galaxy"]["shed_install"],
                           config["galaxy"]["ssh_user"], config["galaxy"]["ssh_key"],
                           config["galaxy"]["galaxy_root_path"], config["galaxy"]["galaxy_config_dir"],
                           config["galaxy"]["galaxy_user"])
