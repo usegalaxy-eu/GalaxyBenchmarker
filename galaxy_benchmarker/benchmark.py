@@ -3,6 +3,7 @@ Definition of different benchmark-types.
 """
 import logging
 import time
+import threading
 from datetime import datetime
 from destination import BaseDestination, PulsarMQDestination, CondorDestination
 from workflow import BaseWorkflow, GalaxyWorkflow, CondorWorkflow
@@ -108,30 +109,82 @@ class DestinationComparisonBenchmark(BaseBenchmark):
 
 
 class BurstBenchmark(BaseBenchmark):
-    allowed_dest_types = [CondorDestination]
-    allowed_workflow_types = [CondorWorkflow]
+    allowed_dest_types = [PulsarMQDestination, CondorDestination]
+    allowed_workflow_types = [GalaxyWorkflow, CondorWorkflow]
+
+    class BurstThread(threading.Thread):
+        def __init__(self, bm, thread_id, results: List):
+            threading.Thread.__init__(self)
+            self.bm = bm
+            self.thread_id = thread_id
+            self.results = results
+            pass
+
+        def run(self):
+            if self.bm.destination_type is PulsarMQDestination:
+                log.info("Running with thread_id {thread_id}".format(thread_id=self.thread_id))
+                res = run_galaxy_benchmark(self, self.bm.galaxy, self.bm.destinations, self.bm.workflows,
+                                           1, "warm", False)
+                self.results[self.thread_id] = res[self.bm.destinations[0].name][self.bm.workflows[0].name][0]
 
     def __init__(self, name, destinations: List[BaseDestination],
-                 workflows: List[BaseWorkflow], runs_per_workflow=1, burst_rate=0):
+                 workflows: List[BaseWorkflow], runs_per_workflow=1, burst_rate=1):
         super().__init__(name, destinations, workflows, runs_per_workflow)
         self.burst_rate = burst_rate
 
-    def run(self, benchmarker):
-        # TODO: Make sure that workflows are uploaded to Condor-Manager
+        if len(self.destinations) != 1:
+            raise ValueError("BurstBenchmark can only be used with exactly one Destination.")
+        if len(self.workflows) != 1:
+            raise ValueError("BurstBenchmark can only be used with exactly one Workflow.")
+        self.destination_type = type(self.destinations[0])
 
-        # TODO: Run burst_rate workflow at the same time until runs_per_workflows ran
-        raise NotImplementedError
+    def run(self, benchmarker):
+        threads = []
+        results = [None]*self.runs_per_workflow
+        total_runs = next_runs = 0
+        while total_runs < self.runs_per_workflow:
+            next_runs += self.burst_rate
+            print("Next runs: {0}".format(next_runs))
+            # If burst_rate < 1, workflow should be run less than 1x per second. So just wait, until next_runs > 1
+            if next_runs < 1:
+                time.sleep(1)
+                continue
+
+            # Make sure, runs_per_workflow won't be exceeded
+            if total_runs + next_runs >= self.runs_per_workflow:
+                next_runs = self.runs_per_workflow - total_runs
+            print(next_runs)
+            for _ in range(0, int(next_runs)):
+                process = self.BurstThread(self, total_runs, results)
+                process.start()
+                threads.append(process)
+                total_runs += 1
+
+            next_runs = 0
+            time.sleep(1)
+
+        # Wait for all Benchmarks being executed
+        for process in threads:
+            process.join()
+
+        self.benchmark_results = {
+            "warm": {
+                self.destinations[0].name: {
+                    self.workflows[0].name: results
+                }
+            }
+        }
 
 
 def run_galaxy_benchmark(benchmark, galaxy, destinations: List[PulsarMQDestination],
-                         workflows: List[GalaxyWorkflow], runs_per_workflow=1, run_type="warm"):
+                         workflows: List[GalaxyWorkflow], runs_per_workflow=1, run_type="warm", warmup=True):
     if run_type not in ["cold", "warm"]:
         raise ValueError("'run_type' must be either 'cold' or 'warm'.")
 
     benchmark_results = dict()
 
-    # Add +1 to warm up Pulsar, if run_type is "warm"
-    if run_type == "warm":
+    # Add +1 to warm up Pulsar, if run_type is "warm" and warmup should happen
+    if warmup and run_type == "warm":
         runs_per_workflow += 1
 
     log.info("Starting to run {type} benchmarks.".format(type=run_type))
@@ -144,7 +197,7 @@ def run_galaxy_benchmark(benchmark, galaxy, destinations: List[PulsarMQDestinati
             retries = 0
             i = 0
             while i < runs_per_workflow:
-                if run_type == "warm" and i == 0:
+                if warmup and run_type == "warm" and i == 0:
                     log.info("First run! Warming up. Results won't be considered for the first time.")
                     workflow.run(destination, galaxy)
                 else:
@@ -153,7 +206,7 @@ def run_galaxy_benchmark(benchmark, galaxy, destinations: List[PulsarMQDestinati
                         destination.run_task(benchmark.cold_pre_task)
 
                     log.info("Running {type} '{workflow}' for the {i} time.".format(type=run_type,
-                                                                                   workflow=workflow.name, i=i + 1))
+                                                                                    workflow=workflow.name, i=i + 1))
                     start_time = time.monotonic()
                     result = workflow.run(destination, galaxy)
                     result["run_time"] = time.monotonic() - start_time
@@ -212,7 +265,7 @@ def configure_benchmark(bm_config: Dict, destinations: Dict, workflows: Dict, gl
     if bm_config["type"] == "Burst":
         benchmark = BurstBenchmark(bm_config["name"], get_needed_destinations(bm_config, destinations, BurstBenchmark),
                                    get_needed_workflows(bm_config, workflows, BurstBenchmark),
-                                   runs_per_workflow)
+                                   runs_per_workflow, bm_config["burst_rate"])
         benchmark.galaxy = glx
 
     return benchmark
