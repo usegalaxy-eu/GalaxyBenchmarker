@@ -45,6 +45,8 @@ class BaseBenchmark:
             for dest_name, workflows in per_dest_results.items():
                 for workflow_name, runs in workflows.items():
                     for run in runs:
+                        if run["jobs"] is None:
+                            continue
                         for job in run["jobs"].values():
                             tags = {
                                 "benchmark_name": self.name,
@@ -144,7 +146,6 @@ class BurstBenchmark(BaseBenchmark):
         total_runs = next_runs = 0
         while total_runs < self.runs_per_workflow:
             next_runs += self.burst_rate
-            print("Next runs: {0}".format(next_runs))
             # If burst_rate < 1, workflow should be run less than 1x per second. So just wait, until next_runs > 1
             if next_runs < 1:
                 time.sleep(1)
@@ -153,7 +154,7 @@ class BurstBenchmark(BaseBenchmark):
             # Make sure, runs_per_workflow won't be exceeded
             if total_runs + next_runs >= self.runs_per_workflow:
                 next_runs = self.runs_per_workflow - total_runs
-            print(next_runs)
+
             for _ in range(0, int(next_runs)):
                 process = self.BurstThread(self, total_runs, results)
                 process.start()
@@ -164,8 +165,12 @@ class BurstBenchmark(BaseBenchmark):
             time.sleep(1)
 
         # Wait for all Benchmarks being executed
+        finished_jobs = 0
         for process in threads:
             process.join()
+            finished_jobs += 1
+            log.info("{finished} out of {total} workflows are finished.".format(finished=finished_jobs,
+                                                                                total=total_runs))
 
         self.benchmark_results = {
             "warm": {
