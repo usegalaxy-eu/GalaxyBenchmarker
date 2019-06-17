@@ -5,6 +5,7 @@ import random
 import bioblend
 import time
 import logging
+import urllib3
 from galaxy_bridge import Galaxy
 from destination import PulsarMQDestination
 from planemo import options
@@ -49,7 +50,7 @@ def cli(ctx, paths, glx, user_key, **kwds):
             test_data = engine.test(runnables)
             exit_code = handle_reports_and_summary(ctx, test_data.structured_data, kwds=kwds)
             status = "success" if exit_code == 0 else "error"
-    except bioblend.ConnectionError:
+    except (bioblend.ConnectionError, urllib3.exceptions.NewConnectionError):
         log.error("There was an error with the connection.")
         status = "error"
 

@@ -36,13 +36,17 @@ class Galaxy:
         Creates a new user (if not already created) with username and a random password and returns
         its user_id and api_key
         """
+        new_user = False
         if len(self.instance.users.get_users(f_name=username)) == 0:
             password = ''.join([random.choice(string.ascii_letters + string.digits) for _ in range(32)])
             self.instance.users.create_local_user(username,
                                                   "{username}@galaxy.uni.andreas-sk.de".format(username=username),
                                                   password)
+            new_user = True
+
         user_id = self.instance.users.get_users(f_name=username)[0]["id"]
-        user_key = self.instance.users.create_user_apikey(user_id)
+        user_key = self.instance.users.create_user_apikey(user_id) if new_user \
+            else self.instance.users.get_user_apikey(user_id)
 
         return user_id, user_key
 
