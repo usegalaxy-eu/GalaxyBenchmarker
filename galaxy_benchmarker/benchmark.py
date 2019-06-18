@@ -45,7 +45,7 @@ class BaseBenchmark:
             for dest_name, workflows in per_dest_results.items():
                 for workflow_name, runs in workflows.items():
                     for run in runs:
-                        if run["jobs"] is None:
+                        if runs is None or run["jobs"] is None:
                             continue
                         for job in run["jobs"].values():
                             tags = {
