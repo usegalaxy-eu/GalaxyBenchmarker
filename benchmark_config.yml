@@ -1,6 +1,7 @@
 galaxy:
   url: "http://galaxy.uni.andreas-sk.de"
-  admin_key: "a4d46fe353a30230b9ade20417b08e54"
+  admin_key: "c67c46b28413ce46c6d5e0f547e2462b"
+  shed_install: false
   ssh_user: ubuntu
   ssh_key: /Users/askorczyk/Dropbox/Studium/5-WS18-19/Bachelorprojekt - Galaxy/bwcloud.cert
   galaxy_root_path: /srv/galaxy
@@ -8,10 +9,10 @@ galaxy:
   galaxy_user: galaxy
 
 influxdb:
-  host: localhost
+  host: influxdb.uni.andreas-sk.de
   port: 8086
-  username: root
-  password: root
+  username: glx_benchmarker_user
+  password: 8f9uas0923ria0fc0932rfau903f
   db_name: glx_benchmarker
 
 destinations:
@@ -53,21 +54,21 @@ workflows:
     path: workflow-testing/sklearn/adaboost/adaboost.ga
 
 benchmarks:
-  - name: ColdvsWarm
-    type: ColdvsWarm
-    destinations:
-      - LocalPulsar
-    runs_per_workflow: 3
-    workflows:
-      - adaboost
+#  - name: ColdvsWarm
+#    type: ColdvsWarm
+#    destinations:
+#      - LocalPulsar
+#    runs_per_workflow: 2
+#    workflows:
+#      - adaboost
 #      - gromacs
 #      - mapping_by_sequencing
-    cold_pre_task:
-      type: "ansible-playbook"
-      playbook: "coldwarm_pretask.yml"
-    post_task:
-      type: "ansible-playbook"
-      playbook: "cleanup_pulsar.yml"
+#    cold_pre_task:
+#      type: "ansible-playbook"
+#      playbook: "coldwarm_pretask.yml"
+#    post_task:
+#      type: "ansible-playbook"
+#      playbook: "cleanup_pulsar.yml"
 #    warm_pre_task:
 #      type: "ansible-playbook"
 #      playbook: "cleanup-pulsar.yml"
@@ -86,11 +87,13 @@ benchmarks:
 #    runs_per_workflow: 1
 #    workflows:
 #      - adaboost
-##      - gromacs
-##      - mapping_by_sequencing
-#  - name: Benchmark3
-#    type: Burst
-#    runs_per_workflow: 100000
-#    burst_rate: 100
-#    workflows:
-#      - condor_workflows/sleep.job
+#      - gromacs
+#      - mapping_by_sequencing
+  - name: BurstBenchmark
+    type: Burst
+    runs_per_workflow: 500
+    burst_rate: 100
+    destinations:
+      - LocalPulsar
+    workflows:
+      - adaboost
