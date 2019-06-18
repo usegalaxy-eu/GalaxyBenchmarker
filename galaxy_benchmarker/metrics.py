@@ -31,6 +31,21 @@ def parse_galaxy_job_metrics(job_metrics: List) -> Dict[str, Dict]:
             "type": "float",
             "value": float(0)
         },
+        "memory.usage_in_bytes": {
+            "name": "memory.usage_in_bytes",
+            "type": "float",
+            "value": float(0)
+        },
+        "memory.max_usage_in_bytes": {
+            "name": "memory.max_usage_in_bytes",
+            "type": "float",
+            "value": float(0)
+        },
+        "memory.memsw.max_usage_in_bytes": {
+            "name": "memory.memsw.max_usage_in_bytes",
+            "type": "float",
+            "value": float(0)
+        },
         "staging_time": {
             "name": "staging_time",
             "type": "float",
@@ -46,6 +61,12 @@ def parse_galaxy_job_metrics(job_metrics: List) -> Dict[str, Dict]:
     for metric in job_metrics:
         if metric["name"] == "cpuacct.usage":
             parsed_metrics["cpuacct.usage"]["value"] = float(metric["raw_value"]) / 1000000000  # Convert to seconds
+        if metric["name"] == "memory.usage_in_bytes":
+            parsed_metrics["memory.usage_in_bytes"]["value"] = float(metric["raw_value"])
+        if metric["name"] == "memory.max_usage_in_bytes":
+            parsed_metrics["memory.max_usage_in_bytes"]["value"] = float(metric["raw_value"])
+        if metric["name"] == "memory.memsw.max_usage_in_bytes":
+            parsed_metrics["memory.memsw.max_usage_in_bytes"]["value"] = float(metric["raw_value"])
         if metric["name"] == "runtime_seconds":
             parsed_metrics["runtime_seconds"]["value"] = float(metric["raw_value"])
         if metric["plugin"] == "jobstatus" and metric["name"] == "queued":
