@@ -1,5 +1,6 @@
 from influxdb import InfluxDBClient
 from typing import Dict
+from datetime import datetime
 
 
 class InfluxDB:
@@ -22,3 +23,13 @@ class InfluxDB:
             })
 
         self.client.write_points(json_points)
+
+    def save_workflow_status(self, tags: Dict, status: str):
+        self.client.write_points([{
+            "measurement": "workflow_status",
+            "tags": tags,
+            "time": str(datetime.now()),
+            "fields": {
+                "value": status
+            }
+        }])

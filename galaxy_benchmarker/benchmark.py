@@ -45,8 +45,21 @@ class BaseBenchmark:
             for dest_name, workflows in per_dest_results.items():
                 for workflow_name, runs in workflows.items():
                     for run in runs:
+                        # Save status per workflow-run
+                        tags = {
+                            "benchmark_name": self.name,
+                            "benchmark_uuid": self.uuid,
+                            "benchmark_type": type(self),
+                            "destination_name": dest_name,
+                            "workflow_name": workflow_name,
+                            "run_type": run_type,
+                        }
+                        inflxdb.save_workflow_status(tags, run["status"])
+
+                        # Save job-metrics if workflow succeeded
                         if runs is None or run["status"] == "error" or run["jobs"] is None:
                             continue
+
                         for job in run["jobs"].values():
                             tags = {
                                 "benchmark_name": self.name,
