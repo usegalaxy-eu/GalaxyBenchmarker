@@ -3,3 +3,4 @@ pyyaml
 bioblend
 Jinja2
 influxdb
+paramiko

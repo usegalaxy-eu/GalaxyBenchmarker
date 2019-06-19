@@ -33,10 +33,10 @@ destinations:
     amqp_url: "pyamqp://pulsar_test:password@rabbitmq.uni.andreas-sk.de:5672//"
   - name: CondorManager
     type: Condor
-    host: pulsar.uni.andreas-sk.de
+    host: condor-manager.uni.andreas-sk.de
     host_user: centos
     ssh_key: /Users/askorczyk/Dropbox/Studium/5-WS18-19/Bachelorprojekt - Galaxy/bwcloud.cert
-    jobs_directory_dir: /home/centos/jobs
+    jobs_directory_dir: /data/share/condor
 #  - name: CondorWithGalaxy
 #    type: GalaxyCondor
 
@@ -52,6 +52,10 @@ workflows:
   - name: adaboost
     type: Galaxy
     path: workflow-testing/sklearn/adaboost/adaboost.ga
+  - name: sleep
+    type: Condor
+    path: /Users/askorczyk/Dropbox/Studium/6-SS19/Bachelorarbeit/Galaxy-Benchmarker/condor-workflows/sleep
+    job_file: test.job
 
 benchmarks:
 #  - name: ColdvsWarm
@@ -89,11 +93,19 @@ benchmarks:
 #      - adaboost
 #      - gromacs
 #      - mapping_by_sequencing
-  - name: BurstBenchmark
+#  - name: PulsarBurstBenchmark
+#    type: Burst
+#    runs_per_workflow: 250
+#    burst_rate: 2
+#    destinations:
+#      - LocalPulsar
+#    workflows:
+#      - adaboost
+  - name: CondorBurstBenchmark
     type: Burst
-    runs_per_workflow: 500
-    burst_rate: 100
+    runs_per_workflow: 50
+    burst_rate: 5
     destinations:
-      - LocalPulsar
+      - CondorManager
     workflows:
-      - adaboost
+      - sleep

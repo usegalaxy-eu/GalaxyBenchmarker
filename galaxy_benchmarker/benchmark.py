@@ -4,12 +4,14 @@ Definition of different benchmark-types.
 import logging
 import time
 import threading
+import random
 from datetime import datetime
 from destination import BaseDestination, PulsarMQDestination, CondorDestination
 from workflow import BaseWorkflow, GalaxyWorkflow, CondorWorkflow
 from task import BaseTask, AnsiblePlaybookTask
 from typing import List, Dict
 from influxdb_bridge import InfluxDB
+from bioblend import ConnectionError
 
 
 log = logging.getLogger("GalaxyBenchmarker")
@@ -45,6 +47,8 @@ class BaseBenchmark:
             for dest_name, workflows in per_dest_results.items():
                 for workflow_name, runs in workflows.items():
                     for run in runs:
+                        if run is None:
+                            continue
                         # Save status per workflow-run
                         tags = {
                             "benchmark_name": self.name,
@@ -57,7 +61,7 @@ class BaseBenchmark:
                         inflxdb.save_workflow_status(tags, run["status"])
 
                         # Save job-metrics if workflow succeeded
-                        if runs is None or run["status"] == "error" or run["jobs"] is None:
+                        if runs is None or run["status"] == "error" or "jobs" not in run or run["jobs"] is None:
                             continue
 
                         for job in run["jobs"].values():
@@ -136,11 +140,20 @@ class BurstBenchmark(BaseBenchmark):
             pass
 
         def run(self):
+            log.info("Running with thread_id {thread_id}".format(thread_id=self.thread_id))
             if self.bm.destination_type is PulsarMQDestination:
-                log.info("Running with thread_id {thread_id}".format(thread_id=self.thread_id))
-                res = run_galaxy_benchmark(self, self.bm.galaxy, self.bm.destinations, self.bm.workflows,
-                                           1, "warm", False)
-                self.results[self.thread_id] = res[self.bm.destinations[0].name][self.bm.workflows[0].name][0]
+                try:
+                    res = run_galaxy_benchmark(self, self.bm.galaxy, self.bm.destinations, self.bm.workflows,
+                                               1, "warm", False)
+                    self.results[self.thread_id] = res[self.bm.destinations[0].name][self.bm.workflows[0].name][0]
+                except ConnectionError:
+                    log.error("ConnectionError!")
+                    self.results[self.thread_id] = {"status": "error"}
+
+            if self.bm.destination_type is CondorDestination:
+                result = self.bm.workflows[0].run(self.bm.destinations[0])
+                result["history_name"] = str(time.time_ns()) + str(random.randrange(0, 99999))
+                self.results[self.thread_id] = result
 
     def __init__(self, name, destinations: List[BaseDestination],
                  workflows: List[BaseWorkflow], runs_per_workflow=1, burst_rate=1):
@@ -152,6 +165,15 @@ class BurstBenchmark(BaseBenchmark):
         if len(self.workflows) != 1:
             raise ValueError("BurstBenchmark can only be used with exactly one Workflow.")
         self.destination_type = type(self.destinations[0])
+
+        if self.destination_type is CondorDestination:
+            self.workflows: List[CondorWorkflow]
+            self.destinations: List[CondorDestination]
+
+            if type(self.workflows[0]) is not CondorWorkflow:
+                raise ValueError("CondorDestination can only work with CondorWorkflow!")
+
+            self.workflows[0].deploy_to_condor_manager(self.destinations[0])
 
     def run(self, benchmarker):
         threads = []

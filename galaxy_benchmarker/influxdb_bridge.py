@@ -1,6 +1,6 @@
 from influxdb import InfluxDBClient
 from typing import Dict
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 class InfluxDB:
@@ -16,7 +16,6 @@ class InfluxDB:
             json_points.append({
                 "measurement": metric["name"],
                 "tags": metric_tags,
-                "time": job_results["update_time"],
                 "fields": {
                     "value": metric["value"]
                 }
@@ -28,7 +27,6 @@ class InfluxDB:
         self.client.write_points([{
             "measurement": "workflow_status",
             "tags": tags,
-            "time": str(datetime.now()),
             "fields": {
                 "value": status
             }

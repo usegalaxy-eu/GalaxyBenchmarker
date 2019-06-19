@@ -1,0 +1,11 @@
+- hosts: all
+  tasks:
+    - name: Create folder for workflow
+      file:
+        path: "{{ jobs_directory_dir }}/{{ workflow_name }}"
+        state: directory
+    - name: Upload workflow-files
+      copy:
+        src: "{{ workflow_directory_path }}/"
+        dest: "{{ jobs_directory_dir }}/{{ workflow_name }}"
+        mode: 0700

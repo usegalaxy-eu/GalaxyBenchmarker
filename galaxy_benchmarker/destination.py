@@ -1,6 +1,7 @@
 """
 Definition of different destination-types for workflows.
 """
+from __future__ import annotations
 import ansible_bridge
 import metrics
 from typing import Dict
@@ -84,6 +85,16 @@ class CondorDestination(BaseDestination):
         self.host_user = host_user
         self.ssh_key = ssh_key
         self.jobs_directory_dir = jobs_directory_dir
+
+    def deploy_workflow(self, workflow: CondorWorkflow):
+        # Use ansible-playbook to upload *.job-file to Condor-Manager
+        values = {
+            "jobs_directory_dir": self.jobs_directory_dir,
+            "workflow_name": workflow.name,
+            "workflow_directory_path": workflow.path,
+            "condor_user": self.condor_user
+        }
+        ansible_bridge.run_playbook("deploy_condor_workflow.yml", self.host, self.host_user, self.ssh_key, values)
 
 
 class GalaxyCondorDestination(BaseDestination):
