@@ -145,7 +145,7 @@ class BurstBenchmark(BaseBenchmark):
                 try:
                     res = run_galaxy_benchmark(self, self.bm.galaxy, self.bm.destinations, self.bm.workflows,
                                                1, "warm", False)
-                    self.results[self.thread_id] = res[self.bm.destinations[0].name][self.bm.workflows[0].name][0]
+                    self.results[self.thread_id] = res[self.bm.destinations[0].name][self.bm.workflows[0].name][0] # TODO: Handle error-responses
                 except ConnectionError:
                     log.error("ConnectionError!")
                     self.results[self.thread_id] = {"status": "error"}
@@ -249,12 +249,19 @@ def run_galaxy_benchmark(benchmark, galaxy, destinations: List[PulsarMQDestinati
                                                                                     workflow=workflow.name, i=i + 1))
                     start_time = time.monotonic()
                     result = workflow.run(destination, galaxy)
-                    result["run_time"] = time.monotonic() - start_time
+                    total_runtime = time.monotonic() - start_time
+
                     result["jobs"] = destination.get_jobs(result["history_name"])
                     result["metrics_summary"] = destination.get_job_metrics_summary(result["jobs"])
+                    result["metrics_summary"]["total_runtime"] = {
+                        "name": "total_runtime",
+                        "type": "float",
+                        "plugin": "benchmarker",
+                        "value": total_runtime
+                    }
 
                     log.info("Finished running '{workflow}' with status '{status}' in {time} seconds."
-                             .format(workflow=workflow.name, status=result["status"], time=result["run_time"]))
+                             .format(workflow=workflow.name, status=result["status"], time=total_runtime))
 
                     # Handle possible errors and maybe retry
                     if result["status"] == "error":
