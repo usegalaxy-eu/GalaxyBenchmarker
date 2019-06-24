@@ -13,6 +13,8 @@ class InfluxDB:
         for metric in job_results["parsed_job_metrics"].values():
             metric_tags = tags.copy()
             metric_tags["job_id"] = job_results["id"]
+            if "plugin" in metric:
+                metric_tags["plugin"] = metric["plugin"]
             json_points.append({
                 "measurement": metric["name"],
                 "tags": metric_tags,
