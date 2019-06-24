@@ -48,36 +48,11 @@ float_metrics = {"processor_count", "memtotal", "swaptotal", "runtime_seconds", 
 
 def parse_galaxy_job_metrics(job_metrics: List) -> Dict[str, Dict]:
     parsed_metrics = {
-        "cpuacct.usage": {
-            "name": "cpuacct.usage",
-            "type": "float",
-            "value": float(0)
-        },
-        "memory.usage_in_bytes": {
-            "name": "memory.usage_in_bytes",
-            "type": "float",
-            "value": float(0)
-        },
-        "memory.max_usage_in_bytes": {
-            "name": "memory.max_usage_in_bytes",
-            "type": "float",
-            "value": float(0)
-        },
-        "memory.memsw.max_usage_in_bytes": {
-            "name": "memory.memsw.max_usage_in_bytes",
-            "type": "float",
-            "value": float(0)
-        },
         "staging_time": {
             "name": "staging_time",
             "type": "float",
             "value": float(0)
         },
-        "runtime_seconds": {
-            "name": "runtime_seconds",
-            "type": "float",
-            "value": float(0)
-        }
     }
 
     for metric in job_metrics:
@@ -88,8 +63,6 @@ def parse_galaxy_job_metrics(job_metrics: List) -> Dict[str, Dict]:
                 "plugin": metric["plugin"],
                 "value": float(metric["raw_value"])
             }
-        if metric["name"] == "runtime_seconds":
-            parsed_metrics["runtime_seconds"]["value"] = float(metric["raw_value"])
         if metric["plugin"] == "jobstatus" and metric["name"] == "queued":
             jobstatus_queued = datetime.strptime(metric["value"], "%Y-%m-%d %H:%M:%S.%f")
         if metric["plugin"] == "jobstatus" and metric["name"] == "running":
