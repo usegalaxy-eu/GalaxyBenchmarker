@@ -1,13 +1,10 @@
 """
 Definition of different workflow-types.
 """
-import planemo_bridge
 import os
 import logging
 import time
-from galaxy_bridge import Galaxy
 import condor_bridge
-from destination import BaseDestination, PulsarMQDestination, CondorDestination
 
 log = logging.getLogger("GalaxyBenchmarker")
 
@@ -19,12 +16,6 @@ class BaseWorkflow:
         self.path = path
         self.name = name
 
-    def run(self, dest: BaseDestination):
-        """
-        Starts workflow
-        """
-        raise NotImplementedError
-
 
 class GalaxyWorkflow(BaseWorkflow):
     def __init__(self, name, path):
@@ -32,10 +23,6 @@ class GalaxyWorkflow(BaseWorkflow):
             raise IOError("Workflow-File at '{path}' in workflow '{wf_name}' could not be found".format(path=path,
                                                                                                         wf_name=name))
         super().__init__(name, path)
-
-    def run(self, dest: PulsarMQDestination, glx: Galaxy):
-        log.info("Running workflow '{wf_name}' using Planemo".format(wf_name=self.name))
-        return planemo_bridge.run_planemo(glx, dest, self.path)
 
 
 class CondorWorkflow(BaseWorkflow):
@@ -54,11 +41,11 @@ class CondorWorkflow(BaseWorkflow):
                                                                                                    wf_name=name))
         self.job_file = job_file
 
-    def deploy_to_condor_manager(self, destination: CondorDestination):
+    def deploy_to_condor_manager(self, destination):
         log.info("Deploying {workflow} to {destination}".format(workflow=self.name, destination=destination.name))
         destination.deploy_workflow(self)
 
-    def run(self, destination: CondorDestination):
+    def run(self, destination):
         client = condor_bridge.get_paramiko_client(destination.host, destination.host_user, destination.ssh_key)
 
         remote_workflow_dir = "{jobs_dir}/{wf_name}".format(jobs_dir=destination.jobs_directory_dir,

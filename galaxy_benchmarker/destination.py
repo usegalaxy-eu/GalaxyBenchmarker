@@ -3,12 +3,17 @@ Definition of different destination-types for workflows.
 """
 from __future__ import annotations
 import ansible_bridge
+import planemo_bridge
 import metrics
+import logging
 from typing import Dict
 from task import BaseTask, AnsiblePlaybookTask
 from galaxy_bridge import Galaxy
 from bioblend.galaxy import GalaxyInstance
 from jinja2 import Template
+from workflow import GalaxyWorkflow, CondorWorkflow
+
+log = logging.getLogger("GalaxyBenchmarker")
 
 
 class BaseDestination:
@@ -63,6 +68,10 @@ class PulsarMQDestination(BaseDestination):
             infos[job_id]["parsed_job_metrics"] = metrics.parse_galaxy_job_metrics(infos[job_id]["job_metrics"])
 
         return infos
+
+    def run_workflow(self, workflow: GalaxyWorkflow):
+        log.info("Running workflow '{wf_name}' using Planemo".format(wf_name=self.name))
+        return planemo_bridge.run_planemo(self.galaxy, self, workflow.path)
 
 
 class CondorDestination(BaseDestination):
