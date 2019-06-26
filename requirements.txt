@@ -1,6 +1,8 @@
+urllib3
 planemo
 pyyaml
 bioblend
 Jinja2
 influxdb
 paramiko
+ansible
