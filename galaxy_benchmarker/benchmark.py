@@ -18,6 +18,9 @@ log = logging.getLogger("GalaxyBenchmarker")
 
 
 class BaseBenchmark:
+    """
+    The Base-Class of Benchmark. All Benchmarks should inherit from it.
+    """
     allowed_dest_types = []
     allowed_workflow_types = []
     galaxy = None
@@ -43,6 +46,9 @@ class BaseBenchmark:
         raise NotImplementedError
 
     def save_results_to_influxdb(self, inflxdb: InfluxDB):
+        """
+        Sends all the metrics of the benchmark_results to influxDB.
+        """
         for run_type, per_dest_results in self.benchmark_results.items():
             for dest_name, workflows in per_dest_results.items():
                 for workflow_name, runs in workflows.items():
@@ -134,47 +140,6 @@ class BurstBenchmark(BaseBenchmark):
     allowed_dest_types = [PulsarMQDestination, CondorDestination]
     allowed_workflow_types = [GalaxyWorkflow, CondorWorkflow]
 
-    class BurstThread(threading.Thread):
-        def __init__(self, bm, thread_id, results: List):
-            threading.Thread.__init__(self)
-            self.bm = bm
-            self.thread_id = thread_id
-            self.results = results
-            pass
-
-        def run(self):
-            log.info("Running with thread_id {thread_id}".format(thread_id=self.thread_id))
-            if self.bm.destination_type is PulsarMQDestination:
-                try:
-                    res = run_galaxy_benchmark(self, self.bm.galaxy, self.bm.destinations, self.bm.workflows,
-                                               1, "warm", False)
-                    self.results[self.thread_id] = res[self.bm.destinations[0].name][self.bm.workflows[0].name][0] # TODO: Handle error-responses
-                except ConnectionError:
-                    log.error("ConnectionError!")
-                    self.results[self.thread_id] = {"status": "error"}
-
-            if self.bm.destination_type is CondorDestination:
-                for destination in self.bm.destinations:
-                    for workflow in self.bm.workflows:
-                        result = destination.run_workflow(workflow)
-                        result["history_name"] = str(time.time_ns()) + str(random.randrange(0, 99999))
-                        result["workflow_metrics"] = {
-                            "status": {
-                                "name": "workflow_status",
-                                "type": "string",
-                                "plugin": "benchmarker",
-                                "value": result["status"]
-                            },
-                            "total_runtime": {
-                                "name": "total_workflow_runtime",
-                                "type": "float",
-                                "plugin": "benchmarker",
-                                "value": result["total_workflow_runtime"]
-                            }
-                        }
-
-                self.results[self.thread_id] = result
-
     def __init__(self, name, destinations: List[BaseDestination],
                  workflows: List[BaseWorkflow], runs_per_workflow=1, burst_rate=1):
         super().__init__(name, destinations, workflows, runs_per_workflow)
@@ -239,6 +204,50 @@ class BurstBenchmark(BaseBenchmark):
                 }
             }
         }
+
+    class BurstThread(threading.Thread):
+        """
+        Class to run a Workflow within a thread to allow multiple runs a the same time.
+        """
+        def __init__(self, bm, thread_id, results: List):
+            threading.Thread.__init__(self)
+            self.bm = bm
+            self.thread_id = thread_id
+            self.results = results
+            pass
+
+        def run(self):
+            log.info("Running with thread_id {thread_id}".format(thread_id=self.thread_id))
+            if self.bm.destination_type is PulsarMQDestination:
+                try:
+                    res = run_galaxy_benchmark(self, self.bm.galaxy, self.bm.destinations, self.bm.workflows,
+                                               1, "warm", False)
+                    self.results[self.thread_id] = res[self.bm.destinations[0].name][self.bm.workflows[0].name][0] # TODO: Handle error-responses
+                except ConnectionError:
+                    log.error("ConnectionError!")
+                    self.results[self.thread_id] = {"status": "error"}
+
+            if self.bm.destination_type is CondorDestination:
+                for destination in self.bm.destinations:
+                    for workflow in self.bm.workflows:
+                        result = destination.run_workflow(workflow)
+                        result["history_name"] = str(time.time_ns()) + str(random.randrange(0, 99999))
+                        result["workflow_metrics"] = {
+                            "status": {
+                                "name": "workflow_status",
+                                "type": "string",
+                                "plugin": "benchmarker",
+                                "value": result["status"]
+                            },
+                            "total_runtime": {
+                                "name": "total_workflow_runtime",
+                                "type": "float",
+                                "plugin": "benchmarker",
+                                "value": result["total_workflow_runtime"]
+                            }
+                        }
+
+                self.results[self.thread_id] = result
 
 
 def run_galaxy_benchmark(benchmark, galaxy, destinations: List[PulsarMQDestination],
@@ -313,7 +322,11 @@ def run_galaxy_benchmark(benchmark, galaxy, destinations: List[PulsarMQDestinati
     return benchmark_results
 
 
-def configure_benchmark(bm_config: Dict, destinations: Dict, workflows: Dict, glx):
+def configure_benchmark(bm_config: Dict, destinations: Dict, workflows: Dict, glx) -> BaseBenchmark:
+    """
+    Initializes and configures a Benchmark according to the given configuration. Returns the configured Benchmark.
+    """
+    # Check, if all set properly
     if bm_config["type"] not in ["ColdvsWarm", "DestinationComparison", "Burst"]:
         raise ValueError("Benchmark-Type '{type}' not valid".format(type=bm_config["type"]))
 
