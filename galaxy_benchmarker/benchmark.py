@@ -49,7 +49,7 @@ class BaseBenchmark:
                     for run in runs:
                         if run is None:
                             continue
-                        # Save status per workflow-run
+                        # Save metrics per workflow-run
                         tags = {
                             "benchmark_name": self.name,
                             "benchmark_uuid": self.uuid,
@@ -58,7 +58,8 @@ class BaseBenchmark:
                             "workflow_name": workflow_name,
                             "run_type": run_type,
                         }
-                        inflxdb.save_workflow_status(tags, run["status"])
+
+                        inflxdb.save_workflow_metrics(tags, run["workflow_metrics"])
 
                         # Save job-metrics if workflow succeeded
                         if runs is None or run["status"] == "error" or "jobs" not in run or run["jobs"] is None:
@@ -249,19 +250,27 @@ def run_galaxy_benchmark(benchmark, galaxy, destinations: List[PulsarMQDestinati
                                                                                     workflow=workflow.name, i=i + 1))
                     start_time = time.monotonic()
                     result = workflow.run(destination, galaxy)
-                    result["total_runtime"] = time.monotonic() - start_time
+                    total_runtime = time.monotonic() - start_time
 
                     result["jobs"] = destination.get_jobs(result["history_name"])
-                    # result["metrics_summary"] = destination.get_job_metrics_summary(result["jobs"])
-                    # result["metrics_summary"]["total_runtime"] = {
-                    #     "name": "total_runtime",
-                    #     "type": "float",
-                    #     "plugin": "benchmarker",
-                    #     "value": total_runtime
-                    # }
+
+                    result["workflow_metrics"] = {
+                        "status": {
+                            "name": "status",
+                            "type": "string",
+                            "plugin": "benchmarker",
+                            "value": result["status"]
+                        },
+                        "total_runtime": {
+                            "name": "total_workflow_runtime",
+                            "type": "float",
+                            "plugin": "benchmarker",
+                            "value": total_runtime
+                        }
+                    }
 
                     log.info("Finished running '{workflow}' with status '{status}' in {time} seconds."
-                             .format(workflow=workflow.name, status=result["status"], time=result["total_runtime"]))
+                             .format(workflow=workflow.name, status=result["status"], time=total_runtime))
 
                     # Handle possible errors and maybe retry
                     if result["status"] == "error":
