@@ -249,19 +249,19 @@ def run_galaxy_benchmark(benchmark, galaxy, destinations: List[PulsarMQDestinati
                                                                                     workflow=workflow.name, i=i + 1))
                     start_time = time.monotonic()
                     result = workflow.run(destination, galaxy)
-                    total_runtime = time.monotonic() - start_time
+                    result["total_runtime"] = time.monotonic() - start_time
 
                     result["jobs"] = destination.get_jobs(result["history_name"])
-                    result["metrics_summary"] = destination.get_job_metrics_summary(result["jobs"])
-                    result["metrics_summary"]["total_runtime"] = {
-                        "name": "total_runtime",
-                        "type": "float",
-                        "plugin": "benchmarker",
-                        "value": total_runtime
-                    }
+                    # result["metrics_summary"] = destination.get_job_metrics_summary(result["jobs"])
+                    # result["metrics_summary"]["total_runtime"] = {
+                    #     "name": "total_runtime",
+                    #     "type": "float",
+                    #     "plugin": "benchmarker",
+                    #     "value": total_runtime
+                    # }
 
                     log.info("Finished running '{workflow}' with status '{status}' in {time} seconds."
-                             .format(workflow=workflow.name, status=result["status"], time=total_runtime))
+                             .format(workflow=workflow.name, status=result["status"], time=result["total_runtime"]))
 
                     # Handle possible errors and maybe retry
                     if result["status"] == "error":
