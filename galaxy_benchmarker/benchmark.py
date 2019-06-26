@@ -246,8 +246,10 @@ def run_galaxy_benchmark(benchmark, galaxy, destinations: List[PulsarMQDestinati
                         log.info("Running cold pre-task for Cleanup.")
                         destination.run_task(benchmark.cold_pre_task)
 
-                    log.info("Running {type} '{workflow}' for the {i} time.".format(type=run_type,
-                                                                                    workflow=workflow.name, i=i + 1))
+                    log.info("Running {type} '{workflow}' for the {i} time on {dest}.".format(type=run_type,
+                                                                                              workflow=workflow.name,
+                                                                                              i=i + 1,
+                                                                                              dest=destination.name))
                     start_time = time.monotonic()
                     result = workflow.run(destination, galaxy)
                     total_runtime = time.monotonic() - start_time
