@@ -49,17 +49,19 @@ class BaseBenchmark:
                     for run in runs:
                         if run is None:
                             continue
-                        # Save metrics per workflow-run
-                        tags = {
-                            "benchmark_name": self.name,
-                            "benchmark_uuid": self.uuid,
-                            "benchmark_type": type(self),
-                            "destination_name": dest_name,
-                            "workflow_name": workflow_name,
-                            "run_type": run_type,
-                        }
 
-                        inflxdb.save_workflow_metrics(tags, run["workflow_metrics"])
+                        if "workflow_metrics" in run:
+                            # Save metrics per workflow-run
+                            tags = {
+                                "benchmark_name": self.name,
+                                "benchmark_uuid": self.uuid,
+                                "benchmark_type": type(self),
+                                "destination_name": dest_name,
+                                "workflow_name": workflow_name,
+                                "run_type": run_type,
+                            }
+
+                            inflxdb.save_workflow_metrics(tags, run["workflow_metrics"])
 
                         # Save job-metrics if workflow succeeded
                         if runs is None or run["status"] == "error" or "jobs" not in run or run["jobs"] is None:
@@ -152,8 +154,25 @@ class BurstBenchmark(BaseBenchmark):
                     self.results[self.thread_id] = {"status": "error"}
 
             if self.bm.destination_type is CondorDestination:
-                result = self.bm.workflows[0].run(self.bm.destinations[0])
-                result["history_name"] = str(time.time_ns()) + str(random.randrange(0, 99999))
+                for destination in self.bm.destinations:
+                    for workflow in self.bm.workflows:
+                        result = destination.run_workflow(workflow)
+                        result["history_name"] = str(time.time_ns()) + str(random.randrange(0, 99999))
+                        result["workflow_metrics"] = {
+                            "status": {
+                                "name": "workflow_status",
+                                "type": "string",
+                                "plugin": "benchmarker",
+                                "value": result["status"]
+                            },
+                            "total_runtime": {
+                                "name": "total_workflow_runtime",
+                                "type": "float",
+                                "plugin": "benchmarker",
+                                "value": result["total_workflow_runtime"]
+                            }
+                        }
+
                 self.results[self.thread_id] = result
 
     def __init__(self, name, destinations: List[BaseDestination],
@@ -163,18 +182,23 @@ class BurstBenchmark(BaseBenchmark):
 
         if len(self.destinations) != 1:
             raise ValueError("BurstBenchmark can only be used with exactly one Destination.")
+
         if len(self.workflows) != 1:
             raise ValueError("BurstBenchmark can only be used with exactly one Workflow.")
+
         self.destination_type = type(self.destinations[0])
 
         if self.destination_type is CondorDestination:
             self.workflows: List[CondorWorkflow]
             self.destinations: List[CondorDestination]
 
-            if type(self.workflows[0]) is not CondorWorkflow:
-                raise ValueError("CondorDestination can only work with CondorWorkflow!")
+            # Deploy Workflow to Destination
+            for destination in self.destinations:
+                for workflow in self.workflows:
+                    if type(workflow) is not CondorWorkflow:
+                        raise ValueError("CondorDestination can only work with CondorWorkflow!")
 
-            self.workflows[0].deploy_to_condor_manager(self.destinations[0])
+                    destination.deploy_workflow(workflow)
 
     def run(self, benchmarker):
         threads = []
@@ -250,15 +274,13 @@ def run_galaxy_benchmark(benchmark, galaxy, destinations: List[PulsarMQDestinati
                                                                                               workflow=workflow.name,
                                                                                               i=i + 1,
                                                                                               dest=destination.name))
-                    start_time = time.monotonic()
                     result = destination.run_workflow(workflow)
-                    total_runtime = time.monotonic() - start_time
 
                     result["jobs"] = destination.get_jobs(result["history_name"])
 
                     result["workflow_metrics"] = {
                         "status": {
-                            "name": "status",
+                            "name": "workflow_status",
                             "type": "string",
                             "plugin": "benchmarker",
                             "value": result["status"]
@@ -267,12 +289,13 @@ def run_galaxy_benchmark(benchmark, galaxy, destinations: List[PulsarMQDestinati
                             "name": "total_workflow_runtime",
                             "type": "float",
                             "plugin": "benchmarker",
-                            "value": total_runtime
+                            "value": result["total_workflow_runtime"]
                         }
                     }
 
                     log.info("Finished running '{workflow}' with status '{status}' in {time} seconds."
-                             .format(workflow=workflow.name, status=result["status"], time=total_runtime))
+                             .format(workflow=workflow.name, status=result["status"],
+                                     time=result["total_workflow_runtime"]))
 
                     # Handle possible errors and maybe retry
                     if result["status"] == "error":
