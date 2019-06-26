@@ -4,6 +4,8 @@ import sys
 from benchmarker import Benchmarker
 import logging
 import time
+import requests
+from requests.adapters import HTTPAdapter
 
 logging.basicConfig()
 log = logging.getLogger("GalaxyBenchmarker")
@@ -12,6 +14,9 @@ log_handler = logging.StreamHandler(sys.stdout)
 log_handler.setLevel(logging.DEBUG)
 
 logging.getLogger("ephemeris").setLevel(logging.WARNING)
+
+s = requests.Session()
+s.mount('http://', HTTPAdapter(max_retries=20))
 
 
 def main():
