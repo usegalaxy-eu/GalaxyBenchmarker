@@ -45,12 +45,3 @@ class InfluxDB:
             })
 
         self.client.write_points(json_points)
-
-    def save_workflow_status(self, tags: Dict, status: str):
-        self.client.write_points([{
-            "measurement": "workflow_status",
-            "tags": tags,
-            "fields": {
-                "value": status
-            }
-        }])
