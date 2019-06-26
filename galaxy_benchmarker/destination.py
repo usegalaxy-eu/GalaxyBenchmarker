@@ -64,19 +64,6 @@ class PulsarMQDestination(BaseDestination):
 
         return infos
 
-    def get_job_metrics_summary(self, jobs: Dict) -> Dict:
-        summary = {
-            "cpuacct.usage": float(0),
-            "staging_time": float(0)
-        }
-
-        for job in jobs.values():
-            parsed_job_metrics = job["parsed_job_metrics"]
-            summary["cpuacct.usage"] += parsed_job_metrics["cpuacct.usage"]["value"]
-            summary["staging_time"] += parsed_job_metrics["staging_time"]["value"]
-
-        return summary
-
 
 class CondorDestination(BaseDestination):
     def __init__(self, name, host, host_user, ssh_key, jobs_directory_dir):
@@ -140,11 +127,15 @@ def create_galaxy_job_conf(glx: Galaxy, destinations: Dict[str, BaseDestination]
 
 
 def get_job_ids_from_history_name(history_name, impersonated_instance: GalaxyInstance):
-    history_id = impersonated_instance.histories.get_histories(name=history_name)[0]["id"]
-    dataset_ids = impersonated_instance.histories.show_history(history_id)["state_ids"]["ok"]
-    job_ids = list()
-    for dataset_id in dataset_ids:
-        job_ids.append(impersonated_instance.histories.show_dataset(history_id, dataset_id)["creating_job"])
+    histories = impersonated_instance.histories.get_histories(name=history_name)
+    if len(histories) >= 1:
+        history_id = histories[0]["id"]
+        dataset_ids = impersonated_instance.histories.show_history(history_id)["state_ids"]["ok"]
+        job_ids = list()
+        for dataset_id in dataset_ids:
+            job_ids.append(impersonated_instance.histories.show_dataset(history_id, dataset_id)["creating_job"])
 
-    return job_ids
+        return job_ids
+
+    return []
 
