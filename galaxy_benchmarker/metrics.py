@@ -34,6 +34,8 @@ def parse_galaxy_job_metrics(job_metrics: List) -> Dict[str, Dict]:
         },
     }
 
+    jobstatus_queued = jobstatus_running = None
+
     for metric in job_metrics:
         if metric["name"] in float_metrics:
             parsed_metrics[metric["name"]] = {
@@ -48,7 +50,8 @@ def parse_galaxy_job_metrics(job_metrics: List) -> Dict[str, Dict]:
             jobstatus_running = datetime.strptime(metric["value"], "%Y-%m-%d %H:%M:%S.%f")
 
     # Calculate staging time
-    parsed_metrics["staging_time"]["value"] = float((jobstatus_running - jobstatus_queued).seconds +
-                                                    (jobstatus_running - jobstatus_queued).microseconds * 0.000001)
+    if jobstatus_queued is not None and jobstatus_running is not None:
+        parsed_metrics["staging_time"]["value"] = float((jobstatus_running - jobstatus_queued).seconds +
+                                                        (jobstatus_running - jobstatus_queued).microseconds * 0.000001)
 
     return parsed_metrics
