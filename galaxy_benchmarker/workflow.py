@@ -5,8 +5,6 @@ import planemo_bridge
 import os
 import logging
 import time
-import paramiko
-from typing import List
 from galaxy_bridge import Galaxy
 import condor_bridge
 from destination import BaseDestination, PulsarMQDestination, CondorDestination

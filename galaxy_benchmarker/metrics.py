@@ -1,27 +1,6 @@
 from typing import List, Dict
 from datetime import datetime
 
-# class BaseMetric:
-#     value = ""
-#
-#     def __init__(self, name, regex):
-#         self.name = name
-#         self.regex = regex
-#
-#     def parse(self, raw_value):
-#         self.value = re.match(self.regex, raw_value)
-#
-#
-# class NumberMetric(BaseMetric):
-#     value: int
-#
-#     def __init__(self, name, regex):
-#         super().__init__(name, regex)
-#
-#
-# metrics = {
-#     "memory.numa_stat.total"
-# }
 
 float_metrics = {"processor_count", "memtotal", "swaptotal", "runtime_seconds", "memory.stat.pgmajfault",
                  "cpu.stat.nr_throttled", "memory.stat.total_rss_huge", "memory.memsw.failcnt",
