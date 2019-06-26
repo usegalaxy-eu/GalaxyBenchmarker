@@ -55,4 +55,3 @@ def cli(ctx, paths, glx, user_key, **kwds):
         status = "error"
 
     return {"status": status, "history_name": kwds["history_name"]}
-

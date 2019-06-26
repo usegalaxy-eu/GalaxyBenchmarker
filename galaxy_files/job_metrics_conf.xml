@@ -52,7 +52,7 @@
   <!-- Uncomment to record hostname - *nix only -->
   <!-- <hostname /> -->
 
-  <collectl subsystems="process,network" summarize_process_data="false" />
+  <!--<collectl subsystems="process,network" summarize_process_data="false" />-->
   <!-- Collectl (http://collectl.sourceforge.net/) is a powerful monitoring
        utility capable of gathering numerous system and process level
        statistics of running applications. The Galaxy collectl job metrics
