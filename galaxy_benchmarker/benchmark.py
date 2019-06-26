@@ -296,8 +296,8 @@ def configure_benchmark(bm_config: Dict, destinations: Dict, workflows: Dict, gl
 
     if bm_config["type"] == "ColdvsWarm":
         benchmark = ColdWarmBenchmark(bm_config["name"],
-                                      get_needed_destinations(bm_config, destinations, ColdWarmBenchmark),
-                                      get_needed_workflows(bm_config, workflows, ColdWarmBenchmark), runs_per_workflow)
+                                      _get_needed_destinations(bm_config, destinations, ColdWarmBenchmark),
+                                      _get_needed_workflows(bm_config, workflows, ColdWarmBenchmark), runs_per_workflow)
         benchmark.galaxy = glx
         if "cold_pre_task" in bm_config:
             benchmark.cold_pre_task = AnsiblePlaybookTask(bm_config["cold_pre_task"]["playbook"])
@@ -311,23 +311,26 @@ def configure_benchmark(bm_config: Dict, destinations: Dict, workflows: Dict, gl
 
     if bm_config["type"] == "DestinationComparison":
         benchmark = DestinationComparisonBenchmark(bm_config["name"],
-                                                   get_needed_destinations(bm_config, destinations,
-                                                                           DestinationComparisonBenchmark),
-                                                   get_needed_workflows(bm_config, workflows,
-                                                                        DestinationComparisonBenchmark),
+                                                   _get_needed_destinations(bm_config, destinations,
+                                                                            DestinationComparisonBenchmark),
+                                                   _get_needed_workflows(bm_config, workflows,
+                                                                         DestinationComparisonBenchmark),
                                                    runs_per_workflow)
         benchmark.galaxy = glx
 
     if bm_config["type"] == "Burst":
-        benchmark = BurstBenchmark(bm_config["name"], get_needed_destinations(bm_config, destinations, BurstBenchmark),
-                                   get_needed_workflows(bm_config, workflows, BurstBenchmark),
+        benchmark = BurstBenchmark(bm_config["name"], _get_needed_destinations(bm_config, destinations, BurstBenchmark),
+                                   _get_needed_workflows(bm_config, workflows, BurstBenchmark),
                                    runs_per_workflow, bm_config["burst_rate"])
         benchmark.galaxy = glx
 
     return benchmark
 
 
-def get_needed_destinations(bm_config: Dict, destinations: Dict, bm_type):
+def _get_needed_destinations(bm_config: Dict, destinations: Dict, bm_type) -> List:
+    """
+    Returns a list of the destinations that were set in the configuration of the benchmark.
+    """
     if "destinations" not in bm_config or len(bm_config["destinations"]) == 0:
         return list()
 
@@ -343,7 +346,10 @@ def get_needed_destinations(bm_config: Dict, destinations: Dict, bm_type):
     return needed_destinations
 
 
-def get_needed_workflows(bm_config: Dict, workflows: Dict, bm_type):
+def _get_needed_workflows(bm_config: Dict, workflows: Dict, bm_type) -> List:
+    """
+    Returns a list of the workflows that were set in the configuration of the benchmark.
+    """
     if "workflows" not in bm_config or len(bm_config["workflows"]) == 0:
         return list()
 
