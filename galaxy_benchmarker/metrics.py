@@ -1,7 +1,7 @@
 from typing import List, Dict
 from datetime import datetime
 
-
+# All the metrics that can safely be parsed as a float_metric (see parse_galaxy_job_metrics)
 float_metrics = {"processor_count", "memtotal", "swaptotal", "runtime_seconds", "memory.stat.pgmajfault",
                  "cpu.stat.nr_throttled", "memory.stat.total_rss_huge", "memory.memsw.failcnt",
                  "memory.oom_control.under_oom", "memory.kmem.failcnt", "memory.stat.total_pgfault",
@@ -26,6 +26,9 @@ float_metrics = {"processor_count", "memtotal", "swaptotal", "runtime_seconds", 
 
 
 def parse_galaxy_job_metrics(job_metrics: List) -> Dict[str, Dict]:
+    """
+    Parses the more or less "raw" metrics from Galaxy, so they can later be ingested by InfluxDB.
+    """
     parsed_metrics = {
         "staging_time": {
             "name": "staging_time",
@@ -44,6 +47,8 @@ def parse_galaxy_job_metrics(job_metrics: List) -> Dict[str, Dict]:
                 "plugin": metric["plugin"],
                 "value": float(metric["raw_value"])
             }
+
+        # For calculating the staging time (if the metrics exist)
         if metric["plugin"] == "jobstatus" and metric["name"] == "queued":
             jobstatus_queued = datetime.strptime(metric["value"], "%Y-%m-%d %H:%M:%S.%f")
         if metric["plugin"] == "jobstatus" and metric["name"] == "running":
