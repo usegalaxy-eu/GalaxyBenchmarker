@@ -60,6 +60,10 @@ class PulsarMQDestination(BaseDestination):
         self._create_galaxy_destination_user(glx)
 
     def _create_galaxy_destination_user(self, glx):
+        """
+        Creates a user specifically for this Destination-Instance. This one is later used for routing the jobs
+        to the right Pulsar-Server.
+        """
         self.galaxy_user_name = str.lower("dest_user_" + self.name)
         self.galaxy_user_id, self.galaxy_user_key = glx.create_user(self.galaxy_user_name)
 
