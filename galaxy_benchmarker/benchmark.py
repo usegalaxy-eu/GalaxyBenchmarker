@@ -37,9 +37,15 @@ class BaseBenchmark:
         self.runs_per_workflow = runs_per_workflow
 
     def run_pre_task(self):
+        """
+        Runs a Task before starting the actual Benchmark.
+        """
         pass
 
     def run_post_task(self):
+        """
+        Runs a Task after Benchmark finished (useful for cleaning up etc.).
+        """
         pass
 
     def run(self, benchmarker):
@@ -99,16 +105,26 @@ class ColdWarmBenchmark(BaseBenchmark):
         self.workflows = workflows
 
     def run_pre_task(self):
+        """
+        Runs a Task before starting the actual Benchmark.
+        """
         if self.pre_task is not None:
             log.info("Running pre-task '{task}'.".format(task=self.pre_task))
             self.destinations[0].run_task(self.pre_task)
 
     def run_post_task(self):
+        """
+        Runs a Task after Benchmark finished (useful for cleaning up etc.).
+        """
         if self.post_task is not None:
             log.info("Running post-task '{task}'.".format(task=self.post_task))
             self.destinations[0].run_task(self.post_task)
 
     def run(self, benchmarker):
+        """
+        Runs the Workflow on each Destinations. First runs all Workflows "cold" (cleaning Pulsar up before each run),
+        after that the "warm"-runs begin.
+        """
         for run_type in ["cold", "warm"]:
             self.benchmark_results[run_type] = run_galaxy_benchmark(self, benchmarker.glx, self.destinations,
                                                                     self.workflows,
@@ -126,12 +142,23 @@ class DestinationComparisonBenchmark(BaseBenchmark):
         self.workflows = workflows
 
     def run_pre_task(self):
+        """
+        Runs a Task before starting the actual Benchmark.
+        """
         pass  # TODO
 
     def run_post_task(self):
+        """
+        Runs a Task after Benchmark finished (useful for cleaning up etc.).
+        """
         pass  # TODO
 
     def run(self, benchmarker):
+        """
+        Runs the Workflows on each Destination. Uses "warm"-run, so for each Destination and Workflow, each Workflow
+        runs for the first time without consideration (so Pulsar has opportunity to install all tools) to not spoil
+        any metrics.
+        """
         self.benchmark_results["warm"] = run_galaxy_benchmark(self, benchmarker.glx, self.destinations, self.workflows,
                                                               self.runs_per_workflow, "warm")
 
@@ -217,6 +244,9 @@ class BurstBenchmark(BaseBenchmark):
             pass
 
         def run(self):
+            """
+            Runs a GalaxyWorkflow or a CondorWorkflow.
+            """
             log.info("Running with thread_id {thread_id}".format(thread_id=self.thread_id))
             if self.bm.destination_type is PulsarMQDestination:
                 try:
@@ -252,8 +282,12 @@ class BurstBenchmark(BaseBenchmark):
 
 def run_galaxy_benchmark(benchmark, galaxy, destinations: List[PulsarMQDestination],
                          workflows: List[GalaxyWorkflow], runs_per_workflow=1, run_type="warm", warmup=True):
+    """
+    Runs the given list of Workflows on the given list of Destinations as a cold or warm benchmark on a
+    PulsarMQDestination for runs_per_workflow times. Handles failures too and retries up to one time.
+    """
     if run_type not in ["cold", "warm"]:
-        raise ValueError("'run_type' must be either 'cold' or 'warm'.")
+        raise ValueError("'run_type' must be of type 'cold' or 'warm'.")
 
     benchmark_results = dict()
 
