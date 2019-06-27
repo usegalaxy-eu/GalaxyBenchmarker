@@ -8,6 +8,9 @@ class InfluxDB:
                                      ssl=False, database=db_name)
 
     def save_job_metrics(self, tags: Dict, job_results: Dict):
+        """
+        Saves the parsed job-specific metrics (see metrics.py) to InfluxDB.
+        """
         json_points = []
 
         for metric in job_results["parsed_job_metrics"].values():
@@ -28,6 +31,9 @@ class InfluxDB:
         self.client.write_points(json_points)
 
     def save_workflow_metrics(self, tags: Dict, metrics: Dict):
+        """
+        Saves the workflow-specific metrics to InfluxDB.
+        """
         json_points = []
 
         for metric in metrics.values():

@@ -18,6 +18,9 @@ log = logging.getLogger("GalaxyBenchmarker")
 
 
 class BaseBenchmark:
+    """
+    The Base-Class of Benchmark. All Benchmarks should inherit from it.
+    """
     allowed_dest_types = []
     allowed_workflow_types = []
     galaxy = None
@@ -34,32 +37,43 @@ class BaseBenchmark:
         self.runs_per_workflow = runs_per_workflow
 
     def run_pre_task(self):
+        """
+        Runs a Task before starting the actual Benchmark.
+        """
         pass
 
     def run_post_task(self):
+        """
+        Runs a Task after Benchmark finished (useful for cleaning up etc.).
+        """
         pass
 
     def run(self, benchmarker):
         raise NotImplementedError
 
     def save_results_to_influxdb(self, inflxdb: InfluxDB):
+        """
+        Sends all the metrics of the benchmark_results to influxDB.
+        """
         for run_type, per_dest_results in self.benchmark_results.items():
             for dest_name, workflows in per_dest_results.items():
                 for workflow_name, runs in workflows.items():
                     for run in runs:
                         if run is None:
                             continue
-                        # Save metrics per workflow-run
-                        tags = {
-                            "benchmark_name": self.name,
-                            "benchmark_uuid": self.uuid,
-                            "benchmark_type": type(self),
-                            "destination_name": dest_name,
-                            "workflow_name": workflow_name,
-                            "run_type": run_type,
-                        }
 
-                        inflxdb.save_workflow_metrics(tags, run["workflow_metrics"])
+                        if "workflow_metrics" in run:
+                            # Save metrics per workflow-run
+                            tags = {
+                                "benchmark_name": self.name,
+                                "benchmark_uuid": self.uuid,
+                                "benchmark_type": type(self),
+                                "destination_name": dest_name,
+                                "workflow_name": workflow_name,
+                                "run_type": run_type,
+                            }
+
+                            inflxdb.save_workflow_metrics(tags, run["workflow_metrics"])
 
                         # Save job-metrics if workflow succeeded
                         if runs is None or run["status"] == "error" or "jobs" not in run or run["jobs"] is None:
@@ -91,16 +105,26 @@ class ColdWarmBenchmark(BaseBenchmark):
         self.workflows = workflows
 
     def run_pre_task(self):
+        """
+        Runs a Task before starting the actual Benchmark.
+        """
         if self.pre_task is not None:
             log.info("Running pre-task '{task}'.".format(task=self.pre_task))
             self.destinations[0].run_task(self.pre_task)
 
     def run_post_task(self):
+        """
+        Runs a Task after Benchmark finished (useful for cleaning up etc.).
+        """
         if self.post_task is not None:
             log.info("Running post-task '{task}'.".format(task=self.post_task))
             self.destinations[0].run_task(self.post_task)
 
     def run(self, benchmarker):
+        """
+        Runs the Workflow on each Destinations. First runs all Workflows "cold" (cleaning Pulsar up before each run),
+        after that the "warm"-runs begin.
+        """
         for run_type in ["cold", "warm"]:
             self.benchmark_results[run_type] = run_galaxy_benchmark(self, benchmarker.glx, self.destinations,
                                                                     self.workflows,
@@ -118,12 +142,23 @@ class DestinationComparisonBenchmark(BaseBenchmark):
         self.workflows = workflows
 
     def run_pre_task(self):
+        """
+        Runs a Task before starting the actual Benchmark.
+        """
         pass  # TODO
 
     def run_post_task(self):
+        """
+        Runs a Task after Benchmark finished (useful for cleaning up etc.).
+        """
         pass  # TODO
 
     def run(self, benchmarker):
+        """
+        Runs the Workflows on each Destination. Uses "warm"-run, so for each Destination and Workflow, each Workflow
+        runs for the first time without consideration (so Pulsar has opportunity to install all tools) to not spoil
+        any metrics.
+        """
         self.benchmark_results["warm"] = run_galaxy_benchmark(self, benchmarker.glx, self.destinations, self.workflows,
                                                               self.runs_per_workflow, "warm")
 
@@ -132,30 +167,6 @@ class BurstBenchmark(BaseBenchmark):
     allowed_dest_types = [PulsarMQDestination, CondorDestination]
     allowed_workflow_types = [GalaxyWorkflow, CondorWorkflow]
 
-    class BurstThread(threading.Thread):
-        def __init__(self, bm, thread_id, results: List):
-            threading.Thread.__init__(self)
-            self.bm = bm
-            self.thread_id = thread_id
-            self.results = results
-            pass
-
-        def run(self):
-            log.info("Running with thread_id {thread_id}".format(thread_id=self.thread_id))
-            if self.bm.destination_type is PulsarMQDestination:
-                try:
-                    res = run_galaxy_benchmark(self, self.bm.galaxy, self.bm.destinations, self.bm.workflows,
-                                               1, "warm", False)
-                    self.results[self.thread_id] = res[self.bm.destinations[0].name][self.bm.workflows[0].name][0] # TODO: Handle error-responses
-                except ConnectionError:
-                    log.error("ConnectionError!")
-                    self.results[self.thread_id] = {"status": "error"}
-
-            if self.bm.destination_type is CondorDestination:
-                result = self.bm.workflows[0].run(self.bm.destinations[0])
-                result["history_name"] = str(time.time_ns()) + str(random.randrange(0, 99999))
-                self.results[self.thread_id] = result
-
     def __init__(self, name, destinations: List[BaseDestination],
                  workflows: List[BaseWorkflow], runs_per_workflow=1, burst_rate=1):
         super().__init__(name, destinations, workflows, runs_per_workflow)
@@ -163,18 +174,23 @@ class BurstBenchmark(BaseBenchmark):
 
         if len(self.destinations) != 1:
             raise ValueError("BurstBenchmark can only be used with exactly one Destination.")
+
         if len(self.workflows) != 1:
             raise ValueError("BurstBenchmark can only be used with exactly one Workflow.")
+
         self.destination_type = type(self.destinations[0])
 
         if self.destination_type is CondorDestination:
             self.workflows: List[CondorWorkflow]
             self.destinations: List[CondorDestination]
 
-            if type(self.workflows[0]) is not CondorWorkflow:
-                raise ValueError("CondorDestination can only work with CondorWorkflow!")
+            # Deploy Workflow to Destination
+            for destination in self.destinations:
+                for workflow in self.workflows:
+                    if type(workflow) is not CondorWorkflow:
+                        raise ValueError("CondorDestination can only work with CondorWorkflow!")
 
-            self.workflows[0].deploy_to_condor_manager(self.destinations[0])
+                    destination.deploy_workflow(workflow)
 
     def run(self, benchmarker):
         threads = []
@@ -216,11 +232,62 @@ class BurstBenchmark(BaseBenchmark):
             }
         }
 
+    class BurstThread(threading.Thread):
+        """
+        Class to run a Workflow within a thread to allow multiple runs a the same time.
+        """
+        def __init__(self, bm, thread_id, results: List):
+            threading.Thread.__init__(self)
+            self.bm = bm
+            self.thread_id = thread_id
+            self.results = results
+            pass
+
+        def run(self):
+            """
+            Runs a GalaxyWorkflow or a CondorWorkflow.
+            """
+            log.info("Running with thread_id {thread_id}".format(thread_id=self.thread_id))
+            if self.bm.destination_type is PulsarMQDestination:
+                try:
+                    res = run_galaxy_benchmark(self, self.bm.galaxy, self.bm.destinations, self.bm.workflows,
+                                               1, "warm", False)
+                    self.results[self.thread_id] = res[self.bm.destinations[0].name][self.bm.workflows[0].name][0] # TODO: Handle error-responses
+                except ConnectionError:
+                    log.error("ConnectionError!")
+                    self.results[self.thread_id] = {"status": "error"}
+
+            if self.bm.destination_type is CondorDestination:
+                for destination in self.bm.destinations:
+                    for workflow in self.bm.workflows:
+                        result = destination.run_workflow(workflow)
+                        result["history_name"] = str(time.time_ns()) + str(random.randrange(0, 99999))
+                        result["workflow_metrics"] = {
+                            "status": {
+                                "name": "workflow_status",
+                                "type": "string",
+                                "plugin": "benchmarker",
+                                "value": result["status"]
+                            },
+                            "total_runtime": {
+                                "name": "total_workflow_runtime",
+                                "type": "float",
+                                "plugin": "benchmarker",
+                                "value": result["total_workflow_runtime"]
+                            }
+                        }
+
+                self.results[self.thread_id] = result
+
 
 def run_galaxy_benchmark(benchmark, galaxy, destinations: List[PulsarMQDestination],
                          workflows: List[GalaxyWorkflow], runs_per_workflow=1, run_type="warm", warmup=True):
+    """
+    Runs the given list of Workflows on the given list of Destinations as a cold or warm benchmark on a
+    PulsarMQDestination for runs_per_workflow times. Handles failures too and retries up to one time.
+    """
     if run_type not in ["cold", "warm"]:
-        raise ValueError("'run_type' must be either 'cold' or 'warm'.")
+        raise ValueError("'run_type' must be of type 'cold' or 'warm'.")
 
     benchmark_results = dict()
 
@@ -240,7 +307,7 @@ def run_galaxy_benchmark(benchmark, galaxy, destinations: List[PulsarMQDestinati
             while i < runs_per_workflow:
                 if warmup and run_type == "warm" and i == 0:
                     log.info("First run! Warming up. Results won't be considered for the first time.")
-                    workflow.run(destination, galaxy)
+                    destination.run_workflow(workflow)
                 else:
                     if run_type == "cold" and benchmark.cold_pre_task is not None:
                         log.info("Running cold pre-task for Cleanup.")
@@ -250,15 +317,13 @@ def run_galaxy_benchmark(benchmark, galaxy, destinations: List[PulsarMQDestinati
                                                                                               workflow=workflow.name,
                                                                                               i=i + 1,
                                                                                               dest=destination.name))
-                    start_time = time.monotonic()
-                    result = workflow.run(destination, galaxy)
-                    total_runtime = time.monotonic() - start_time
+                    result = destination.run_workflow(workflow)
 
                     result["jobs"] = destination.get_jobs(result["history_name"])
 
                     result["workflow_metrics"] = {
                         "status": {
-                            "name": "status",
+                            "name": "workflow_status",
                             "type": "string",
                             "plugin": "benchmarker",
                             "value": result["status"]
@@ -267,12 +332,13 @@ def run_galaxy_benchmark(benchmark, galaxy, destinations: List[PulsarMQDestinati
                             "name": "total_workflow_runtime",
                             "type": "float",
                             "plugin": "benchmarker",
-                            "value": total_runtime
+                            "value": result["total_workflow_runtime"]
                         }
                     }
 
                     log.info("Finished running '{workflow}' with status '{status}' in {time} seconds."
-                             .format(workflow=workflow.name, status=result["status"], time=total_runtime))
+                             .format(workflow=workflow.name, status=result["status"],
+                                     time=result["total_workflow_runtime"]))
 
                     # Handle possible errors and maybe retry
                     if result["status"] == "error":
@@ -290,7 +356,11 @@ def run_galaxy_benchmark(benchmark, galaxy, destinations: List[PulsarMQDestinati
     return benchmark_results
 
 
-def configure_benchmark(bm_config: Dict, destinations: Dict, workflows: Dict, glx):
+def configure_benchmark(bm_config: Dict, destinations: Dict, workflows: Dict, glx) -> BaseBenchmark:
+    """
+    Initializes and configures a Benchmark according to the given configuration. Returns the configured Benchmark.
+    """
+    # Check, if all set properly
     if bm_config["type"] not in ["ColdvsWarm", "DestinationComparison", "Burst"]:
         raise ValueError("Benchmark-Type '{type}' not valid".format(type=bm_config["type"]))
 

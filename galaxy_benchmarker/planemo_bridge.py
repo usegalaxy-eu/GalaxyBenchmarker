@@ -1,23 +1,25 @@
 """
 Bridge between Planemo and GalaxyBenchmarker
 """
+from __future__ import annotations
 import random
 import bioblend
 import time
 import logging
 import urllib3
 from galaxy_bridge import Galaxy
-from destination import PulsarMQDestination
+# from destination import PulsarMQDestination
 from planemo import options
 from planemo.cli import Context
 from planemo.engine import engine_context
 from planemo.galaxy.test import handle_reports_and_summary
 from planemo.runnable import for_paths
+from typing import Dict
 
 log = logging.getLogger("GalaxyBenchmarker")
 
 
-def run_planemo(glx: Galaxy, dest: PulsarMQDestination, workflow_path):
+def run_planemo(glx: Galaxy, dest: PulsarMQDestination, workflow_path) -> Dict:
     """
     Runs workflow with Planemo and returns a dict of the status and history_name of the finished workflow.
     """
@@ -28,7 +30,7 @@ def run_planemo(glx: Galaxy, dest: PulsarMQDestination, workflow_path):
 @options.galaxy_config_options()
 @options.test_options()
 @options.engine_options()
-def cli(ctx, paths, glx, user_key, **kwds):
+def cli(ctx, paths, glx, user_key, **kwds) -> Dict:
     """
     Run specified tool's tests within Galaxy.
     Returns a dict of the status and history_name of the finished workflow.
