@@ -27,6 +27,14 @@
     - name: Copy _conda-base to _conda (to speed up Pulsar-Startup)
       command: "cp {{tool_dependency_dir}}/_conda-base/ {{tool_dependency_dir}}/_conda/ -R"
       when: conda_base_directory.stat.exists and conda_base_directory.stat.isdir
+    - name: Delete persisted_data-folder
+      file:
+        path: "{{tool_dependency_dir}}/persisted_data"
+        state: absent
+    - name: Delete staging-folder
+      file:
+        path: "{{tool_dependency_dir}}/staging"
+        state: absent
     - name: Start Pulsar
       service:
         name: pulsar
