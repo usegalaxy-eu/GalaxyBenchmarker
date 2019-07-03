@@ -343,10 +343,14 @@ def run_galaxy_benchmark(benchmark, galaxy, destinations: List[PulsarMQDestinati
                     # Handle possible errors and maybe retry
                     if result["status"] == "error":
                         log.info("Result won't be considered.")
+
                         if retries < 2:
                             log.info("Retrying..")
                             retries += 1
                             i -= 1
+                        # If too many retries, continue with next workflow
+                        else:
+                            break
                     else:
                         benchmark_results[destination.name][workflow.name].append(result)
                         retries = 0
