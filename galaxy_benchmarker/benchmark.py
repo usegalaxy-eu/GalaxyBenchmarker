@@ -6,7 +6,7 @@ import time
 import threading
 import random
 from datetime import datetime
-from destination import BaseDestination, PulsarMQDestination, CondorDestination
+from destination import BaseDestination, PulsarMQDestination, GalaxyCondorDestination, CondorDestination
 from workflow import BaseWorkflow, GalaxyWorkflow, CondorWorkflow
 from task import BaseTask, AnsiblePlaybookTask
 from typing import List, Dict
@@ -136,7 +136,7 @@ class ColdWarmBenchmark(BaseBenchmark):
 
 
 class DestinationComparisonBenchmark(BaseBenchmark):
-    allowed_dest_types = [PulsarMQDestination]
+    allowed_dest_types = [PulsarMQDestination, GalaxyCondorDestination]
     allowed_workflow_types = [GalaxyWorkflow]
 
     def __init__(self, name, destinations: List[PulsarMQDestination],

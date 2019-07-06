@@ -42,7 +42,7 @@ class BaseDestination:
         raise NotImplementedError
 
 
-class PulsarMQDestination(BaseDestination):
+class GalaxyDestination(BaseDestination):
     host = ""
     host_user = ""
     ssh_key = ""
@@ -53,9 +53,8 @@ class PulsarMQDestination(BaseDestination):
     galaxy_user_id = ""
     galaxy_user_key = ""
 
-    def __init__(self, name, glx: Galaxy, amqp_url):
+    def __init__(self, name, glx: Galaxy):
         super().__init__(name)
-        self.amqp_url = amqp_url
         self.galaxy = glx
         self._create_galaxy_destination_user(glx)
 
@@ -102,6 +101,17 @@ class PulsarMQDestination(BaseDestination):
         result["total_workflow_runtime"] = time.monotonic() - start_time
 
         return result
+
+
+class PulsarMQDestination(GalaxyDestination):
+    def __init__(self, name, glx: Galaxy, amqp_url):
+        self.amqp_url = amqp_url
+        super().__init__(name, glx)
+
+
+class GalaxyCondorDestination(GalaxyDestination):
+    def __init__(self, name, glx: Galaxy):
+        super().__init__(name, glx)
 
 
 class CondorDestination(BaseDestination):
@@ -163,11 +173,6 @@ class CondorDestination(BaseDestination):
         return result
 
 
-class GalaxyCondorDestination(BaseDestination):
-    def __init__(self, name):
-        super().__init__(name)
-
-
 def configure_destination(dest_config, glx):
     """
     Initializes and configures a Destination according to the given configuration. Returns the configured Destination.
@@ -193,7 +198,7 @@ def configure_destination(dest_config, glx):
                                         dest_config["ssh_key"], dest_config["jobs_directory_dir"])
 
     if dest_config["type"] == "GalaxyCondor":
-        destination = GalaxyCondorDestination(dest_config["name"])
+        destination = GalaxyCondorDestination(dest_config["name"], glx)
 
     return destination
 
@@ -207,12 +212,18 @@ def create_galaxy_job_conf(glx: Galaxy, destinations: Dict[str, BaseDestination]
         template = Template(file_.read())
 
     pulsar_destinations = list()
+    galaxy_condor_destinations = list()
 
     for dest in destinations.values():
         if type(dest) is PulsarMQDestination:
             pulsar_destinations.append(dest)
+        if type(dest) is GalaxyCondorDestination:
+            galaxy_condor_destinations.append(dest)
 
-    job_conf = template.render(galaxy=glx, destinations=pulsar_destinations)
+    job_conf = template.render(galaxy=glx,
+                               pulsar_destinations=pulsar_destinations,
+                               galaxy_condor_destinations=galaxy_condor_destinations)
+
     with open("galaxy_files/job_conf.xml.tmp", "w") as fh:
         fh.write(job_conf)
 

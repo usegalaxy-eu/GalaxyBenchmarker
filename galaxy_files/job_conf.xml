@@ -2,11 +2,14 @@
 <job_conf>
     <plugins workers="2">
         <plugin id="local" type="runner" load="galaxy.jobs.runners.local:LocalJobRunner"/>
-        {% for destination in destinations %}
+        {% for destination in pulsar_destinations %}
             <plugin id="{{ destination.name|lower }}_runner" type="runner" load="galaxy.jobs.runners.pulsar:PulsarMQJobRunner">
                 <param id="galaxy_url">{{ galaxy.url }}</param>
                 <param id="amqp_url">{{ destination.amqp_url }}</param>
             </plugin>
+        {% endfor %}
+        {% for destination in galaxy_condor_destinations %}
+            <plugin id="{{ destination.name|lower }}_runner" type="runner" load="galaxy.jobs.runners.condor:CondorJobRunner" />
         {% endfor %}
     </plugins>
     <destinations default="dynamic_runner">
@@ -14,17 +17,22 @@
           <param id="type">python</param>
           <param id="function">dynamic_destination</param>
         </destination>
-        <destination id="local" runner="local"/>
-        {% for destination in destinations %}
+        <destination id="local" runner="local" />
+        {% for destination in pulsar_destinations %}
             <destination id="{{ destination.name|lower }}" runner="{{ destination.name|lower }}_runner">
                 <param id="jobs_directory">{{ destination.jobs_directory_dir }}</param>
                 <param id="dependency_resolution">remote</param>
                 <param id="default_file_action">remote_transfer</param>
-                <param id="amqp_acknowledge">True</param>
+                <param id="remote_metadata">false</param>
+                <param id="rewrite_parameters">true</param>
                 <param id="persistence_directory">{{ destination.persistence_dir }}</param>
+                <param id="amqp_acknowledge">True</param>
                 <param id="amqp_ack_republish_time">30</param>
                 <param id="manager">_default_</param>
             </destination>
+        {% endfor %}
+        {% for destination in galaxy_condor_destinations %}
+            <destination id="{{ destination.name|lower }}" runner="{{ destination.name|lower }}_runner" />
         {% endfor %}
     </destinations>
     <tools>
