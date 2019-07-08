@@ -53,10 +53,11 @@ class GalaxyDestination(BaseDestination):
     galaxy_user_id = ""
     galaxy_user_key = ""
 
-    def __init__(self, name, glx: Galaxy):
+    def __init__(self, name, glx: Galaxy, job_conf_params: Dict):
         super().__init__(name)
         self.galaxy = glx
         self._create_galaxy_destination_user(glx)
+        self.job_conf_params = job_conf_params
 
     def _create_galaxy_destination_user(self, glx):
         """
@@ -104,14 +105,14 @@ class GalaxyDestination(BaseDestination):
 
 
 class PulsarMQDestination(GalaxyDestination):
-    def __init__(self, name, glx: Galaxy, amqp_url):
+    def __init__(self, name, glx: Galaxy, job_conf_params: Dict, amqp_url):
         self.amqp_url = amqp_url
-        super().__init__(name, glx)
+        super().__init__(name, glx, job_conf_params)
 
 
 class GalaxyCondorDestination(GalaxyDestination):
-    def __init__(self, name, glx: Galaxy):
-        super().__init__(name, glx)
+    def __init__(self, name, glx: Galaxy, job_conf_params: Dict):
+        super().__init__(name, glx, job_conf_params)
 
 
 class CondorDestination(BaseDestination):
@@ -185,8 +186,10 @@ def configure_destination(dest_config, glx):
     if dest_config["type"] not in ["PulsarMQ", "Condor", "GalaxyCondor"]:
         raise ValueError("Destination-Type '{type}' not valid".format(type=dest_config["type"]))
 
+    job_conf_params = dict() if "job_conf_params" not in dest_config else dest_config["job_conf_params"]
+
     if dest_config["type"] == "PulsarMQ":
-        destination = PulsarMQDestination(dest_config["name"], glx, dest_config["amqp_url"])
+        destination = PulsarMQDestination(dest_config["name"], glx, job_conf_params, dest_config["amqp_url"])
         if "host" in dest_config:
             destination.host = dest_config["host"]
             destination.host_user = dest_config["host_user"]
@@ -198,7 +201,7 @@ def configure_destination(dest_config, glx):
                                         dest_config["ssh_key"], dest_config["jobs_directory_dir"])
 
     if dest_config["type"] == "GalaxyCondor":
-        destination = GalaxyCondorDestination(dest_config["name"], glx)
+        destination = GalaxyCondorDestination(dest_config["name"], glx, job_conf_params)
 
     return destination
 
@@ -213,16 +216,20 @@ def create_galaxy_job_conf(glx: Galaxy, destinations: Dict[str, BaseDestination]
 
     pulsar_destinations = list()
     galaxy_condor_destinations = list()
+    job_conf_params = dict()
 
     for dest in destinations.values():
         if type(dest) is PulsarMQDestination:
             pulsar_destinations.append(dest)
         if type(dest) is GalaxyCondorDestination:
             galaxy_condor_destinations.append(dest)
+        if issubclass(type(dest), GalaxyDestination):
+            job_conf_params[dest.name] = dest.job_conf_params
 
     job_conf = template.render(galaxy=glx,
                                pulsar_destinations=pulsar_destinations,
-                               galaxy_condor_destinations=galaxy_condor_destinations)
+                               galaxy_condor_destinations=galaxy_condor_destinations,
+                               job_conf_params=job_conf_params)
 
     with open("galaxy_files/job_conf.xml.tmp", "w") as fh:
         fh.write(job_conf)

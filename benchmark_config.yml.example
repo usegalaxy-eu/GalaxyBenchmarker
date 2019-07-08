@@ -31,12 +31,37 @@ destinations:
     tool_dependency_dir: /data/share/tools
     jobs_directory_dir: /data/share/staging
     persistence_dir: /data/share/persisted_data
+    # To configure additional params in job_conf.xml
+    job_conf_params:
+      dependency_resolution: remote
+      default_file_action: remote_transfer
+      remote_metadata: false
+      rewrite_parameters: true
+      amqp_acknowledge: true
+      amqp_ack_republish_time: 10
+      manager: _default_
   - name: RemotePulsar1
     type: PulsarMQ
     amqp_url: "pyamqp://username:password@rabbit.example2.com:5672//"
+    job_conf_params:
+      dependency_resolution: remote
+      default_file_action: remote_transfer
+      remote_metadata: false
+      rewrite_parameters: true
+      amqp_acknowledge: true
+      amqp_ack_republish_time: 10
+      manager: _default_
   - name: RemotePulsar1
     type: PulsarMQ
     amqp_url: "pyamqp://username:password@rabbit.example3.com:5672//"
+    job_conf_params:
+      dependency_resolution: remote
+      default_file_action: remote_transfer
+      remote_metadata: false
+      rewrite_parameters: true
+      amqp_acknowledge: true
+      amqp_ack_republish_time: 10
+      manager: _default_
   - name: CondorManager
     type: Condor
     host: condor-manager.uni.andreas-sk.de
