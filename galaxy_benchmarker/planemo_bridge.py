@@ -14,6 +14,7 @@ from planemo.cli import Context
 from planemo.engine import engine_context
 from planemo.galaxy.test import handle_reports_and_summary
 from planemo.runnable import for_paths
+from planemo.galaxy.workflows import install_shed_repos
 from typing import Dict
 
 log = logging.getLogger("GalaxyBenchmarker")
@@ -23,21 +24,29 @@ def run_planemo(glx: Galaxy, dest: PulsarMQDestination, workflow_path) -> Dict:
     """
     Runs workflow with Planemo and returns a dict of the status and history_name of the finished workflow.
     """
-    return cli(Context(), [workflow_path], glx, dest.galaxy_user_key)
+    return _cli(Context(), [workflow_path], glx, dest.galaxy_user_key)
+
+
+def install_workflow(workflow_path, glx_instance):
+    """
+    Installs the tools necessary to run a given workflow (given as a path to the workflow).
+    """
+    runnable = for_paths(workflow_path)[0]
+    install_shed_repos(runnable, glx_instance, False)
 
 
 @options.galaxy_target_options()
 @options.galaxy_config_options()
 @options.test_options()
 @options.engine_options()
-def cli(ctx, paths, glx, user_key, **kwds) -> Dict:
+def _cli(ctx, paths, glx, user_key, **kwds) -> Dict:
     """
     Run specified tool's tests within Galaxy.
     Returns a dict of the status and history_name of the finished workflow.
     See https://github.com/galaxyproject/planemo/blob/master/planemo/commands/cmd_test.py
     """
     kwds["engine"] = "external_galaxy"
-    kwds["shed_install"] = glx.shed_install
+    kwds["shed_install"] = False
     kwds["galaxy_url"] = glx.url
     kwds["galaxy_admin_key"] = glx.admin_key
     kwds["history_name"] = "galaxy_benchmarker-" + str(time.time_ns()) + str(random.randrange(0, 99999))

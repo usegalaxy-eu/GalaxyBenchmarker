@@ -11,6 +11,7 @@ from workflow import BaseWorkflow, GalaxyWorkflow, CondorWorkflow
 from task import BaseTask, AnsiblePlaybookTask
 from typing import List, Dict
 from influxdb_bridge import InfluxDB
+import planemo_bridge
 from bioblend import ConnectionError
 
 
@@ -99,10 +100,17 @@ class ColdWarmBenchmark(BaseBenchmark):
     warm_pre_task: AnsiblePlaybookTask = None
 
     def __init__(self, name, destinations: List[PulsarMQDestination],
-                 workflows: List[GalaxyWorkflow], runs_per_workflow=1):
+                 workflows: List[GalaxyWorkflow], galaxy, runs_per_workflow=1):
         super().__init__(name, destinations, workflows, runs_per_workflow)
         self.destinations = destinations
         self.workflows = workflows
+        self.galaxy = galaxy
+
+        # Install all necessary tools on Galaxy
+        if self.galaxy.shed_install:
+            log.info("Installing all necessary workflow-tools on Galaxy.")
+            for workflow in self.workflows:
+                planemo_bridge.install_workflow([workflow.path], self.galaxy.instance)
 
     def run_pre_task(self):
         """
@@ -125,6 +133,7 @@ class ColdWarmBenchmark(BaseBenchmark):
         Runs the Workflow on each Destinations. First runs all Workflows "cold" (cleaning Pulsar up before each run),
         after that the "warm"-runs begin.
         """
+
         for run_type in ["cold", "warm"]:
             try:
                 self.benchmark_results[run_type] = run_galaxy_benchmark(self, benchmarker.glx, self.destinations,
@@ -140,10 +149,17 @@ class DestinationComparisonBenchmark(BaseBenchmark):
     allowed_workflow_types = [GalaxyWorkflow]
 
     def __init__(self, name, destinations: List[PulsarMQDestination],
-                 workflows: List[GalaxyWorkflow], runs_per_workflow=1):
+                 workflows: List[GalaxyWorkflow], galaxy, runs_per_workflow=1):
         super().__init__(name, destinations, workflows, runs_per_workflow)
         self.destinations = destinations
         self.workflows = workflows
+        self.galaxy = galaxy
+
+        # Install all necessary tools on Galaxy
+        if self.galaxy.shed_install:
+            log.info("Installing all necessary workflow-tools on Galaxy.")
+            for workflow in self.workflows:
+                planemo_bridge.install_workflow([workflow.path], self.galaxy.instance)
 
     def run_pre_task(self):
         """
@@ -386,7 +402,8 @@ def configure_benchmark(bm_config: Dict, destinations: Dict, workflows: Dict, gl
     if bm_config["type"] == "ColdvsWarm":
         benchmark = ColdWarmBenchmark(bm_config["name"],
                                       _get_needed_destinations(bm_config, destinations, ColdWarmBenchmark),
-                                      _get_needed_workflows(bm_config, workflows, ColdWarmBenchmark), runs_per_workflow)
+                                      _get_needed_workflows(bm_config, workflows, ColdWarmBenchmark), glx,
+                                      runs_per_workflow)
         benchmark.galaxy = glx
         if "cold_pre_task" in bm_config:
             benchmark.cold_pre_task = AnsiblePlaybookTask(bm_config["cold_pre_task"]["playbook"])
@@ -404,8 +421,7 @@ def configure_benchmark(bm_config: Dict, destinations: Dict, workflows: Dict, gl
                                                                             DestinationComparisonBenchmark),
                                                    _get_needed_workflows(bm_config, workflows,
                                                                          DestinationComparisonBenchmark),
-                                                   runs_per_workflow)
-        benchmark.galaxy = glx
+                                                   glx, runs_per_workflow)
 
     if bm_config["type"] == "Burst":
         benchmark = BurstBenchmark(bm_config["name"], _get_needed_destinations(bm_config, destinations, BurstBenchmark),
