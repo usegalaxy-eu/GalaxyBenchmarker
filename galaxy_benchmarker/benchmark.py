@@ -110,6 +110,7 @@ class ColdWarmBenchmark(BaseBenchmark):
         if self.galaxy.shed_install:
             log.info("Installing all necessary workflow-tools on Galaxy.")
             for workflow in self.workflows:
+                log.info("Installing tools for workflow '{workflow}'".format(workflow=workflow.name))
                 planemo_bridge.install_workflow([workflow.path], self.galaxy.instance)
 
     def run_pre_task(self):
@@ -159,6 +160,7 @@ class DestinationComparisonBenchmark(BaseBenchmark):
         if self.galaxy.shed_install:
             log.info("Installing all necessary workflow-tools on Galaxy.")
             for workflow in self.workflows:
+                log.info("Installing tools for workflow '{workflow}'".format(workflow=workflow.name))
                 planemo_bridge.install_workflow([workflow.path], self.galaxy.instance)
 
     def run_pre_task(self):
