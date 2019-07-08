@@ -436,8 +436,8 @@ def _get_needed_destinations(bm_config: Dict, destinations: Dict, bm_type) -> Li
     """
     Returns a list of the destinations that were set in the configuration of the benchmark.
     """
-    if "destinations" not in bm_config or len(bm_config["destinations"]) == 0:
-        return list()
+    if "destinations" not in bm_config or bm_config["destinations"] is None or len(bm_config["destinations"]) == 0:
+        raise ValueError("No destination set in benchmark '{name}'".format(name=bm_config["name"]))
 
     needed_destinations = list()
     for dest_name in bm_config["destinations"]:
@@ -455,8 +455,8 @@ def _get_needed_workflows(bm_config: Dict, workflows: Dict, bm_type) -> List:
     """
     Returns a list of the workflows that were set in the configuration of the benchmark.
     """
-    if "workflows" not in bm_config or len(bm_config["workflows"]) == 0:
-        return list()
+    if "workflows" not in bm_config or bm_config["workflows"] is None or len(bm_config["workflows"]) == 0:
+        raise ValueError("No workflow set in benchmark '{name}'".format(name=bm_config["name"]))
 
     needed_workflows = list()
     for wf_name in bm_config["workflows"]:
