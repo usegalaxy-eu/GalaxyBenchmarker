@@ -50,14 +50,17 @@ class GalaxyDestination(BaseDestination):
     jobs_directory_dir = "/data/share/staging"
     persistence_dir = "/data/share/persisted_data"
     galaxy_user_name = ""
-    galaxy_user_id = ""
     galaxy_user_key = ""
 
-    def __init__(self, name, glx: Galaxy, job_conf_params: Dict):
+    def __init__(self, name, glx: Galaxy, job_conf_params: Dict, galaxy_user_name=None, galaxy_user_key=None):
         super().__init__(name)
         self.galaxy = glx
-        self._create_galaxy_destination_user(glx)
         self.job_conf_params = job_conf_params
+        self.galaxy_user_name = galaxy_user_name
+        self.galaxy_user_key = galaxy_user_key
+
+        if self.galaxy_user_name is None or self.galaxy_user_key is None:
+            self._create_galaxy_destination_user(glx)
 
     def _create_galaxy_destination_user(self, glx):
         """
@@ -65,7 +68,7 @@ class GalaxyDestination(BaseDestination):
         to the right Pulsar-Server.
         """
         self.galaxy_user_name = str.lower("dest_user_" + self.name)
-        self.galaxy_user_id, self.galaxy_user_key = glx.create_user(self.galaxy_user_name)
+        _, self.galaxy_user_key = glx.create_user(self.galaxy_user_name)
 
     def _run_ansible_playbook_task(self, task: AnsiblePlaybookTask):
         """
@@ -105,14 +108,14 @@ class GalaxyDestination(BaseDestination):
 
 
 class PulsarMQDestination(GalaxyDestination):
-    def __init__(self, name, glx: Galaxy, job_conf_params: Dict, amqp_url):
+    def __init__(self, name, glx: Galaxy, job_conf_params: Dict, amqp_url="", galaxy_user_name="", galaxy_user_key=""):
         self.amqp_url = amqp_url
-        super().__init__(name, glx, job_conf_params)
+        super().__init__(name, glx, job_conf_params, galaxy_user_name, galaxy_user_key)
 
 
 class GalaxyCondorDestination(GalaxyDestination):
-    def __init__(self, name, glx: Galaxy, job_conf_params: Dict):
-        super().__init__(name, glx, job_conf_params)
+    def __init__(self, name, glx: Galaxy, job_conf_params: Dict, galaxy_user_name="", galaxy_user_key=""):
+        super().__init__(name, glx, job_conf_params, galaxy_user_name, galaxy_user_key)
 
 
 class CondorDestination(BaseDestination):
@@ -188,8 +191,12 @@ def configure_destination(dest_config, glx):
 
     job_conf_params = dict() if "job_conf_params" not in dest_config else dest_config["job_conf_params"]
 
+    galaxy_user_name = None if "galaxy_user_name" not in dest_config else dest_config["galaxy_user_name"]
+    galaxy_user_key = None if "galaxy_user_key" not in dest_config else dest_config["galaxy_user_key"]
+
     if dest_config["type"] == "PulsarMQ":
-        destination = PulsarMQDestination(dest_config["name"], glx, job_conf_params, dest_config["amqp_url"])
+        destination = PulsarMQDestination(dest_config["name"], glx, job_conf_params, dest_config["amqp_url"],
+                                          galaxy_user_name, galaxy_user_key)
         if "host" in dest_config:
             destination.host = dest_config["host"]
             destination.host_user = dest_config["host_user"]
@@ -201,7 +208,8 @@ def configure_destination(dest_config, glx):
                                         dest_config["ssh_key"], dest_config["jobs_directory_dir"])
 
     if dest_config["type"] == "GalaxyCondor":
-        destination = GalaxyCondorDestination(dest_config["name"], glx, job_conf_params)
+        destination = GalaxyCondorDestination(dest_config["name"], glx, job_conf_params, galaxy_user_name,
+                                              galaxy_user_key)
 
     return destination
 
