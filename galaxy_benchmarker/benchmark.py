@@ -429,6 +429,9 @@ def _get_needed_destinations(bm_config: Dict, destinations: Dict, bm_type) -> Li
 
     needed_destinations = list()
     for dest_name in bm_config["destinations"]:
+        # Make sure, that destination exists
+        if dest_name not in destinations:
+            raise ValueError("Destination '{name}' not set in workflows-configuration.".format(name=dest_name))
         # Make sure, that destination-type is allowed
         if type(destinations[dest_name]) not in bm_type.allowed_dest_types:
             raise ValueError("Destination-Type {dest} is not allowed in benchmark-type {bm}. \
@@ -448,6 +451,9 @@ def _get_needed_workflows(bm_config: Dict, workflows: Dict, bm_type) -> List:
 
     needed_workflows = list()
     for wf_name in bm_config["workflows"]:
+        # Make sure, that workflow exists
+        if wf_name not in workflows:
+            raise ValueError("Workflow '{name}' not set in workflows-configuration.".format(name=wf_name))
         # Make sure, that workflow-type is allowed
         if type(workflows[wf_name]) not in bm_type.allowed_workflow_types:
             raise ValueError("Workflow-Type {wf} is not allowed in benchmark-type {bm}. \
