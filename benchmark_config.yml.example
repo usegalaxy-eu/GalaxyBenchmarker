@@ -69,6 +69,7 @@ workflows:
   - name: GalaxyWorkflow1
     type: Galaxy
     path: path/to/galaxy/workflow/file.ga
+    timeout: 100 # Optional. Workflow will be canceled after timeout.
   - name: CondorWorkflow1
     type: Condor
     path: path/to/condor/workflow/folder

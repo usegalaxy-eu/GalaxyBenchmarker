@@ -320,7 +320,9 @@ def run_galaxy_benchmark(benchmark, galaxy, destinations: List[PulsarMQDestinati
                 while i < runs_per_workflow:
                     if warmup and run_type == "warm" and i == 0:
                         log.info("First run! Warming up. Results won't be considered for the first time.")
-                        destination.run_workflow(workflow)
+                        result = destination.run_workflow(workflow)
+                        if result["status"] == "error":
+                            retries += 1
                     else:
                         if run_type == "cold" and benchmark.cold_pre_task is not None:
                             log.info("Running cold pre-task for Cleanup.")
@@ -332,7 +334,8 @@ def run_galaxy_benchmark(benchmark, galaxy, destinations: List[PulsarMQDestinati
                                                                                                   dest=destination.name))
                         result = destination.run_workflow(workflow)
 
-                        result["jobs"] = destination.get_jobs(result["history_name"])
+                        if "history_name" in result:
+                            result["jobs"] = destination.get_jobs(result["history_name"])
 
                         result["workflow_metrics"] = {
                             "status": {

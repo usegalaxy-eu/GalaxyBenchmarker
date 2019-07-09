@@ -17,6 +17,8 @@ class BaseWorkflow:
 
 
 class GalaxyWorkflow(BaseWorkflow):
+    timeout = None
+
     def __init__(self, name, path):
         # Make sure that workflow file exists
         if not os.path.isfile(path):
@@ -60,6 +62,7 @@ def configure_workflow(wf_config: Dict) -> BaseWorkflow:
         workflow = GalaxyWorkflow(wf_config["name"], wf_config["path"])
         if "description" in wf_config:
             workflow.description = wf_config["description"]
+        workflow.timeout = None if "timeout" not in wf_config else wf_config["timeout"]
 
     if wf_config["type"] == "Condor":
         workflow = CondorWorkflow(wf_config["name"], wf_config["path"], wf_config["job_file"])

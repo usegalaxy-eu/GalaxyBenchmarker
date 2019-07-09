@@ -8,6 +8,7 @@ import condor_bridge
 import metrics
 import logging
 import time
+from multiprocessing import Pool, TimeoutError
 from typing import Dict
 from task import BaseTask, AnsiblePlaybookTask
 from galaxy_bridge import Galaxy
@@ -101,7 +102,20 @@ class GalaxyDestination(BaseDestination):
         log.info("Running workflow '{wf_name}' using Planemo".format(wf_name=workflow.name))
 
         start_time = time.monotonic()
-        result = planemo_bridge.run_planemo(self.galaxy, self, workflow.path)
+
+        if workflow.timeout is None:
+            result = planemo_bridge.run_planemo(self.galaxy, self, workflow.path)
+        else:
+            # Run inside a Process to enable timeout
+            pool = Pool(processes=1)
+            pool_result = pool.apply_async(planemo_bridge.run_planemo, (self.galaxy, self, workflow.path))
+
+            try:
+                result = pool_result.get(timeout=workflow.timeout)
+            except TimeoutError:
+                log.info("Timeout after {timeout} seconds".format(timeout=workflow.timeout))
+                result = {"status": "error"}
+
         result["total_workflow_runtime"] = time.monotonic() - start_time
 
         return result
