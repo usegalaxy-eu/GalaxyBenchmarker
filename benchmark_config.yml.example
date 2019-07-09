@@ -44,15 +44,9 @@ destinations:
       manager: _default_
   - name: RemotePulsar1
     type: PulsarMQ
-    amqp_url: "pyamqp://username:password@rabbit.example2.com:5672//"
-    job_conf_params:
-      dependency_resolution: remote
-      default_file_action: remote_transfer
-      remote_metadata: false
-      rewrite_parameters: true
-      amqp_acknowledge: true
-      amqp_ack_republish_time: 10
-      manager: _default_
+    # If credentials are set, Destination won't create a user on Galaxy and will just use these for submitting jobs
+    galaxy_user_name: user2
+    galaxy_user_key: blablablakey
   - name: RemotePulsar1
     type: PulsarMQ
     amqp_url: "pyamqp://username:password@rabbit.example3.com:5672//"
