@@ -1,6 +1,8 @@
 from bioblend.galaxy import GalaxyInstance
-from typing import Tuple
+from typing import Tuple, List
+from workflow import BaseWorkflow, GalaxyWorkflow
 import ansible_bridge
+import planemo_bridge
 import logging
 import string
 import random
@@ -51,6 +53,13 @@ class Galaxy:
             user_key = self.instance.users.create_user_apikey(user_id)
 
         return user_id, user_key
+
+    def install_tools_for_workflows(self, workflows: List[BaseWorkflow]):
+        log.info("Installing all necessary workflow-tools on Galaxy.")
+        for workflow in workflows:
+            if type(workflow) is GalaxyWorkflow:
+                log.info("Installing tools for workflow '{workflow}'".format(workflow=workflow.name))
+                planemo_bridge.install_workflow([workflow.path], self.instance)
 
     def deploy_job_conf(self):
         """

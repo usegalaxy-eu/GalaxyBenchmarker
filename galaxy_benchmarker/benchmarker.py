@@ -40,9 +40,14 @@ class Benchmarker:
         for bm_config in config["benchmarks"]:
             self.benchmarks[bm_config["name"]] = benchmark.configure_benchmark(bm_config, self.destinations,
                                                                                self.workflows, self.glx)
-        log.info("Creating job_conf for Galaxy and deploying it")
-        destination.create_galaxy_job_conf(self.glx, self.destinations)
-        self.glx.deploy_job_conf()
+
+        if config["galaxy"]["configure_job_destinations"]:
+            log.info("Creating job_conf for Galaxy and deploying it")
+            destination.create_galaxy_job_conf(self.glx, self.destinations)
+            self.glx.deploy_job_conf()
+
+        if config["galaxy"]["shed_install"]:
+            self.glx.install_tools_for_workflows(self.workflows.values())
 
     def run_pre_tasks(self):
         log.info("Running pre-tasks for benchmarks")

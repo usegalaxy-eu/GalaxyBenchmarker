@@ -4,6 +4,8 @@ galaxy:
   admin_key: "blablabla"
   # Check, if tools need to be installed when running GalaxyWorkflow (can be turned off after first benchmark-run)
   shed_install: true
+  # Should Galaxy be configured to use the given Destinations or is everything already set?
+  configure_job_destinations: true
   # Used to deploy DynamicDestinations via Ansible
   ssh_user: ubuntu
   ssh_key: /local/path/to/ssh/key.cert
