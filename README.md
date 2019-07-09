@@ -9,7 +9,8 @@ collecting the metrics.
 GalaxyBenchmarker is designed to be easily extendable in terms of destinations-types and benchmark-scenarios.
 
 ### Benchmark-Scenarios
-Currently there are three types/scenarios of benchmarks available:
+Currently there are three types/scenarios of benchmarks available. Every benchmark allows to define its destination and workflows to test, how often workflows should
+be run per destination and if some ansible-playbooks should be run before or after the benchmark ran.
 #### Cold vs Warm
 What is the difference between running a workflow for the first time or for it having been run multiple
 times already? What is the overhead for staging time, installing tools, etc?
@@ -23,9 +24,6 @@ to a remote location might take some time), runtime, etc.
 #### Burst
 How does a destination handle a big burst of requests?
 
-
-Every benchmark allows to define its destination and workflows to test, how often workflows should
-be run per destination and if some ansible-playbooks should be run before or after the benchmark ran.
 
 ## Requirements
 * A Galaxy-Instance with admin rights
