@@ -24,9 +24,12 @@ class Benchmarker:
                           config["galaxy"]["galaxy_root_path"], config["galaxy"]["galaxy_config_dir"],
                           config["galaxy"]["galaxy_user"])
 
-        self.inflx_db = InfluxDB(config["influxdb"]["host"], config["influxdb"]["port"],
-                                 config["influxdb"]["username"], config["influxdb"]["password"],
-                                 config["influxdb"]["db_name"])
+        if "influxdb" in config:
+            self.inflx_db = InfluxDB(config["influxdb"]["host"], config["influxdb"]["port"],
+                                     config["influxdb"]["username"], config["influxdb"]["password"],
+                                     config["influxdb"]["db_name"])
+        else:
+            self.inflx_db = None
 
         self.workflows = dict()
         for wf_config in config["workflows"]:
@@ -47,7 +50,7 @@ class Benchmarker:
             self.glx.deploy_job_conf()
 
         if config["galaxy"]["shed_install"]:
-            self.glx.install_tools_for_workflows(self.workflows.values())
+            self.glx.install_tools_for_workflows(list(self.workflows.values()))
 
     def run_pre_tasks(self):
         log.info("Running pre-tasks for benchmarks")

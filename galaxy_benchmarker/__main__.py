@@ -41,8 +41,9 @@ def main():
             log.info("Saving results to file: '{filename}.json'.".format(filename=results_filename))
             benchmarker.save_results(results_filename)
 
-            log.info("Sending results to influxDB.")
-            benchmarker.send_results_to_influxdb()
+            if benchmarker.inflx_db is not None:
+                log.info("Sending results to influxDB.")
+                benchmarker.send_results_to_influxdb()
 
             benchmarker.run_post_tasks()
 
