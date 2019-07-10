@@ -8,7 +8,7 @@ import random
 from datetime import datetime
 from destination import BaseDestination, PulsarMQDestination, GalaxyCondorDestination, CondorDestination
 from workflow import BaseWorkflow, GalaxyWorkflow, CondorWorkflow
-from task import BaseTask, AnsiblePlaybookTask
+from task import BaseTask, AnsiblePlaybookTask, BenchmarkerTask
 from typing import List, Dict
 from influxdb_bridge import InfluxDB
 import planemo_bridge
@@ -26,8 +26,8 @@ class BaseBenchmark:
     allowed_workflow_types = []
     galaxy = None
     benchmark_results = dict()
-    pre_task: BaseTask = None
-    post_task: BaseTask = None
+    pre_tasks: List[BaseTask] = None
+    post_tasks: List[BaseTask] = None
 
     def __init__(self, name, destinations: List[BaseDestination],
                  workflows: List[BaseWorkflow], runs_per_workflow=1):
@@ -41,13 +41,21 @@ class BaseBenchmark:
         """
         Runs a Task before starting the actual Benchmark.
         """
-        pass
+        if self.pre_tasks is None:
+            return
+        for task in self.pre_tasks:
+            log.info("Running task {task}".format(task=task))
+            task.run()
 
     def run_post_task(self):
         """
         Runs a Task after Benchmark finished (useful for cleaning up etc.).
         """
-        pass
+        if self.post_tasks is None:
+            return
+        for task in self.post_tasks:
+            log.info("Running task {task}".format(task=task))
+            task.run()
 
     def run(self, benchmarker):
         raise NotImplementedError
@@ -106,22 +114,6 @@ class ColdWarmBenchmark(BaseBenchmark):
         self.workflows = workflows
         self.galaxy = galaxy
 
-    def run_pre_task(self):
-        """
-        Runs a Task before starting the actual Benchmark.
-        """
-        if self.pre_task is not None:
-            log.info("Running pre-task '{task}'.".format(task=self.pre_task))
-            self.destinations[0].run_task(self.pre_task)
-
-    def run_post_task(self):
-        """
-        Runs a Task after Benchmark finished (useful for cleaning up etc.).
-        """
-        if self.post_task is not None:
-            log.info("Running post-task '{task}'.".format(task=self.post_task))
-            self.destinations[0].run_task(self.post_task)
-
     def run(self, benchmarker):
         """
         Runs the Workflow on each Destinations. First runs all Workflows "cold" (cleaning Pulsar up before each run),
@@ -149,18 +141,6 @@ class DestinationComparisonBenchmark(BaseBenchmark):
         self.workflows = workflows
         self.galaxy = galaxy
         self.warmup = warmup
-
-    def run_pre_task(self):
-        """
-        Runs a Task before starting the actual Benchmark.
-        """
-        pass  # TODO
-
-    def run_post_task(self):
-        """
-        Runs a Task after Benchmark finished (useful for cleaning up etc.).
-        """
-        pass  # TODO
 
     def run(self, benchmarker):
         """
@@ -398,14 +378,12 @@ def configure_benchmark(bm_config: Dict, destinations: Dict, workflows: Dict, gl
                                       runs_per_workflow)
         benchmark.galaxy = glx
         if "cold_pre_task" in bm_config:
-            benchmark.cold_pre_task = AnsiblePlaybookTask(bm_config["cold_pre_task"]["playbook"])
+            if bm_config["cold_pre_task"]["type"] == "AnsiblePlaybook":
+                benchmark.cold_pre_task = AnsiblePlaybookTask(benchmark, bm_config["cold_pre_task"]["playbook"])
 
         if "warm_pre_task" in bm_config:
-            benchmark.warm_pre_task = AnsiblePlaybookTask(bm_config["warm_pre_task"]["playbook"])
-        if "pre_task" in bm_config:
-            benchmark.pre_task = AnsiblePlaybookTask(bm_config["pre_task"]["playbook"])
-        if "post_task" in bm_config:
-            benchmark.post_task = AnsiblePlaybookTask(bm_config["post_task"]["playbook"])
+            if bm_config["warm_pre_task"]["type"] == "AnsiblePlaybook":
+                benchmark.warm_pre_task = AnsiblePlaybookTask(benchmark, bm_config["warm_pre_task"]["playbook"])
 
     if bm_config["type"] == "DestinationComparison":
         warmup = True if "warmup" not in bm_config else bm_config["warmup"]
@@ -421,6 +399,26 @@ def configure_benchmark(bm_config: Dict, destinations: Dict, workflows: Dict, gl
                                    _get_needed_workflows(bm_config, workflows, BurstBenchmark),
                                    runs_per_workflow, bm_config["burst_rate"])
         benchmark.galaxy = glx
+
+    if "pre_tasks" in bm_config:
+        benchmark.pre_tasks = list()
+        for task in bm_config["pre_tasks"]:
+            if task["type"] == "AnsiblePlaybook":
+                benchmark.pre_tasks.append(AnsiblePlaybookTask(benchmark, task["playbook"]))
+            elif task["type"] == "BenchmarkerTask":
+                benchmark.pre_tasks.append(BenchmarkerTask(benchmark, task["name"]))
+            else:
+                raise ValueError("Task of type '{type}' is not supported".format(type=task["type"]))
+
+    if "post_tasks" in bm_config:
+        benchmark.post_tasks = list()
+        for task in bm_config["post_tasks"]:
+            if task["type"] == "AnsiblePlaybook":
+                benchmark.post_tasks.append(AnsiblePlaybookTask(benchmark, task["playbook"]))
+            elif task["type"] == "BenchmarkerTask":
+                benchmark.post_tasks.append(BenchmarkerTask(benchmark, task["name"]))
+            else:
+                raise ValueError("Task of type '{type}' is not supported".format(type=task["type"]))
 
     return benchmark
 

@@ -10,7 +10,7 @@ import logging
 import time
 from multiprocessing import Pool, TimeoutError
 from typing import Dict
-from task import BaseTask, AnsiblePlaybookTask
+from task import BaseTask, AnsiblePlaybookTask, BenchmarkerTask
 from galaxy_bridge import Galaxy
 from bioblend.galaxy import GalaxyInstance
 from jinja2 import Template
@@ -37,9 +37,9 @@ class BaseDestination:
         if task is None:
             return
         if type(task) is AnsiblePlaybookTask:
-            self._run_ansible_playbook_task(task)
+            self.run_ansible_playbook_task(task)
 
-    def _run_ansible_playbook_task(self, task: AnsiblePlaybookTask):
+    def run_ansible_playbook_task(self, task: AnsiblePlaybookTask):
         raise NotImplementedError
 
 
@@ -72,7 +72,7 @@ class GalaxyDestination(BaseDestination):
         self.galaxy_user_name = str.lower("dest_user_" + self.name)
         _, self.galaxy_user_key = glx.create_user(self.galaxy_user_name)
 
-    def _run_ansible_playbook_task(self, task: AnsiblePlaybookTask):
+    def run_ansible_playbook_task(self, task: AnsiblePlaybookTask):
         """
         Runs the given AnsiblePlaybookTask on the destination.
         """

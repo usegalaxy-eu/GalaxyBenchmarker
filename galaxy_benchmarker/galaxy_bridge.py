@@ -54,6 +54,16 @@ class Galaxy:
 
         return user_id, user_key
 
+    def delete_all_histories_for_user(self, user, purge=True):
+        """
+        Deletes and - if not set otherwise - purges for a given username all its histories.
+        """
+        impersonated = self.impersonate(user)
+        histories = impersonated.histories.get_histories()
+
+        for history in histories:
+            impersonated.histories.delete_history(history["id"], purge)
+
     def install_tools_for_workflows(self, workflows: List[BaseWorkflow]):
         log.info("Installing all necessary workflow-tools on Galaxy.")
         for workflow in workflows:
