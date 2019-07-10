@@ -143,11 +143,12 @@ class DestinationComparisonBenchmark(BaseBenchmark):
     allowed_workflow_types = [GalaxyWorkflow]
 
     def __init__(self, name, destinations: List[PulsarMQDestination],
-                 workflows: List[GalaxyWorkflow], galaxy, runs_per_workflow=1):
+                 workflows: List[GalaxyWorkflow], galaxy, runs_per_workflow=1, warmup=True):
         super().__init__(name, destinations, workflows, runs_per_workflow)
         self.destinations = destinations
         self.workflows = workflows
         self.galaxy = galaxy
+        self.warmup = warmup
 
     def run_pre_task(self):
         """
@@ -170,7 +171,7 @@ class DestinationComparisonBenchmark(BaseBenchmark):
         try:
             self.benchmark_results["warm"] = run_galaxy_benchmark(self, benchmarker.glx, self.destinations,
                                                                   self.workflows,
-                                                                  self.runs_per_workflow, "warm")
+                                                                  self.runs_per_workflow, "warm", self.warmup)
         except KeyboardInterrupt as e:
             self.benchmark_results["warm"] = e.args[0]
 
@@ -407,12 +408,13 @@ def configure_benchmark(bm_config: Dict, destinations: Dict, workflows: Dict, gl
             benchmark.post_task = AnsiblePlaybookTask(bm_config["post_task"]["playbook"])
 
     if bm_config["type"] == "DestinationComparison":
+        warmup = True if "warmup" not in bm_config else bm_config["warmup"]
         benchmark = DestinationComparisonBenchmark(bm_config["name"],
                                                    _get_needed_destinations(bm_config, destinations,
                                                                             DestinationComparisonBenchmark),
                                                    _get_needed_workflows(bm_config, workflows,
                                                                          DestinationComparisonBenchmark),
-                                                   glx, runs_per_workflow)
+                                                   glx, runs_per_workflow, warmup)
 
     if bm_config["type"] == "Burst":
         benchmark = BurstBenchmark(bm_config["name"], _get_needed_destinations(bm_config, destinations, BurstBenchmark),
