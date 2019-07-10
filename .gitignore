@@ -1,6 +1,7 @@
 *.DS_Store
 .idea/
 workflow-testing
+galaxy_workflows
 tools.yml
 *.retry
 *.html
