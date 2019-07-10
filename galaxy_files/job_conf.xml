@@ -6,6 +6,9 @@
             <plugin id="{{ destination.name|lower }}_runner" type="runner" load="galaxy.jobs.runners.pulsar:PulsarMQJobRunner">
                 <param id="galaxy_url">{{ galaxy.url }}</param>
                 <param id="amqp_url">{{ destination.amqp_url }}</param>
+                {% for key, value in job_plugin_params[destination.name].items() %}
+                    <param id="{{ key }}">{{ value }}</param>
+                {% endfor %}
             </plugin>
         {% endfor %}
         {% for destination in galaxy_condor_destinations %}
@@ -22,7 +25,7 @@
             <destination id="{{ destination.name|lower }}" runner="{{ destination.name|lower }}_runner">
                 <param id="jobs_directory">{{ destination.jobs_directory_dir }}</param>
                 <param id="persistence_directory">{{ destination.persistence_dir }}</param>
-                {% for key, value in job_conf_params[destination.name].items() %}
+                {% for key, value in job_destination_params[destination.name].items() %}
                     <param id="{{ key }}">{{ value }}</param>
                 {% endfor %}
             </destination>

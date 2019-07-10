@@ -34,14 +34,15 @@ destinations:
     jobs_directory_dir: /data/share/staging
     persistence_dir: /data/share/persisted_data
     # To configure additional params in job_conf.xml
-    job_conf_params:
+    job_plugin_params:
+      manager: __default__
+    job_destination_params:
       dependency_resolution: remote
       default_file_action: remote_transfer
       remote_metadata: false
       rewrite_parameters: true
       amqp_acknowledge: true
       amqp_ack_republish_time: 10
-      manager: _default_
   - name: RemotePulsar1
     type: PulsarMQ
     # If credentials are set, Destination won't create a user on Galaxy and will just use these for submitting jobs
@@ -50,14 +51,15 @@ destinations:
   - name: RemotePulsar1
     type: PulsarMQ
     amqp_url: "pyamqp://username:password@rabbit.example3.com:5672//"
-    job_conf_params:
+    job_plugin_params:
+      manager: __default__
+    job_destination_params:
       dependency_resolution: remote
       default_file_action: remote_transfer
       remote_metadata: false
       rewrite_parameters: true
       amqp_acknowledge: true
       amqp_ack_republish_time: 10
-      manager: _default_
   - name: CondorManager
     type: Condor
     host: condor-manager.uni.andreas-sk.de
@@ -107,6 +109,7 @@ benchmarks:
       - RemotePulsar1
       - RemotePulsar2
     runs_per_workflow: 5
+    warmup: true # Should a warmup-run happen before the actual benchmarking?
     workflows:
       - GalaxyWorkflow1
   - name: PulsarBurstBenchmark
