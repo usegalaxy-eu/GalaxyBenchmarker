@@ -5,7 +5,7 @@ from typing import Dict
 class InfluxDB:
     def __init__(self, host, port, username, password, db_name):
         self.client = InfluxDBClient(host=host, port=port, username=username, password=password,
-                                     ssl=False, database=db_name)
+                                     ssl=False, database=db_name, retries=20)
 
     def save_job_metrics(self, tags: Dict, job_results: Dict):
         """

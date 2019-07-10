@@ -1,6 +1,8 @@
 import yaml
 import argparse
 import sys
+import bioblend
+from time import sleep
 from benchmarker import Benchmarker
 import logging
 import time
@@ -35,7 +37,10 @@ def main():
             benchmarker.run_pre_tasks()
 
             log.info("Starting to run benchmarks.")
-            benchmarker.run()
+            try:
+                benchmarker.run()
+            except bioblend.ConnectionError:
+                log.error("There was a problem with the connection. Benchmark canceled.")
 
             results_filename = "results/results_{time}".format(time=time.time())
             log.info("Saving results to file: '{filename}.json'.".format(filename=results_filename))
