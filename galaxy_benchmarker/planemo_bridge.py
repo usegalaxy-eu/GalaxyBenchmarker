@@ -61,8 +61,8 @@ def _cli(ctx, paths, glx, user_key, **kwds) -> Dict:
             test_data = engine.test(runnables)
             exit_code = handle_reports_and_summary(ctx, test_data.structured_data, kwds=kwds)
             status = "success" if exit_code == 0 else "error"
-    except (bioblend.ConnectionError, urllib3.exceptions.NewConnectionError):
-        log.error("There was an error with the connection.")
+    except Exception as e:
+        log.error("There was an error: {e}".format(e=e))
         status = "error"
 
     return {"status": status, "history_name": kwds["history_name"]}

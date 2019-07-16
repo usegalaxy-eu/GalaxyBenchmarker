@@ -315,7 +315,7 @@ def run_galaxy_benchmark(benchmark, galaxy, destinations: List[PulsarMQDestinati
                                                                                                   dest=destination.name))
                         result = destination.run_workflow(workflow)
 
-                        if "history_name" in result:
+                        if "history_name" in result and result["status"] == "success":
                             result["jobs"] = destination.get_jobs(result["history_name"])
 
                         result["workflow_metrics"] = {
@@ -342,7 +342,9 @@ def run_galaxy_benchmark(benchmark, galaxy, destinations: List[PulsarMQDestinati
                             log.info("Result won't be considered.")
 
                             if retries < 2:
-                                log.info("Retrying..")
+                                retry_wait = 60 * 2 ** retries
+                                log.info("Retrying after {wait} seconds..".format(wait=retry_wait))
+                                time.sleep(retry_wait)
                                 retries += 1
                                 i -= 1
                             # If too many retries, continue with next workflow
