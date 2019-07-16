@@ -6,10 +6,10 @@ import time
 import threading
 import random
 from datetime import datetime
-from destination import BaseDestination, PulsarMQDestination, GalaxyCondorDestination, CondorDestination
+from destination import BaseDestination, GalaxyDestination, PulsarMQDestination, GalaxyCondorDestination, CondorDestination
 from workflow import BaseWorkflow, GalaxyWorkflow, CondorWorkflow
 from task import BaseTask, AnsiblePlaybookTask, BenchmarkerTask
-from typing import List, Dict
+from typing import List, Dict, Union
 from influxdb_bridge import InfluxDB
 import planemo_bridge
 from bioblend import ConnectionError
@@ -102,12 +102,12 @@ class BaseBenchmark:
 
 
 class ColdWarmBenchmark(BaseBenchmark):
-    allowed_dest_types = [PulsarMQDestination]
+    allowed_dest_types = [GalaxyDestination, PulsarMQDestination]
     allowed_workflow_types = [GalaxyWorkflow]
     cold_pre_task: AnsiblePlaybookTask = None
     warm_pre_task: AnsiblePlaybookTask = None
 
-    def __init__(self, name, destinations: List[PulsarMQDestination],
+    def __init__(self, name, destinations: List[Union[PulsarMQDestination, GalaxyDestination]],
                  workflows: List[GalaxyWorkflow], galaxy, runs_per_workflow=1):
         super().__init__(name, destinations, workflows, runs_per_workflow)
         self.destinations = destinations
@@ -131,10 +131,10 @@ class ColdWarmBenchmark(BaseBenchmark):
 
 
 class DestinationComparisonBenchmark(BaseBenchmark):
-    allowed_dest_types = [PulsarMQDestination, GalaxyCondorDestination]
+    allowed_dest_types = [GalaxyDestination, PulsarMQDestination, GalaxyCondorDestination]
     allowed_workflow_types = [GalaxyWorkflow]
 
-    def __init__(self, name, destinations: List[PulsarMQDestination],
+    def __init__(self, name, destinations: List[Union[PulsarMQDestination, GalaxyDestination]],
                  workflows: List[GalaxyWorkflow], galaxy, runs_per_workflow=1, warmup=True):
         super().__init__(name, destinations, workflows, runs_per_workflow)
         self.destinations = destinations
@@ -157,7 +157,7 @@ class DestinationComparisonBenchmark(BaseBenchmark):
 
 
 class BurstBenchmark(BaseBenchmark):
-    allowed_dest_types = [PulsarMQDestination, CondorDestination]
+    allowed_dest_types = [GalaxyDestination, PulsarMQDestination, CondorDestination]
     allowed_workflow_types = [GalaxyWorkflow, CondorWorkflow]
 
     def __init__(self, name, destinations: List[BaseDestination],

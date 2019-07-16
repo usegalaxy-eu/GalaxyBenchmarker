@@ -53,11 +53,9 @@ class GalaxyDestination(BaseDestination):
     galaxy_user_name = ""
     galaxy_user_key = ""
 
-    def __init__(self, name, glx: Galaxy, job_plugin_params: Dict, job_destination_params: Dict, galaxy_user_name=None, galaxy_user_key=None):
+    def __init__(self, name, glx: Galaxy, galaxy_user_name=None, galaxy_user_key=None):
         super().__init__(name)
         self.galaxy = glx
-        self.job_plugin_params = job_plugin_params
-        self.job_destination_params = job_destination_params
         self.galaxy_user_name = galaxy_user_name
         self.galaxy_user_key = galaxy_user_key
 
@@ -89,7 +87,6 @@ class GalaxyDestination(BaseDestination):
         infos = dict()
         for job_id in job_ids:
             infos[job_id] = self.galaxy.instance.jobs.show_job(job_id, full_details=True)
-
             # Parse JobMetrics for future usage in influxDB
             infos[job_id]["parsed_job_metrics"] = metrics.parse_galaxy_job_metrics(infos[job_id]["job_metrics"])
 
@@ -125,12 +122,16 @@ class GalaxyDestination(BaseDestination):
 class PulsarMQDestination(GalaxyDestination):
     def __init__(self, name, glx: Galaxy, job_plugin_params: Dict, job_destination_params: Dict, amqp_url="", galaxy_user_name="", galaxy_user_key=""):
         self.amqp_url = amqp_url
-        super().__init__(name, glx, job_plugin_params, job_destination_params, galaxy_user_name, galaxy_user_key)
+        self.job_plugin_params = job_plugin_params
+        self.job_destination_params = job_destination_params
+        super().__init__(name, glx, galaxy_user_name, galaxy_user_key)
 
 
 class GalaxyCondorDestination(GalaxyDestination):
     def __init__(self, name, glx: Galaxy, job_plugin_params: Dict, job_destination_params: Dict, galaxy_user_name="", galaxy_user_key=""):
-        super().__init__(name, glx, job_plugin_params, job_destination_params, galaxy_user_name, galaxy_user_key)
+        self.job_plugin_params = job_plugin_params
+        self.job_destination_params = job_destination_params
+        super().__init__(name, glx, galaxy_user_name, galaxy_user_key)
 
 
 class CondorDestination(BaseDestination):
@@ -201,7 +202,7 @@ def configure_destination(dest_config, glx):
         raise ValueError("No Destination-Name set! Config: '{config}'".format(config=dest_config))
     if "type" not in dest_config:
         raise ValueError("No Destination-Type set for '{dest}'".format(dest=dest_config["name"]))
-    if dest_config["type"] not in ["PulsarMQ", "Condor", "GalaxyCondor"]:
+    if dest_config["type"] not in ["Galaxy", "PulsarMQ", "Condor", "GalaxyCondor"]:
         raise ValueError("Destination-Type '{type}' not valid".format(type=dest_config["type"]))
 
     job_plugin_params = dict() if "job_plugin_params" not in dest_config else dest_config["job_plugin_params"]
@@ -209,6 +210,9 @@ def configure_destination(dest_config, glx):
 
     galaxy_user_name = None if "galaxy_user_name" not in dest_config else dest_config["galaxy_user_name"]
     galaxy_user_key = None if "galaxy_user_key" not in dest_config else dest_config["galaxy_user_key"]
+
+    if dest_config["type"] == "Galaxy":
+        destination = GalaxyDestination(dest_config["name"], glx, galaxy_user_name, galaxy_user_key)
 
     if dest_config["type"] == "PulsarMQ":
         destination = PulsarMQDestination(dest_config["name"], glx, job_plugin_params, job_destination_params,
@@ -250,9 +254,8 @@ def create_galaxy_job_conf(glx: Galaxy, destinations: Dict[str, BaseDestination]
             pulsar_destinations.append(dest)
         if type(dest) is GalaxyCondorDestination:
             galaxy_condor_destinations.append(dest)
-        if issubclass(type(dest), GalaxyDestination):
+        if issubclass(type(dest), PulsarMQDestination) or issubclass(type(dest), GalaxyCondorDestination):
             job_plugin_params[dest.name] = dest.job_plugin_params
-        if issubclass(type(dest), GalaxyDestination):
             job_destination_params[dest.name] = dest.job_destination_params
 
     job_conf = template.render(galaxy=glx,
