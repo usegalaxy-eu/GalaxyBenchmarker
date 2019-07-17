@@ -16,7 +16,7 @@
   "gnetId": null,
   "graphTooltip": 0,
   "id": 4,
-  "iteration": 1563177419243,
+  "iteration": 1563364619685,
   "links": [],
   "panels": [
     {
@@ -336,7 +336,7 @@
           "type": "table"
         }
       ],
-      "title": "Custom Measurements",
+      "title": "Custom Metrics",
       "type": "row"
     },
     {
@@ -1701,9 +1701,116 @@
         "align": false,
         "alignLevel": null
       }
+    },
+    {
+      "columns": [],
+      "datasource": "glx_benchmarker",
+      "fontSize": "100%",
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 62
+      },
+      "id": 40,
+      "links": [],
+      "options": {},
+      "pageSize": null,
+      "scroll": true,
+      "showHeader": true,
+      "sort": {
+        "col": 0,
+        "desc": true
+      },
+      "styles": [
+        {
+          "alias": "Time",
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "pattern": "Time",
+          "type": "hidden"
+        },
+        {
+          "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "decimals": 2,
+          "pattern": "/.*/",
+          "thresholds": [],
+          "type": "number",
+          "unit": "s"
+        }
+      ],
+      "targets": [
+        {
+          "alias": "CPU-Time per Workflow",
+          "groupBy": [
+            {
+              "params": [
+                "benchmark_uid"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "destination_name"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "workflow_name"
+              ],
+              "type": "tag"
+            }
+          ],
+          "measurement": "staging_time",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "query": "SELECT min(\"sum\"), max(\"sum\"), mean(\"sum\"), stddev(\"sum\") FROM (SELECT sum(\"value\") FROM \"staging_time\" WHERE (\"benchmark_type\" =  '<class \\'benchmark.DestinationComparisonBenchmark\\'>' AND \"benchmark_uuid\" =~ /$selected_benchmark_uuid/ AND \"workflow_name\" =~ /$selected_workflow_name/ AND \"destination_name\" =~ /$selected_destination_name/) AND $timeFilter GROUP BY \"destination_name\", \"workflow_name\", \"history_name\") GROUP BY destination_name, workflow_name",
+          "rawQuery": true,
+          "refId": "A",
+          "resultFormat": "table",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "sum"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "run_type",
+              "operator": "=",
+              "value": "warm"
+            },
+            {
+              "condition": "AND",
+              "key": "benchmark_type",
+              "operator": "=",
+              "value": "<class 'benchmark.ColdWarmBenchmark'>"
+            }
+          ]
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Average Staging-Time per Destination and Workflow",
+      "transform": "table",
+      "type": "table"
     }
   ],
-  "refresh": false,
+  "refresh": "1m",
   "schemaVersion": 18,
   "style": "dark",
   "tags": [],
@@ -1713,19 +1820,17 @@
         "allValue": null,
         "current": {
           "text": "All",
-          "value": [
-            "$__all"
-          ]
+          "value": "$__all"
         },
         "datasource": "glx_benchmarker",
-        "definition": "SELECT benchmark_uuid , value FROM \"workflow_status\" WHERE \"benchmark_type\" =  '<class \\'benchmark.DestinationComparisonBenchmark\\'>'",
+        "definition": "SELECT benchmark_uuid , value FROM \"runtime_seconds\" WHERE \"benchmark_type\" =  '<class \\'benchmark.DestinationComparisonBenchmark\\'>'",
         "hide": 0,
         "includeAll": true,
         "label": "Benchmark UUID",
         "multi": true,
         "name": "selected_benchmark_uuid",
         "options": [],
-        "query": "SELECT benchmark_uuid , value FROM \"workflow_status\" WHERE \"benchmark_type\" =  '<class \\'benchmark.DestinationComparisonBenchmark\\'>'",
+        "query": "SELECT benchmark_uuid , value FROM \"runtime_seconds\" WHERE \"benchmark_type\" =  '<class \\'benchmark.DestinationComparisonBenchmark\\'>'",
         "refresh": 2,
         "regex": "",
         "skipUrlSync": false,
@@ -1739,21 +1844,19 @@
       {
         "allValue": null,
         "current": {
-          "tags": [],
-          "text": "adaboost",
-          "value": [
-            "adaboost"
-          ]
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
         },
         "datasource": "glx_benchmarker",
-        "definition": "SELECT workflow_name, value FROM \"workflow_status\" WHERE \"benchmark_type\" =  '<class \\'benchmark.DestinationComparisonBenchmark\\'>' GROUP BY workflow_name",
+        "definition": "SELECT workflow_name, value FROM \"runtime_seconds\" WHERE \"benchmark_type\" =  '<class \\'benchmark.DestinationComparisonBenchmark\\'>' GROUP BY workflow_name",
         "hide": 0,
         "includeAll": true,
         "label": "Workflow",
         "multi": true,
         "name": "selected_workflow_name",
         "options": [],
-        "query": "SELECT workflow_name, value FROM \"workflow_status\" WHERE \"benchmark_type\" =  '<class \\'benchmark.DestinationComparisonBenchmark\\'>' GROUP BY workflow_name",
+        "query": "SELECT workflow_name, value FROM \"runtime_seconds\" WHERE \"benchmark_type\" =  '<class \\'benchmark.DestinationComparisonBenchmark\\'>' GROUP BY workflow_name",
         "refresh": 2,
         "regex": "",
         "skipUrlSync": false,
@@ -1767,21 +1870,18 @@
       {
         "allValue": null,
         "current": {
-          "text": "Belgium + Tubingen",
-          "value": [
-            "Belgium",
-            "Tubingen"
-          ]
+          "text": "All",
+          "value": "$__all"
         },
         "datasource": "glx_benchmarker",
-        "definition": "SELECT destination_name, value FROM \"workflow_status\" WHERE \"benchmark_type\" =  '<class \\'benchmark.DestinationComparisonBenchmark\\'>' GROUP BY destination_name",
+        "definition": "SELECT destination_name, value FROM \"runtime_seconds\" WHERE \"benchmark_type\" =  '<class \\'benchmark.DestinationComparisonBenchmark\\'>' GROUP BY destination_name",
         "hide": 0,
         "includeAll": true,
         "label": "Destination",
         "multi": true,
         "name": "selected_destination_name",
         "options": [],
-        "query": "SELECT destination_name, value FROM \"workflow_status\" WHERE \"benchmark_type\" =  '<class \\'benchmark.DestinationComparisonBenchmark\\'>' GROUP BY destination_name",
+        "query": "SELECT destination_name, value FROM \"runtime_seconds\" WHERE \"benchmark_type\" =  '<class \\'benchmark.DestinationComparisonBenchmark\\'>' GROUP BY destination_name",
         "refresh": 2,
         "regex": "",
         "skipUrlSync": false,
@@ -1795,8 +1895,8 @@
       {
         "allValue": null,
         "current": {
-          "text": "workflow_status",
-          "value": "workflow_status"
+          "text": "cpu.cfs_period_us",
+          "value": "cpu.cfs_period_us"
         },
         "datasource": "glx_benchmarker",
         "definition": "SHOW MEASUREMENTS ",
@@ -1851,5 +1951,5 @@
   "timezone": "",
   "title": "Destination-Comparison Benchmarks",
   "uid": "Ve6R3OnZz",
-  "version": 21
+  "version": 23
 }
