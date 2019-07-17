@@ -16,140 +16,328 @@
   "gnetId": null,
   "graphTooltip": 0,
   "id": 4,
-  "iteration": 1562752681435,
+  "iteration": 1563177419243,
   "links": [],
   "panels": [
     {
-      "aliasColors": {},
-      "bars": true,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": "glx_benchmarker",
-      "fill": 1,
+      "collapsed": true,
       "gridPos": {
-        "h": 6,
+        "h": 1,
         "w": 24,
         "x": 0,
         "y": 0
       },
-      "id": 34,
-      "legend": {
-        "alignAsTable": false,
-        "avg": false,
-        "current": false,
-        "hideEmpty": false,
-        "hideZero": false,
-        "max": false,
-        "min": false,
-        "show": false,
-        "total": false,
-        "values": false
-      },
-      "lines": false,
-      "linewidth": 1,
-      "links": [],
-      "nullPointMode": "null",
-      "options": {},
-      "percentage": false,
-      "pointradius": 2,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [
+      "id": 39,
+      "panels": [
         {
-          "alias": "/error/",
-          "color": "#E02F44"
-        },
-        {
-          "alias": "/success/",
-          "color": "#56A64B"
-        }
-      ],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "alias": "$tag_benchmark_uuid: $col",
-          "groupBy": [
+          "aliasColors": {},
+          "bars": true,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "glx_benchmarker",
+          "fill": 1,
+          "gridPos": {
+            "h": 6,
+            "w": 24,
+            "x": 0,
+            "y": 1
+          },
+          "id": 34,
+          "legend": {
+            "alignAsTable": false,
+            "avg": false,
+            "current": false,
+            "hideEmpty": false,
+            "hideZero": false,
+            "max": false,
+            "min": false,
+            "show": false,
+            "total": false,
+            "values": false
+          },
+          "lines": false,
+          "linewidth": 1,
+          "links": [],
+          "nullPointMode": "null",
+          "options": {},
+          "percentage": false,
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [
             {
-              "params": [
-                "benchmark_uuid"
+              "alias": "/error/",
+              "color": "#E02F44"
+            },
+            {
+              "alias": "/success/",
+              "color": "#56A64B"
+            }
+          ],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "alias": "$tag_benchmark_uuid: $col",
+              "groupBy": [
+                {
+                  "params": [
+                    "benchmark_uuid"
+                  ],
+                  "type": "tag"
+                }
               ],
-              "type": "tag"
+              "measurement": "workflow_status",
+              "orderByTime": "ASC",
+              "policy": "default",
+              "query": "SELECT success, error FROM (SELECT count(\"value\") as success FROM \"workflow_status\" WHERE (\"value\" = 'success') AND \"benchmark_uuid\" =~ /$selected_benchmark_uuid/ AND \"workflow_name\" =~ /$selected_workflow_name/ AND \"destination_name\" =~ /$selected_destination_name/ AND $timeFilter GROUP BY \"benchmark_uuid\"), (SELECT count(\"value\") as error FROM \"workflow_status\" WHERE (\"value\" = 'error')  AND \"benchmark_uuid\" =~ /$selected_benchmark_uuid/ AND \"workflow_name\" =~ /$selected_workflow_name/ AND \"destination_name\" =~ /$selected_destination_name/ AND $timeFilter GROUP BY \"benchmark_uuid\") GROUP BY benchmark_uuid",
+              "rawQuery": true,
+              "refId": "A",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "value"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "count"
+                  }
+                ]
+              ],
+              "tags": [
+                {
+                  "key": "value",
+                  "operator": "=",
+                  "value": "error"
+                }
+              ]
             }
           ],
-          "measurement": "workflow_status",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT success, error FROM (SELECT count(\"value\") as success FROM \"workflow_status\" WHERE (\"value\" = 'success') AND \"benchmark_uuid\" =~ /$selected_benchmark_uuid/ AND \"workflow_name\" =~ /$selected_workflow_name/ AND \"destination_name\" =~ /$selected_destination_name/ AND $timeFilter GROUP BY \"benchmark_uuid\"), (SELECT count(\"value\") as error FROM \"workflow_status\" WHERE (\"value\" = 'error')  AND \"benchmark_uuid\" =~ /$selected_benchmark_uuid/ AND \"workflow_name\" =~ /$selected_workflow_name/ AND \"destination_name\" =~ /$selected_destination_name/ AND $timeFilter GROUP BY \"benchmark_uuid\") GROUP BY benchmark_uuid",
-          "rawQuery": true,
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "count"
-              }
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "Workflow Status",
+          "tooltip": {
+            "shared": false,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "series",
+            "name": null,
+            "show": true,
+            "values": [
+              "total"
             ]
-          ],
-          "tags": [
+          },
+          "yaxes": [
             {
-              "key": "value",
-              "operator": "=",
-              "value": "error"
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
             }
-          ]
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeRegions": [],
-      "timeShift": null,
-      "title": "Workflow Status",
-      "tooltip": {
-        "shared": false,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "series",
-        "name": null,
-        "show": true,
-        "values": [
-          "total"
-        ]
-      },
-      "yaxes": [
-        {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
         },
         {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
+          "columns": [],
+          "datasource": "glx_benchmarker",
+          "fontSize": "100%",
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 7
+          },
+          "id": 36,
+          "links": [],
+          "options": {},
+          "pageSize": null,
+          "scroll": true,
+          "showHeader": true,
+          "sort": {
+            "col": 0,
+            "desc": true
+          },
+          "styles": [
+            {
+              "alias": "Time",
+              "dateFormat": "YYYY-MM-DD HH:mm:ss",
+              "pattern": "Time",
+              "type": "date"
+            },
+            {
+              "alias": "",
+              "colorMode": null,
+              "colors": [
+                "rgba(245, 54, 54, 0.9)",
+                "rgba(237, 129, 40, 0.89)",
+                "rgba(50, 172, 45, 0.97)"
+              ],
+              "decimals": 2,
+              "pattern": "/.*/",
+              "thresholds": [],
+              "type": "number",
+              "unit": "none"
+            }
+          ],
+          "targets": [
+            {
+              "groupBy": [
+                {
+                  "params": [
+                    "$__interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "orderByTime": "ASC",
+              "policy": "default",
+              "query": "SELECT value FROM /$selected_measurement/  WHERE (\"benchmark_type\" =  '<class \\'benchmark.DestinationComparisonBenchmark\\'>' AND \"benchmark_uuid\" =~ /$selected_benchmark_uuid/ AND \"workflow_name\" =~ /$selected_workflow_name/ AND \"destination_name\" =~ /$selected_destination_name/) AND $timeFilter GROUP BY benchmark_uuid, destination_name, workflow_name",
+              "rawQuery": true,
+              "refId": "A",
+              "resultFormat": "table",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "value"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": []
+            }
+          ],
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "Selected Measurements",
+          "transform": "table",
+          "type": "table"
+        },
+        {
+          "columns": [],
+          "datasource": "glx_benchmarker",
+          "fontSize": "100%",
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 7
+          },
+          "id": 37,
+          "links": [],
+          "options": {},
+          "pageSize": null,
+          "scroll": true,
+          "showHeader": true,
+          "sort": {
+            "col": 0,
+            "desc": true
+          },
+          "styles": [
+            {
+              "alias": "Time",
+              "dateFormat": "YYYY-MM-DD HH:mm:ss",
+              "pattern": "Time",
+              "type": "date"
+            },
+            {
+              "alias": "",
+              "colorMode": null,
+              "colors": [
+                "rgba(245, 54, 54, 0.9)",
+                "rgba(237, 129, 40, 0.89)",
+                "rgba(50, 172, 45, 0.97)"
+              ],
+              "decimals": 2,
+              "pattern": "/.*/",
+              "thresholds": [],
+              "type": "number",
+              "unit": "none"
+            }
+          ],
+          "targets": [
+            {
+              "groupBy": [
+                {
+                  "params": [
+                    "$__interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "orderByTime": "ASC",
+              "policy": "default",
+              "query": "SELECT min(\"sum\"), max(\"sum\"), mean(\"sum\"), stddev(\"sum\") FROM (SELECT sum(\"value\") FROM /$selected_measurement/ WHERE (\"benchmark_type\" =  '<class \\'benchmark.DestinationComparisonBenchmark\\'>' AND \"benchmark_uuid\" =~ /$selected_benchmark_uuid/ AND \"workflow_name\" =~ /$selected_workflow_name/ AND \"destination_name\" =~ /$selected_destination_name/) AND $timeFilter GROUP BY \"destination_name\", \"workflow_name\", \"benchmark_uuid\", \"history_name\") GROUP BY \"benchmark_uuid\", \"destination_name\", \"workflow_name\" ",
+              "rawQuery": true,
+              "refId": "A",
+              "resultFormat": "table",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "value"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": []
+            }
+          ],
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "Average over selected measurements",
+          "transform": "table",
+          "type": "table"
         }
       ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
+      "title": "Custom Measurements",
+      "type": "row"
     },
     {
       "collapsed": false,
@@ -157,7 +345,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 6
+        "y": 1
       },
       "id": 25,
       "panels": [],
@@ -172,7 +360,7 @@
         "h": 16,
         "w": 12,
         "x": 0,
-        "y": 7
+        "y": 2
       },
       "id": 16,
       "links": [],
@@ -279,7 +467,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 7
+        "y": 2
       },
       "id": 17,
       "links": [],
@@ -389,7 +577,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 15
+        "y": 10
       },
       "id": 19,
       "legend": {
@@ -508,7 +696,7 @@
         "h": 16,
         "w": 12,
         "x": 0,
-        "y": 23
+        "y": 18
       },
       "id": 30,
       "links": [],
@@ -615,7 +803,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 23
+        "y": 18
       },
       "id": 31,
       "links": [],
@@ -725,7 +913,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 31
+        "y": 26
       },
       "id": 32,
       "legend": {
@@ -842,7 +1030,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 39
+        "y": 34
       },
       "id": 23,
       "panels": [],
@@ -857,7 +1045,7 @@
         "h": 13,
         "w": 12,
         "x": 0,
-        "y": 40
+        "y": 35
       },
       "id": 5,
       "links": [],
@@ -964,7 +1152,7 @@
         "h": 5,
         "w": 12,
         "x": 12,
-        "y": 40
+        "y": 35
       },
       "id": 15,
       "links": [],
@@ -1074,7 +1262,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 45
+        "y": 40
       },
       "id": 26,
       "legend": {
@@ -1191,7 +1379,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 53
+        "y": 48
       },
       "id": 21,
       "panels": [],
@@ -1206,7 +1394,7 @@
         "h": 13,
         "w": 12,
         "x": 0,
-        "y": 54
+        "y": 49
       },
       "id": 29,
       "links": [],
@@ -1293,7 +1481,7 @@
         "h": 5,
         "w": 12,
         "x": 12,
-        "y": 54
+        "y": 49
       },
       "id": 12,
       "links": [],
@@ -1403,7 +1591,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 59
+        "y": 54
       },
       "id": 27,
       "legend": {
@@ -1551,9 +1739,10 @@
       {
         "allValue": null,
         "current": {
-          "text": "All",
+          "tags": [],
+          "text": "adaboost",
           "value": [
-            "$__all"
+            "adaboost"
           ]
         },
         "datasource": "glx_benchmarker",
@@ -1578,10 +1767,10 @@
       {
         "allValue": null,
         "current": {
-          "tags": [],
-          "text": "All",
+          "text": "Belgium + Tubingen",
           "value": [
-            "$__all"
+            "Belgium",
+            "Tubingen"
           ]
         },
         "datasource": "glx_benchmarker",
@@ -1602,11 +1791,36 @@
         "tagsQuery": "",
         "type": "query",
         "useTags": false
+      },
+      {
+        "allValue": null,
+        "current": {
+          "text": "workflow_status",
+          "value": "workflow_status"
+        },
+        "datasource": "glx_benchmarker",
+        "definition": "SHOW MEASUREMENTS ",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Measurement",
+        "multi": false,
+        "name": "selected_measurement",
+        "options": [],
+        "query": "SHOW MEASUREMENTS ",
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
       }
     ]
   },
   "time": {
-    "from": "now-24h",
+    "from": "now-7d",
     "to": "now"
   },
   "timepicker": {
@@ -1637,5 +1851,5 @@
   "timezone": "",
   "title": "Destination-Comparison Benchmarks",
   "uid": "Ve6R3OnZz",
-  "version": 20
+  "version": 21
 }
