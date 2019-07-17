@@ -36,7 +36,9 @@
     </destinations>
     <tools>
         <tool id="upload1" destination="local" />
+        <tool id="__SET_METADATA__" destination="local" />
         <tool id="toolshed.g2.bx.psu.edu/repos/iuc/snpeff/snpEff_download/4.1.0" destination="local" />
         <tool id="toolshed.g2.bx.psu.edu/repos/iuc/snpeff/snpEff_download/4.3r.1" destination="local" />
+        <tool id="toolshed.g2.bx.psu.edu/repos/bgruening/prepare_ligands_for_docking/prepare_ligands_for_docking/2.4.2.0" destination="local" />
     </tools>
 </job_conf>
