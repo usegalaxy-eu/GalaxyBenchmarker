@@ -79,6 +79,7 @@ class BaseBenchmark:
                                 "benchmark_type": type(self),
                                 "destination_name": dest_name,
                                 "workflow_name": workflow_name,
+                                "history_name": run["history_name"] if "history_name" in run else None,
                                 "run_type": run_type,
                             }
 
