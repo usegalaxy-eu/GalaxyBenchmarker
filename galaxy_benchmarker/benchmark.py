@@ -249,6 +249,8 @@ class BurstBenchmark(BaseBenchmark):
             log.info("Starting to run BackgroundTaskThread")
             for task in self.bm.background_tasks:
                 task["next_run"] = time.monotonic() + task["first_run_after"]
+                if "run_until" in task:
+                    task["run_until"] += time.monotonic()
 
             while True:
                 for task in self.bm.background_tasks:
