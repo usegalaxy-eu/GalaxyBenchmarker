@@ -6,6 +6,7 @@ from galaxy_bridge import Galaxy
 import logging
 import json
 from influxdb_bridge import InfluxDB
+from openstack_bridge import OpenStackCompute
 
 log = logging.getLogger("GalaxyBenchmarker")
 
@@ -31,6 +32,12 @@ class Benchmarker:
         else:
             self.inflx_db = None
 
+        if "openstack" in config:
+            os_conf = config["openstack"]
+            self.openstack = OpenStackCompute(os_conf["auth_url"], os_conf["compute_endpoint_version"],
+                                              os_conf["username"], os_conf["password"], os_conf["project_id"],
+                                              os_conf["region_name"], os_conf["user_domain_name"])
+
         self.workflows = dict()
         for wf_config in config["workflows"]:
             self.workflows[wf_config["name"]] = workflow.configure_workflow(wf_config)
@@ -42,7 +49,7 @@ class Benchmarker:
         self.benchmarks = dict()
         for bm_config in config["benchmarks"]:
             self.benchmarks[bm_config["name"]] = benchmark.configure_benchmark(bm_config, self.destinations,
-                                                                               self.workflows, self.glx)
+                                                                               self.workflows, self.glx, self)
 
         if glx_conf["configure_job_destinations"]:
             log.info("Creating job_conf for Galaxy and deploying it")

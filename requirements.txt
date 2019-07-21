@@ -6,3 +6,4 @@ Jinja2
 influxdb
 paramiko
 ansible
+python-openstackclient

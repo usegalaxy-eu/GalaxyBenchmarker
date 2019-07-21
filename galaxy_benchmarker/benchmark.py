@@ -10,6 +10,7 @@ from destination import BaseDestination, GalaxyDestination, PulsarMQDestination,
 from workflow import BaseWorkflow, GalaxyWorkflow, CondorWorkflow
 from task import BaseTask, AnsiblePlaybookTask, BenchmarkerTask
 from typing import List, Dict, Union
+from task import configure_task
 from influxdb_bridge import InfluxDB
 import planemo_bridge
 from bioblend import ConnectionError
@@ -24,14 +25,16 @@ class BaseBenchmark:
     """
     allowed_dest_types = []
     allowed_workflow_types = []
+    benchmarker = None
     galaxy = None
     benchmark_results = dict()
     pre_tasks: List[BaseTask] = None
     post_tasks: List[BaseTask] = None
 
-    def __init__(self, name, destinations: List[BaseDestination],
+    def __init__(self, name, benchmarker, destinations: List[BaseDestination],
                  workflows: List[BaseWorkflow], runs_per_workflow=1):
         self.name = name
+        self.benchmarker = benchmarker
         self.uuid = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
         self.destinations = destinations
         self.workflows = workflows
@@ -108,9 +111,9 @@ class ColdWarmBenchmark(BaseBenchmark):
     cold_pre_task: AnsiblePlaybookTask = None
     warm_pre_task: AnsiblePlaybookTask = None
 
-    def __init__(self, name, destinations: List[Union[PulsarMQDestination, GalaxyDestination]],
+    def __init__(self, name, benchmarker, destinations: List[Union[PulsarMQDestination, GalaxyDestination]],
                  workflows: List[GalaxyWorkflow], galaxy, runs_per_workflow=1):
-        super().__init__(name, destinations, workflows, runs_per_workflow)
+        super().__init__(name, benchmarker, destinations, workflows, runs_per_workflow)
         self.destinations = destinations
         self.workflows = workflows
         self.galaxy = galaxy
@@ -135,9 +138,9 @@ class DestinationComparisonBenchmark(BaseBenchmark):
     allowed_dest_types = [GalaxyDestination, PulsarMQDestination, GalaxyCondorDestination]
     allowed_workflow_types = [GalaxyWorkflow]
 
-    def __init__(self, name, destinations: List[Union[PulsarMQDestination, GalaxyDestination]],
+    def __init__(self, name, benchmarker, destinations: List[Union[PulsarMQDestination, GalaxyDestination]],
                  workflows: List[GalaxyWorkflow], galaxy, runs_per_workflow=1, warmup=True):
-        super().__init__(name, destinations, workflows, runs_per_workflow)
+        super().__init__(name, benchmarker, destinations, workflows, runs_per_workflow)
         self.destinations = destinations
         self.workflows = workflows
         self.galaxy = galaxy
@@ -161,9 +164,11 @@ class BurstBenchmark(BaseBenchmark):
     allowed_dest_types = [GalaxyDestination, PulsarMQDestination, CondorDestination]
     allowed_workflow_types = [GalaxyWorkflow, CondorWorkflow]
 
-    def __init__(self, name, destinations: List[BaseDestination],
+    background_tasks: List[Dict] = list()
+
+    def __init__(self, name, benchmarker, destinations: List[BaseDestination],
                  workflows: List[BaseWorkflow], runs_per_workflow=1, burst_rate=1):
-        super().__init__(name, destinations, workflows, runs_per_workflow)
+        super().__init__(name, benchmarker, destinations, workflows, runs_per_workflow)
         self.burst_rate = burst_rate
 
         if len(self.destinations) != 1:
@@ -187,6 +192,9 @@ class BurstBenchmark(BaseBenchmark):
                     destination.deploy_workflow(workflow)
 
     def run(self, benchmarker):
+        background_task_process = self.BackgroundTaskThread(self)
+        background_task_process.start()
+
         threads = []
         results = [None]*self.runs_per_workflow
         total_runs = next_runs = 0
@@ -217,6 +225,7 @@ class BurstBenchmark(BaseBenchmark):
             finished_jobs += 1
             log.info("{finished} out of {total} workflows are finished.".format(finished=finished_jobs,
                                                                                 total=total_runs))
+        background_task_process.stop = True
 
         self.benchmark_results = {
             "warm": {
@@ -225,6 +234,36 @@ class BurstBenchmark(BaseBenchmark):
                 }
             }
         }
+
+    class BackgroundTaskThread(threading.Thread):
+        stop = False
+
+        def __init__(self, bm):
+            threading.Thread.__init__(self)
+            self.bm = bm
+
+        def run(self):
+            if len(self.bm.background_tasks) == 0:
+                return
+
+            log.info("Starting to run BackgroundTaskThread")
+            for task in self.bm.background_tasks:
+                task["next_run"] = time.monotonic() + task["first_run_after"]
+
+            while True:
+                for task in self.bm.background_tasks:
+                    if task["next_run"] <= time.monotonic():
+                        log.info("Running background task {task}".format(task=task))
+                        task["task"].run()
+                        task["next_run"] = time.monotonic() + task["run_every"]
+                    if "run_until" in task:
+                        if task["run_until"] <= time.monotonic() and task["next_run"] < float("inf"):
+                            task["next_run"] = float("inf")
+                            log.info("Stopped background task {task}, as run_until passed".format(task=task))
+                if self.stop:
+                    break
+
+                time.sleep(1)
 
     class BurstThread(threading.Thread):
         """
@@ -235,7 +274,6 @@ class BurstBenchmark(BaseBenchmark):
             self.bm = bm
             self.thread_id = thread_id
             self.results = results
-            pass
 
         def run(self):
             """
@@ -370,7 +408,7 @@ def run_galaxy_benchmark(benchmark, galaxy, destinations: List[PulsarMQDestinati
     return benchmark_results
 
 
-def configure_benchmark(bm_config: Dict, destinations: Dict, workflows: Dict, glx) -> BaseBenchmark:
+def configure_benchmark(bm_config: Dict, destinations: Dict, workflows: Dict, glx, benchmarker) -> BaseBenchmark:
     """
     Initializes and configures a Benchmark according to the given configuration. Returns the configured Benchmark.
     """
@@ -381,7 +419,7 @@ def configure_benchmark(bm_config: Dict, destinations: Dict, workflows: Dict, gl
     runs_per_workflow = bm_config["runs_per_workflow"] if "runs_per_workflow" in bm_config else 1
 
     if bm_config["type"] == "ColdvsWarm":
-        benchmark = ColdWarmBenchmark(bm_config["name"],
+        benchmark = ColdWarmBenchmark(bm_config["name"], benchmarker,
                                       _get_needed_destinations(bm_config, destinations, ColdWarmBenchmark),
                                       _get_needed_workflows(bm_config, workflows, ColdWarmBenchmark), glx,
                                       runs_per_workflow)
@@ -396,7 +434,7 @@ def configure_benchmark(bm_config: Dict, destinations: Dict, workflows: Dict, gl
 
     if bm_config["type"] == "DestinationComparison":
         warmup = True if "warmup" not in bm_config else bm_config["warmup"]
-        benchmark = DestinationComparisonBenchmark(bm_config["name"],
+        benchmark = DestinationComparisonBenchmark(bm_config["name"], benchmarker,
                                                    _get_needed_destinations(bm_config, destinations,
                                                                             DestinationComparisonBenchmark),
                                                    _get_needed_workflows(bm_config, workflows,
@@ -404,10 +442,17 @@ def configure_benchmark(bm_config: Dict, destinations: Dict, workflows: Dict, gl
                                                    glx, runs_per_workflow, warmup)
 
     if bm_config["type"] == "Burst":
-        benchmark = BurstBenchmark(bm_config["name"], _get_needed_destinations(bm_config, destinations, BurstBenchmark),
+        benchmark = BurstBenchmark(bm_config["name"], benchmarker,
+                                   _get_needed_destinations(bm_config, destinations, BurstBenchmark),
                                    _get_needed_workflows(bm_config, workflows, BurstBenchmark),
                                    runs_per_workflow, bm_config["burst_rate"])
         benchmark.galaxy = glx
+
+        if "background_tasks" in bm_config:
+            benchmark.background_tasks = list()
+            for task_conf in bm_config["background_tasks"]:
+                task_conf["task"] = configure_task(task_conf, benchmark)
+                benchmark.background_tasks.append(task_conf)
 
     if "pre_tasks" in bm_config:
         benchmark.pre_tasks = list()
