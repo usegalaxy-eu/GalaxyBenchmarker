@@ -125,3 +125,4 @@ dmypy.json
 .pyre/
 *.tmp
 benchmark_config.yml
+condor_benchmark_config.yml
