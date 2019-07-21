@@ -135,6 +135,8 @@ class GalaxyCondorDestination(GalaxyDestination):
 
 
 class CondorDestination(BaseDestination):
+    status_refresh_time = 0.5 # TODO: Figure out, if that timing is to fast
+
     def __init__(self, name, host, host_user, ssh_key, jobs_directory_dir):
         super().__init__(name)
         self.host = host
@@ -167,6 +169,7 @@ class CondorDestination(BaseDestination):
 
         start_time = time.monotonic()
         job_ids = condor_bridge.submit_job(ssh_client, remote_workflow_dir, workflow.job_file)
+        submit_time = time.monotonic() - start_time
 
         # Check every 0.1s if status has changed
         status = "unknown"
@@ -179,16 +182,20 @@ class CondorDestination(BaseDestination):
                                                                                       error=error))
                 break
             status = job_status["status"]
-            time.sleep(0.1)  # TODO: Figure out, if that timing is to fast
+            time.sleep(self.status_refresh_time)
 
         total_workflow_runtime = time.monotonic() - start_time
 
-        ssh_client.close()
-
         result = {
+            "id": job_ids["id"],
+            "id_range": job_ids["range"],
             "status": "success" if status == "done" else "error",
-            "total_workflow_runtime": total_workflow_runtime
+            "total_workflow_runtime": total_workflow_runtime,
+            "submit_time": submit_time,
+            "jobs": condor_bridge.get_condor_history(ssh_client, float(job_ids["id"]), float(job_ids["id"]))
         }
+
+        ssh_client.close()
 
         return result
 
@@ -227,6 +234,8 @@ def configure_destination(dest_config, glx):
     if dest_config["type"] == "Condor":
         destination = CondorDestination(dest_config["name"], dest_config["host"], dest_config["host_user"],
                                         dest_config["ssh_key"], dest_config["jobs_directory_dir"])
+        if "status_refresh_time" in dest_config:
+            destination.status_refresh_time = dest_config["status_refresh_time"]
 
     if dest_config["type"] == "GalaxyCondor":
         destination = GalaxyCondorDestination(dest_config["name"], glx, job_plugin_params, job_destination_params,

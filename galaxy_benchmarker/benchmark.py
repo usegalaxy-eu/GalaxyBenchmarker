@@ -96,7 +96,7 @@ class BaseBenchmark:
                                 "benchmark_type": type(self),
                                 "destination_name": dest_name,
                                 "workflow_name": workflow_name,
-                                "history_name": run["history_name"],
+                                "history_name": run["history_name"] if "history_name" in run else None,
                                 "run_type": run_type,
                             }
                             inflxdb.save_job_metrics(tags, job)
@@ -268,6 +268,12 @@ class BurstBenchmark(BaseBenchmark):
                                 "type": "float",
                                 "plugin": "benchmarker",
                                 "value": result["total_workflow_runtime"]
+                            },
+                            "submit_time": {
+                                "name": "submit_time",
+                                "type": "float",
+                                "plugin": "benchmarker",
+                                "value": result["submit_time"]
                             }
                         }
 
