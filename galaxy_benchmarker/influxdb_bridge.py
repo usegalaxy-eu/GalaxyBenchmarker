@@ -11,6 +11,9 @@ class InfluxDB:
         """
         Saves the parsed job-specific metrics (see metrics.py) to InfluxDB.
         """
+        if "parsed_job_metrics" not in job_results:
+            return []
+
         json_points = []
 
         for metric in job_results["parsed_job_metrics"].values():
