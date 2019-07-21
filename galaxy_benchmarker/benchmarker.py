@@ -7,7 +7,6 @@ import logging
 import json
 from influxdb_bridge import InfluxDB
 
-
 log = logging.getLogger("GalaxyBenchmarker")
 
 
@@ -19,15 +18,16 @@ class Benchmarker:
     benchmarks: Dict[str, benchmark.BaseBenchmark]
 
     def __init__(self, config):
-        self.glx = Galaxy(config["galaxy"]["url"], config["galaxy"]["admin_key"], config["galaxy"]["shed_install"],
-                          config["galaxy"]["ssh_user"], config["galaxy"]["ssh_key"],
-                          config["galaxy"]["galaxy_root_path"], config["galaxy"]["galaxy_config_dir"],
-                          config["galaxy"]["galaxy_user"])
+        glx_conf = config["galaxy"]
+        self.glx = Galaxy(glx_conf["url"], glx_conf["admin_key"], glx_conf["shed_install"],
+                          glx_conf["ssh_user"], glx_conf["ssh_key"],
+                          glx_conf["galaxy_root_path"], glx_conf["galaxy_config_dir"],
+                          glx_conf["galaxy_user"])
 
         if "influxdb" in config:
-            self.inflx_db = InfluxDB(config["influxdb"]["host"], config["influxdb"]["port"],
-                                     config["influxdb"]["username"], config["influxdb"]["password"],
-                                     config["influxdb"]["db_name"])
+            inf_conf = config["influxdb"]
+            self.inflx_db = InfluxDB(inf_conf["host"], inf_conf["port"], inf_conf["username"], inf_conf["password"],
+                                     inf_conf["db_name"])
         else:
             self.inflx_db = None
 
@@ -44,12 +44,12 @@ class Benchmarker:
             self.benchmarks[bm_config["name"]] = benchmark.configure_benchmark(bm_config, self.destinations,
                                                                                self.workflows, self.glx)
 
-        if config["galaxy"]["configure_job_destinations"]:
+        if glx_conf["configure_job_destinations"]:
             log.info("Creating job_conf for Galaxy and deploying it")
             destination.create_galaxy_job_conf(self.glx, self.destinations)
             self.glx.deploy_job_conf()
 
-        if config["galaxy"]["shed_install"]:
+        if glx_conf["shed_install"]:
             self.glx.install_tools_for_workflows(list(self.workflows.values()))
 
     def run_pre_tasks(self):
