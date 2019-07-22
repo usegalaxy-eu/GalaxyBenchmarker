@@ -167,9 +167,11 @@ class CondorDestination(BaseDestination):
         remote_workflow_dir = "{jobs_dir}/{wf_name}".format(jobs_dir=self.jobs_directory_dir,
                                                             wf_name=workflow.name)
 
+        log.info("Submitting workflow '{wf}' to '{dest}'".format(wf=workflow, dest=self))
         start_time = time.monotonic()
         job_ids = condor_bridge.submit_job(ssh_client, remote_workflow_dir, workflow.job_file)
         submit_time = time.monotonic() - start_time
+        log.info("Submitted in {seconds} seconds".format(seconds=submit_time))
 
         # Check every 0.1s if status has changed
         status = "unknown"
