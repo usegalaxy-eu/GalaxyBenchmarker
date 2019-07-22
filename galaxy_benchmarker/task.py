@@ -33,6 +33,8 @@ class BenchmarkerTask(BaseTask):
             self._reboot_openstack_servers()
         if self.name == "reboot_random_openstack_server":
             self._reboot_random_openstack_server()
+        if self.name == "rebuild_random_openstack_server":
+            self._rebuild_random_openstack_server()
 
     def _delete_old_histories(self, destination):
         destination.galaxy.delete_all_histories_for_user(destination.galaxy_user_name, True)
@@ -56,6 +58,16 @@ class BenchmarkerTask(BaseTask):
 
         rand_index = randrange(0, len(servers))
         os.reboot_servers([servers[rand_index]], reboot_type == "hard")
+
+    def _rebuild_random_openstack_server(self):
+        if "name_contains" not in self.params:
+            raise ValueError("'name_contains' is needed for rebuilding openstack servers")
+
+        os = self.benchmark.benchmarker.openstack
+        servers = os.get_servers(self.params["name_contains"])
+
+        rand_index = randrange(0, len(servers))
+        os.rebuild_servers([servers[rand_index]])
 
 
 def configure_task(task_conf: Dict, benchmark):

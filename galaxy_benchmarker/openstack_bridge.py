@@ -36,3 +36,13 @@ class OpenStackCompute:
             if server.status == 'ACTIVE':
                 log.info("Rebooting server {name}".format(name=server.name))
                 server.reboot(reboot_type)
+
+    def rebuild_servers(self, servers: List[novaclient.v2.servers.Server]):
+        """
+        Rebuilds the given servers with the current settings (images, cloud-init, etc).
+        """
+        for server in servers:
+            if server.status == 'ACTIVE':
+                log.info("Rebuilding server {name}".format(name=server.name))
+                image = server.image["id"]
+                server.rebuild(image)
