@@ -77,7 +77,6 @@ def get_condor_history(client: paramiko.SSHClient, first_id: float, last_id: flo
         raise ValueError("An error with condor_history occurred: {error}".format(error=error))
 
     result = dict()
-
     first = True
     for output in stdout:
         # Check for right output and ignore header
@@ -89,15 +88,14 @@ def get_condor_history(client: paramiko.SSHClient, first_id: float, last_id: flo
 
         values = output.split()
 
-        # Make sure, that job_id is in boundaries of first/last id
-        if int(float(values[0])) > first_id:
+        # Make sure, that job_id is in boundaries of first/last id. As condor_history is not ordered by id, we need
+        # to check each record
+        if int(float(values[0])) > first_id or int(float(values[0])) < last_id:
             continue
-        if int(float(values[0])) < last_id:
-            break
 
         run_time = datetime.strptime(values[4], "0+%H:%M:%S")
-        result[str(float(values[0]))] = {
-            "id": float(values[0]),
+        result[values[0]] = {
+            "id": values[0],
             "owner": values[1],
             "submitted": values[2] + " " + values[3],
             "run_time": (run_time.hour * 3600 + run_time.minute * 60 + run_time.second),
@@ -112,7 +110,7 @@ def get_condor_history(client: paramiko.SSHClient, first_id: float, last_id: flo
                     "value": float(run_time.hour * 3600 + run_time.minute * 60 + run_time.second)
                 },
                 "status": {
-                    "name": "status",
+                    "name": "job_status",
                     "type": "string",
                     "plugin": "benchmarker",
                     "value": "success" if values[5] == "C" else "error"
