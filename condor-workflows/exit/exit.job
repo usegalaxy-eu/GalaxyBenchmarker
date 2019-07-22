@@ -1,0 +1,7 @@
+Universe = vanilla
+Executable = exit.sh
+Log = exit.$(process).log
+Output = exit.$(process).out
+Error = exit.$(process).err
+request_cpus = 1
+Queue 100
