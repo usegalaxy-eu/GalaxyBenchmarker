@@ -2,6 +2,8 @@ import paramiko
 import re
 from typing import List, Dict
 from datetime import datetime
+import json
+import metrics
 
 
 def get_paramiko_client(host, username, key_file):
@@ -67,7 +69,7 @@ def get_condor_history(client: paramiko.SSHClient, first_id: float, last_id: flo
     """
     Returns condor_history as a list of jobs. Returns all job_ids >= first_id
     """
-    stdin, stdout, stderr = client.exec_command("condor_history -backwards -since {i}".format(i=int(first_id)-1))
+    stdin, stdout, stderr = client.exec_command("condor_history -backwards -json -since {i}".format(i=int(first_id)-1))
 
     error = ""
     for err in stderr:
@@ -76,50 +78,15 @@ def get_condor_history(client: paramiko.SSHClient, first_id: float, last_id: flo
     if error != "":
         raise ValueError("An error with condor_history occurred: {error}".format(error=error))
 
-    result = dict()
-    first = True
+    json_output = ""
     for output in stdout:
-        # Check for right output and ignore header
-        if first:
-            if output.find("OWNER") == -1:
-                raise Exception("Unexpected output of 'condor_history': {output}".format(output=output))
-            first = False
-            continue
+        json_output += output
 
-        values = output.split()
-
-        # Make sure, that job_id is in boundaries of first/last id. As condor_history is not ordered by id, we need
-        # to check each record
-        if int(float(values[0])) > first_id or int(float(values[0])) < last_id:
-            continue
-
-        try:
-            run_time = datetime.strptime(values[4], "0+%H:%M:%S")
-        except ValueError:
-            run_time = datetime.strptime("0+00:00:00", "0+%H:%M:%S")
-
-        result[values[0]] = {
-            "id": values[0],
-            "owner": values[1],
-            "submitted": values[2] + " " + values[3],
-            "run_time": (run_time.hour * 3600 + run_time.minute * 60 + run_time.second),  # RemoteWallClockTime
-            "st": values[5], # JobStatus
-            "completed": values[6] + " " + values[7],  # CompletionDate
-            "cmd": values[8],
-            "parsed_job_metrics": {
-                "runtime_seconds": {
-                    "name": "runtime_seconds",
-                    "type": "float",
-                    "plugin": "benchmarker",
-                    "value": float(run_time.hour * 3600 + run_time.minute * 60 + run_time.second)
-                },
-                "status": {
-                    "name": "job_status",
-                    "type": "string",
-                    "plugin": "benchmarker",
-                    "value": "success" if values[5] == "C" else "error"
-                }
-            }
-        }
+    job_list = json.loads(json_output)
+    result = {}
+    for job in job_list:
+        job["parsed_job_metrics"] = metrics.parse_condor_job_metrics(job)
+        job["id"] = job["GlobalJobId"]
+        result[job["id"]] = job
 
     return result
