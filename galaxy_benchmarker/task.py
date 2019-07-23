@@ -23,6 +23,7 @@ class AnsiblePlaybookTask(BaseTask):
 
     __repr__ = __str__
 
+
 class BenchmarkerTask(BaseTask):
     def __init__(self, benchmark, name, params=dict()):
         self.name = name
@@ -33,12 +34,14 @@ class BenchmarkerTask(BaseTask):
         if self.name == "delete_old_histories":
             for destination in self.benchmark.destinations:
                 self._delete_old_histories(destination)
-        if self.name == "reboot_openstack_servers":
+        elif self.name == "reboot_openstack_servers":
             self._reboot_openstack_servers()
-        if self.name == "reboot_random_openstack_server":
+        elif self.name == "reboot_random_openstack_server":
             self._reboot_random_openstack_server()
-        if self.name == "rebuild_random_openstack_server":
+        elif self.name == "rebuild_random_openstack_server":
             self._rebuild_random_openstack_server()
+        else:
+            raise ValueError("{name} is not a valid BenchmarkerTask!".format(name=self.name))
 
     def _delete_old_histories(self, destination):
         destination.galaxy.delete_all_histories_for_user(destination.galaxy_user_name, True)
