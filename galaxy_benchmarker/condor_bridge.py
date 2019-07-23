@@ -54,7 +54,7 @@ def get_job_status(client: paramiko.SSHClient, job_id):
         raise Exception("Couldn't parse condor_q")
 
     return {
-        "status": "done" if status[0] == 0 else "running",
+        "status": "done" if status[0] == 0 or (status[3] == 0 and status[4] == 0) else "running",
         "total_jobs": status[0],
         "completed": status[1],
         "idle": status[3],
@@ -67,7 +67,7 @@ def get_condor_history(client: paramiko.SSHClient, first_id: float, last_id: flo
     """
     Returns condor_history as a list of jobs. Returns all job_ids >= first_id
     """
-    stdin, stdout, stderr = client.exec_command("condor_history -backwards")
+    stdin, stdout, stderr = client.exec_command("condor_history -backwards -since {i}".format(i=int(first_id)-1))
 
     error = ""
     for err in stderr:
@@ -93,14 +93,18 @@ def get_condor_history(client: paramiko.SSHClient, first_id: float, last_id: flo
         if int(float(values[0])) > first_id or int(float(values[0])) < last_id:
             continue
 
-        run_time = datetime.strptime(values[4], "0+%H:%M:%S")
+        try:
+            run_time = datetime.strptime(values[4], "0+%H:%M:%S")
+        except ValueError:
+            run_time = datetime.strptime("0+00:00:00", "0+%H:%M:%S")
+
         result[values[0]] = {
             "id": values[0],
             "owner": values[1],
             "submitted": values[2] + " " + values[3],
-            "run_time": (run_time.hour * 3600 + run_time.minute * 60 + run_time.second),
-            "st": values[5],
-            "completed": values[6] + " " + values[7],
+            "run_time": (run_time.hour * 3600 + run_time.minute * 60 + run_time.second),  # RemoteWallClockTime
+            "st": values[5], # JobStatus
+            "completed": values[6] + " " + values[7],  # CompletionDate
             "cmd": values[8],
             "parsed_job_metrics": {
                 "runtime_seconds": {
