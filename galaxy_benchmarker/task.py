@@ -18,6 +18,10 @@ class AnsiblePlaybookTask(BaseTask):
         for destination in self.benchmark.destinations:
             destination.run_ansible_playbook_task(self)
 
+    def __str__(self):
+        return "Ansible Playbook: " + self.playbook
+
+    __repr__ = __str__
 
 class BenchmarkerTask(BaseTask):
     def __init__(self, benchmark, name, params=dict()):
@@ -68,6 +72,11 @@ class BenchmarkerTask(BaseTask):
 
         rand_index = randrange(0, len(servers))
         os.rebuild_servers([servers[rand_index]])
+
+    def __str__(self):
+        return self.name
+
+    __repr__ = __str__
 
 
 def configure_task(task_conf: Dict, benchmark):

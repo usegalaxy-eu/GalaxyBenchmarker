@@ -15,6 +15,11 @@ class BaseWorkflow:
         self.path = path
         self.name = name
 
+    def __str__(self):
+        return self.name
+
+    __repr__ = __str__
+
 
 class GalaxyWorkflow(BaseWorkflow):
     timeout = None

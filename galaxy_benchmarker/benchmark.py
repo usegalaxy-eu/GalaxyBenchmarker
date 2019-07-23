@@ -12,7 +12,6 @@ from task import BaseTask, AnsiblePlaybookTask, BenchmarkerTask
 from typing import List, Dict, Union
 from task import configure_task
 from influxdb_bridge import InfluxDB
-import planemo_bridge
 from bioblend import ConnectionError
 
 
@@ -35,7 +34,7 @@ class BaseBenchmark:
                  workflows: List[BaseWorkflow], runs_per_workflow=1):
         self.name = name
         self.benchmarker = benchmarker
-        self.uuid = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
+        self.uuid = name + "_" + datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
         self.destinations = destinations
         self.workflows = workflows
         self.runs_per_workflow = runs_per_workflow
@@ -103,6 +102,11 @@ class BaseBenchmark:
                                 "run_type": run_type,
                             }
                             inflxdb.save_job_metrics(tags, job)
+
+    def __str__(self):
+        return self.name
+
+    __repr__ = __str__
 
 
 class ColdWarmBenchmark(BaseBenchmark):

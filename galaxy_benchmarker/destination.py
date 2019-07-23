@@ -42,6 +42,11 @@ class BaseDestination:
     def run_ansible_playbook_task(self, task: AnsiblePlaybookTask):
         raise NotImplementedError
 
+    def __str__(self):
+        return self.name
+
+    __repr__ = __str__
+
 
 class GalaxyDestination(BaseDestination):
     host = ""
@@ -148,7 +153,7 @@ class CondorDestination(BaseDestination):
         """
         Deploys the given workflow to the Condor-Server with Ansible.
         """
-        log.info("Deploying {workflow} to {destination}".format(workflow=self.name, destination=self.name))
+        log.info("Deploying {workflow} to {destination}".format(workflow=workflow.name, destination=self.name))
         # Use ansible-playbook to upload *.job-file to Condor-Manager
         values = {
             "jobs_directory_dir": self.jobs_directory_dir,
