@@ -16,7 +16,7 @@
   "gnetId": null,
   "graphTooltip": 0,
   "id": 4,
-  "iteration": 1563364619715,
+  "iteration": 1563885333107,
   "links": [],
   "panels": [
     {
@@ -2129,9 +2129,238 @@
         "align": false,
         "alignLevel": null
       }
+    },
+    {
+      "columns": [],
+      "datasource": "glx_benchmarker",
+      "fontSize": "100%",
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 62
+      },
+      "id": 44,
+      "links": [],
+      "options": {},
+      "pageSize": null,
+      "scroll": true,
+      "showHeader": true,
+      "sort": {
+        "col": 0,
+        "desc": true
+      },
+      "styles": [
+        {
+          "alias": "Time",
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "pattern": "Time",
+          "type": "hidden"
+        },
+        {
+          "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "decimals": 2,
+          "pattern": "/.*/",
+          "thresholds": [],
+          "type": "number",
+          "unit": "s"
+        }
+      ],
+      "targets": [
+        {
+          "alias": "CPU-Time per Workflow",
+          "groupBy": [
+            {
+              "params": [
+                "benchmark_uid"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "destination_name"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "workflow_name"
+              ],
+              "type": "tag"
+            }
+          ],
+          "measurement": "staging_time",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "query": "SELECT min(\"value\"), max(\"value\"), mean(\"value\"), stddev(\"value\") FROM (SELECT value FROM \"staging_time\" WHERE (\"benchmark_type\" =  '<class \\'benchmark.DestinationComparisonBenchmark\\'>' AND \"benchmark_uuid\" =~ /$selected_benchmark_uuid/ AND \"workflow_name\" =~ /$selected_workflow_name/ AND \"destination_name\" =~ /$selected_destination_name/) AND $timeFilter GROUP BY \"destination_name\", \"workflow_name\", \"history_name\") GROUP BY destination_name, workflow_name",
+          "rawQuery": true,
+          "refId": "A",
+          "resultFormat": "table",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "sum"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "run_type",
+              "operator": "=",
+              "value": "warm"
+            },
+            {
+              "condition": "AND",
+              "key": "benchmark_type",
+              "operator": "=",
+              "value": "<class 'benchmark.ColdWarmBenchmark'>"
+            }
+          ]
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Average Staging-Time per Destination and Job",
+      "transform": "table",
+      "type": "table"
+    },
+    {
+      "aliasColors": {},
+      "bars": true,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "glx_benchmarker",
+      "fill": 1,
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 62
+      },
+      "id": 45,
+      "legend": {
+        "alignAsTable": false,
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "rightSide": false,
+        "show": false,
+        "total": false,
+        "values": false
+      },
+      "lines": false,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null",
+      "options": {},
+      "paceLength": 10,
+      "percentage": false,
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "alias": "$tag_destination_name: $tag_workflow_name",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "orderByTime": "ASC",
+          "policy": "default",
+          "query": "SELECT mean(\"value\") FROM (SELECT value FROM \"staging_time\" WHERE (\"benchmark_type\" =  '<class \\'benchmark.DestinationComparisonBenchmark\\'>' AND \"benchmark_uuid\" =~ /$selected_benchmark_uuid/ AND \"workflow_name\" =~ /$selected_workflow_name/ AND \"destination_name\" =~ /$selected_destination_name/) AND $timeFilter GROUP BY \"destination_name\", \"workflow_name\", \"history_name\") WHERE $timeFilter GROUP BY destination_name, workflow_name",
+          "rawQuery": true,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": []
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Average Staging-Time per Destination and Job",
+      "tooltip": {
+        "shared": false,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "series",
+        "name": null,
+        "show": true,
+        "values": [
+          "total"
+        ]
+      },
+      "yaxes": [
+        {
+          "format": "s",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": false
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
     }
   ],
-  "refresh": "1m",
+  "refresh": "",
   "schemaVersion": 18,
   "style": "dark",
   "tags": [],
@@ -2140,9 +2369,9 @@
       {
         "allValue": null,
         "current": {
-          "text": "All",
+          "text": "Docking_with_VinaTest_2019-07-23 09:29:52.930519",
           "value": [
-            "$__all"
+            "Docking_with_VinaTest_2019-07-23 09:29:52.930519"
           ]
         },
         "datasource": "glx_benchmarker",
@@ -2167,9 +2396,9 @@
       {
         "allValue": null,
         "current": {
-          "text": "Docking_with_Vina",
+          "text": "All",
           "value": [
-            "Docking_with_Vina"
+            "$__all"
           ]
         },
         "datasource": "glx_benchmarker",
@@ -2221,8 +2450,8 @@
       {
         "allValue": null,
         "current": {
-          "text": "cpu.cfs_period_us",
-          "value": "cpu.cfs_period_us"
+          "text": "workflow_status",
+          "value": "workflow_status"
         },
         "datasource": "glx_benchmarker",
         "definition": "SHOW MEASUREMENTS ",
@@ -2246,7 +2475,7 @@
     ]
   },
   "time": {
-    "from": "now-7d",
+    "from": "now-3h",
     "to": "now"
   },
   "timepicker": {
@@ -2277,5 +2506,5 @@
   "timezone": "",
   "title": "Destination-Comparison Benchmarks",
   "uid": "Ve6R3OnZz",
-  "version": 26
+  "version": 27
 }

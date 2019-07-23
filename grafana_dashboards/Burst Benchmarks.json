@@ -15,7 +15,8 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "id": 4,
+  "id": 2,
+  "iteration": 1563785924621,
   "links": [],
   "panels": [
     {
@@ -93,7 +94,7 @@
           "measurement": "workflow_status",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT success, error FROM (SELECT count(\"value\") as success FROM \"workflow_status\" WHERE (\"value\" = 'success') AND $timeFilter GROUP BY \"benchmark_uuid\"), (SELECT count(\"value\") as error FROM \"workflow_status\" WHERE (\"value\" = 'error')  AND $timeFilter GROUP BY \"benchmark_uuid\") GROUP BY benchmark_uuid",
+          "query": "SELECT success, error FROM (SELECT count(\"value\") as success FROM \"workflow_status\" WHERE (\"value\" = 'success') AND \"benchmark_uuid\" =~ /$selected_benchmark_uuid/ AND $timeFilter GROUP BY \"benchmark_uuid\"), (SELECT count(\"value\") as error FROM \"workflow_status\" WHERE (\"value\" = 'error') AND \"benchmark_uuid\" =~ /$selected_benchmark_uuid/ AND $timeFilter GROUP BY \"benchmark_uuid\") WHERE $timeFilter GROUP BY benchmark_uuid",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series",
@@ -164,12 +165,144 @@
       }
     },
     {
+      "aliasColors": {},
+      "bars": true,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "glx_benchmarker",
+      "fill": 1,
+      "gridPos": {
+        "h": 6,
+        "w": 24,
+        "x": 0,
+        "y": 7
+      },
+      "id": 43,
+      "legend": {
+        "alignAsTable": false,
+        "avg": false,
+        "current": false,
+        "hideEmpty": false,
+        "hideZero": false,
+        "max": false,
+        "min": false,
+        "show": false,
+        "total": false,
+        "values": false
+      },
+      "lines": false,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null",
+      "options": {},
+      "percentage": false,
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [
+        {
+          "alias": "/error/",
+          "color": "#E02F44"
+        },
+        {
+          "alias": "/success/",
+          "color": "#56A64B"
+        }
+      ],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "alias": "$tag_benchmark_uuid: $col",
+          "groupBy": [
+            {
+              "params": [
+                "benchmark_uuid"
+              ],
+              "type": "tag"
+            }
+          ],
+          "measurement": "workflow_status",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "query": "SELECT success, error FROM (SELECT count(\"value\") as success FROM \"job_status\" WHERE (\"value\" = 'success') AND \"benchmark_uuid\" =~ /$selected_benchmark_uuid/ AND $timeFilter GROUP BY \"benchmark_uuid\"), (SELECT count(\"value\") as error FROM \"job_status\" WHERE (\"value\" != 'success') AND \"benchmark_uuid\" =~ /$selected_benchmark_uuid/  AND $timeFilter GROUP BY \"benchmark_uuid\") WHERE $timeFilter GROUP BY benchmark_uuid",
+          "rawQuery": true,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "count"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "value",
+              "operator": "=",
+              "value": "error"
+            }
+          ]
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Job Status",
+      "tooltip": {
+        "shared": false,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "series",
+        "name": null,
+        "show": true,
+        "values": [
+          "total"
+        ]
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
       "collapsed": false,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 7
+        "y": 13
       },
       "id": 25,
       "panels": [],
@@ -184,7 +317,7 @@
         "h": 16,
         "w": 12,
         "x": 0,
-        "y": 8
+        "y": 14
       },
       "id": 16,
       "links": [],
@@ -244,7 +377,7 @@
           "measurement": "staging_time",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT sum(\"value\") FROM \"runtime_seconds\" WHERE (\"benchmark_type\" =  '<class \\'benchmark.BurstBenchmark\\'>') AND $timeFilter GROUP BY \"destination_name\", \"workflow_name\", \"benchmark_uuid\", \"history_name\"",
+          "query": "SELECT value  FROM \"runtime_seconds\" WHERE (\"benchmark_type\" =  '<class \\'benchmark.BurstBenchmark\\'>') AND \"benchmark_uuid\" =~ /$selected_benchmark_uuid/ AND $timeFilter GROUP BY \"destination_name\", \"workflow_name\", \"benchmark_uuid\"",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "table",
@@ -279,7 +412,7 @@
       ],
       "timeFrom": null,
       "timeShift": null,
-      "title": "Runtimes",
+      "title": "Job runtime_seconds",
       "transform": "table",
       "type": "table"
     },
@@ -291,7 +424,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 8
+        "y": 14
       },
       "id": 19,
       "links": [],
@@ -348,7 +481,7 @@
           "measurement": "runtime_seconds",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT median(\"sum\"), mean(\"sum\"), max(\"sum\"), min(\"sum\") FROM (SELECT sum(\"value\") FROM \"runtime_seconds\" WHERE (\"benchmark_type\" =  '<class \\'benchmark.BurstBenchmark\\'>') AND $timeFilter GROUP BY \"workflow_name\", \"benchmark_uuid\", \"history_name\") WHERE $timeFilter GROUP BY \"benchmark_uuid\", \"workflow_name\" ",
+          "query": "SELECT median(\"value\"), mean(\"value\"), max(\"value\"), min(\"value\") FROM (SELECT value FROM \"runtime_seconds\" WHERE (\"benchmark_type\" =  '<class \\'benchmark.BurstBenchmark\\'>') AND \"benchmark_uuid\" =~ /$selected_benchmark_uuid/ AND $timeFilter GROUP BY \"workflow_name\", \"benchmark_uuid\", \"history_name\") WHERE $timeFilter GROUP BY \"benchmark_uuid\", \"workflow_name\" ",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "table",
@@ -388,7 +521,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 16
+        "y": 22
       },
       "id": 30,
       "legend": {
@@ -439,7 +572,7 @@
           "measurement": "staging_time",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT sum FROM (SELECT sum(\"value\") FROM \"runtime_seconds\" WHERE (\"benchmark_type\" =  '<class \\'benchmark.BurstBenchmark\\'>') AND $timeFilter GROUP BY \"destination_name\", \"workflow_name\", \"benchmark_uuid\", \"history_name\")",
+          "query": "SELECT value FROM \"runtime_seconds\" WHERE (\"benchmark_type\" =  '<class \\'benchmark.BurstBenchmark\\'>') AND \"benchmark_uuid\" =~ /$selected_benchmark_uuid/ AND $timeFilter GROUP BY \"workflow_name\", \"benchmark_uuid\", \"history_name\"",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series",
@@ -515,343 +648,16 @@
       }
     },
     {
-      "collapsed": false,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 24
-      },
-      "id": 23,
-      "panels": [],
-      "title": "CPU Time",
-      "type": "row"
-    },
-    {
       "columns": [],
       "datasource": "glx_benchmarker",
       "fontSize": "100%",
       "gridPos": {
-        "h": 13,
+        "h": 16,
         "w": 12,
         "x": 0,
-        "y": 25
+        "y": 30
       },
-      "id": 5,
-      "links": [],
-      "options": {},
-      "pageSize": null,
-      "scroll": true,
-      "showHeader": true,
-      "sort": {
-        "col": 0,
-        "desc": true
-      },
-      "styles": [
-        {
-          "alias": "Time",
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "pattern": "Time",
-          "type": "hidden"
-        },
-        {
-          "alias": "",
-          "colorMode": null,
-          "colors": [
-            "rgba(245, 54, 54, 0.9)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(50, 172, 45, 0.97)"
-          ],
-          "decimals": 2,
-          "pattern": "/.*/",
-          "thresholds": [],
-          "type": "number",
-          "unit": "s"
-        }
-      ],
-      "targets": [
-        {
-          "alias": "CPU-Time per Workflow",
-          "groupBy": [
-            {
-              "params": [
-                "benchmark_uid"
-              ],
-              "type": "tag"
-            },
-            {
-              "params": [
-                "destination_name"
-              ],
-              "type": "tag"
-            },
-            {
-              "params": [
-                "workflow_name"
-              ],
-              "type": "tag"
-            }
-          ],
-          "measurement": "cpuacct.usage",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT sum(\"value\") FROM \"cpuacct.usage\" WHERE (\"benchmark_type\" = '<class \\'benchmark.BurstBenchmark\\'>') AND $timeFilter GROUP BY \"destination_name\", \"workflow_name\", \"benchmark_uuid\", \"history_name\"",
-          "rawQuery": true,
-          "refId": "A",
-          "resultFormat": "table",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "sum"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "run_type",
-              "operator": "=",
-              "value": "warm"
-            },
-            {
-              "condition": "AND",
-              "key": "benchmark_type",
-              "operator": "=",
-              "value": "<class 'benchmark.ColdWarmBenchmark'>"
-            }
-          ]
-        }
-      ],
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "CPU-Usage",
-      "transform": "table",
-      "type": "table"
-    },
-    {
-      "columns": [],
-      "datasource": "glx_benchmarker",
-      "fontSize": "100%",
-      "gridPos": {
-        "h": 5,
-        "w": 12,
-        "x": 12,
-        "y": 25
-      },
-      "id": 31,
-      "links": [],
-      "options": {},
-      "pageSize": null,
-      "scroll": true,
-      "showHeader": true,
-      "sort": {
-        "col": 0,
-        "desc": true
-      },
-      "styles": [
-        {
-          "alias": "Time",
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "pattern": "Time",
-          "type": "hidden"
-        },
-        {
-          "alias": "",
-          "colorMode": null,
-          "colors": [
-            "rgba(245, 54, 54, 0.9)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(50, 172, 45, 0.97)"
-          ],
-          "decimals": 2,
-          "pattern": "/.*/",
-          "thresholds": [],
-          "type": "number",
-          "unit": "s"
-        }
-      ],
-      "targets": [
-        {
-          "alias": "CPU-Time per Workflow",
-          "groupBy": [
-            {
-              "params": [
-                "benchmark_uid"
-              ],
-              "type": "tag"
-            },
-            {
-              "params": [
-                "destination_name"
-              ],
-              "type": "tag"
-            },
-            {
-              "params": [
-                "workflow_name"
-              ],
-              "type": "tag"
-            }
-          ],
-          "measurement": "cpuacct.usage",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT median(\"sum\"), mean(\"sum\"), max(\"sum\"), min(\"sum\") FROM (SELECT sum(\"value\") FROM \"cpuacct.usage\" WHERE (\"benchmark_type\" = '<class \\'benchmark.BurstBenchmark\\'>') AND $timeFilter GROUP BY \"destination_name\", \"workflow_name\", \"benchmark_uuid\", \"history_name\") WHERE $timeFilter GROUP BY \"benchmark_uuid\", \"workflow_name\" ",
-          "rawQuery": true,
-          "refId": "A",
-          "resultFormat": "table",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "sum"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "run_type",
-              "operator": "=",
-              "value": "warm"
-            },
-            {
-              "condition": "AND",
-              "key": "benchmark_type",
-              "operator": "=",
-              "value": "<class 'benchmark.ColdWarmBenchmark'>"
-            }
-          ]
-        }
-      ],
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "CPU-Usage per Benchmark and Workflow",
-      "transform": "table",
-      "type": "table"
-    },
-    {
-      "collapsed": false,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 38
-      },
-      "id": 21,
-      "panels": [],
-      "title": "Staging Time",
-      "type": "row"
-    },
-    {
-      "columns": [],
-      "datasource": "glx_benchmarker",
-      "fontSize": "100%",
-      "gridPos": {
-        "h": 13,
-        "w": 12,
-        "x": 0,
-        "y": 39
-      },
-      "id": 29,
-      "links": [],
-      "options": {},
-      "pageSize": null,
-      "scroll": true,
-      "showHeader": true,
-      "sort": {
-        "col": 0,
-        "desc": true
-      },
-      "styles": [
-        {
-          "alias": "Time",
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "pattern": "Time",
-          "type": "date"
-        },
-        {
-          "alias": "",
-          "colorMode": null,
-          "colors": [
-            "rgba(245, 54, 54, 0.9)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(50, 172, 45, 0.97)"
-          ],
-          "decimals": 2,
-          "pattern": "/.*/",
-          "thresholds": [],
-          "type": "number",
-          "unit": "short"
-        }
-      ],
-      "targets": [
-        {
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT sum(\"value\") FROM \"staging_time\" WHERE (\"benchmark_type\" =  '<class \\'benchmark.BurstBenchmark\\'>') AND $timeFilter GROUP BY \"destination_name\", \"workflow_name\", \"benchmark_uuid\", \"history_name\"",
-          "rawQuery": true,
-          "refId": "A",
-          "resultFormat": "table",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": []
-        }
-      ],
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "Staging-Time per Workflow-Run",
-      "transform": "table",
-      "type": "table"
-    },
-    {
-      "columns": [],
-      "datasource": "glx_benchmarker",
-      "fontSize": "100%",
-      "gridPos": {
-        "h": 5,
-        "w": 12,
-        "x": 12,
-        "y": 39
-      },
-      "id": 32,
+      "id": 40,
       "links": [],
       "options": {},
       "pageSize": null,
@@ -909,7 +715,7 @@
           "measurement": "staging_time",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT median(\"sum\"), mean(\"sum\"), max(\"sum\"), min(\"sum\") FROM (SELECT sum(\"value\") FROM \"staging_time\" WHERE (\"benchmark_type\" =  '<class \\'benchmark.BurstBenchmark\\'>') AND $timeFilter GROUP BY \"workflow_name\", \"benchmark_uuid\", \"history_name\") WHERE $timeFilter GROUP BY \"benchmark_uuid\", \"workflow_name\" ",
+          "query": "SELECT sum(\"value\") FROM \"total_workflow_runtime\" WHERE (\"benchmark_type\" =  '<class \\'benchmark.BurstBenchmark\\'>') AND \"benchmark_uuid\" =~ /$selected_benchmark_uuid/ AND $timeFilter GROUP BY \"destination_name\", \"workflow_name\", \"benchmark_uuid\", \"history_name\"",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "table",
@@ -944,7 +750,101 @@
       ],
       "timeFrom": null,
       "timeShift": null,
-      "title": "Staging-Time per Benchmark and Workflow",
+      "title": "Total Workflow Runtimes",
+      "transform": "table",
+      "type": "table"
+    },
+    {
+      "columns": [],
+      "datasource": "glx_benchmarker",
+      "fontSize": "100%",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 30
+      },
+      "id": 41,
+      "links": [],
+      "options": {},
+      "pageSize": null,
+      "scroll": true,
+      "showHeader": true,
+      "sort": {
+        "col": 0,
+        "desc": true
+      },
+      "styles": [
+        {
+          "alias": "Time",
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "pattern": "Time",
+          "type": "date"
+        },
+        {
+          "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "(median|mean|max|min)",
+          "thresholds": [],
+          "type": "number",
+          "unit": "s"
+        },
+        {
+          "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "decimals": 2,
+          "pattern": "/.*/",
+          "thresholds": [],
+          "type": "number",
+          "unit": "short"
+        }
+      ],
+      "targets": [
+        {
+          "alias": "$tag_ benchmark_uuid: $tag_workflow_name",
+          "groupBy": [],
+          "measurement": "runtime_seconds",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "query": "SELECT median(\"sum\"), mean(\"sum\"), max(\"sum\"), min(\"sum\") FROM (SELECT sum(\"value\") FROM \"total_workflow_runtime\" WHERE (\"benchmark_type\" =  '<class \\'benchmark.BurstBenchmark\\'>') AND \"benchmark_uuid\" =~ /$selected_benchmark_uuid/ AND $timeFilter GROUP BY \"workflow_name\", \"benchmark_uuid\", \"history_name\") WHERE $timeFilter GROUP BY \"benchmark_uuid\", \"workflow_name\" ",
+          "rawQuery": true,
+          "refId": "A",
+          "resultFormat": "table",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "benchmark_type",
+              "operator": "=",
+              "value": "<class 'benchmark.BurstBenchmark'>"
+            }
+          ]
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Total Workflow Runtime per Benchmark and Workflow",
       "transform": "table",
       "type": "table"
     },
@@ -959,9 +859,9 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 44
+        "y": 38
       },
-      "id": 33,
+      "id": 42,
       "legend": {
         "avg": false,
         "current": false,
@@ -1010,7 +910,7 @@
           "measurement": "staging_time",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT sum FROM (SELECT sum(\"value\") FROM \"staging_time\" WHERE (\"benchmark_type\" =  '<class \\'benchmark.BurstBenchmark\\'>') AND $timeFilter GROUP BY \"destination_name\", \"workflow_name\", \"benchmark_uuid\", \"history_name\")",
+          "query": "SELECT sum FROM (SELECT sum(\"value\") FROM \"total_workflow_runtime\" WHERE (\"benchmark_type\" =  '<class \\'benchmark.BurstBenchmark\\'>') AND \"benchmark_uuid\" =~ /$selected_benchmark_uuid/ AND $timeFilter GROUP BY \"destination_name\", \"workflow_name\", \"benchmark_uuid\", \"history_name\")",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series",
@@ -1047,7 +947,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Staging-Time distribution",
+      "title": "Total Workflow Runtime distribution",
       "tooltip": {
         "shared": false,
         "sort": 0,
@@ -1063,8 +963,9 @@
       },
       "yaxes": [
         {
+          "decimals": -1,
           "format": "none",
-          "label": null,
+          "label": "",
           "logBase": 1,
           "max": null,
           "min": null,
@@ -1083,6 +984,594 @@
         "align": false,
         "alignLevel": null
       }
+    },
+    {
+      "collapsed": true,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 46
+      },
+      "id": 23,
+      "panels": [
+        {
+          "columns": [],
+          "datasource": "glx_benchmarker",
+          "fontSize": "100%",
+          "gridPos": {
+            "h": 13,
+            "w": 12,
+            "x": 0,
+            "y": 47
+          },
+          "id": 5,
+          "links": [],
+          "options": {},
+          "pageSize": null,
+          "scroll": true,
+          "showHeader": true,
+          "sort": {
+            "col": 0,
+            "desc": true
+          },
+          "styles": [
+            {
+              "alias": "Time",
+              "dateFormat": "YYYY-MM-DD HH:mm:ss",
+              "pattern": "Time",
+              "type": "hidden"
+            },
+            {
+              "alias": "",
+              "colorMode": null,
+              "colors": [
+                "rgba(245, 54, 54, 0.9)",
+                "rgba(237, 129, 40, 0.89)",
+                "rgba(50, 172, 45, 0.97)"
+              ],
+              "dateFormat": "YYYY-MM-DD HH:mm:ss",
+              "decimals": 2,
+              "mappingType": 1,
+              "pattern": "sum",
+              "thresholds": [],
+              "type": "number",
+              "unit": "ns"
+            },
+            {
+              "alias": "",
+              "colorMode": null,
+              "colors": [
+                "rgba(245, 54, 54, 0.9)",
+                "rgba(237, 129, 40, 0.89)",
+                "rgba(50, 172, 45, 0.97)"
+              ],
+              "decimals": 2,
+              "pattern": "/.*/",
+              "thresholds": [],
+              "type": "number",
+              "unit": "s"
+            }
+          ],
+          "targets": [
+            {
+              "alias": "CPU-Time per Workflow",
+              "groupBy": [
+                {
+                  "params": [
+                    "benchmark_uid"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "destination_name"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "workflow_name"
+                  ],
+                  "type": "tag"
+                }
+              ],
+              "measurement": "cpuacct.usage",
+              "orderByTime": "ASC",
+              "policy": "default",
+              "query": "SELECT sum(\"value\") FROM \"cpuacct.usage\" WHERE (\"benchmark_type\" = '<class \\'benchmark.BurstBenchmark\\'>') AND \"benchmark_uuid\" =~ /$selected_benchmark_uuid/ AND $timeFilter GROUP BY \"destination_name\", \"workflow_name\", \"benchmark_uuid\", \"history_name\"",
+              "rawQuery": true,
+              "refId": "A",
+              "resultFormat": "table",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "value"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "sum"
+                  }
+                ]
+              ],
+              "tags": [
+                {
+                  "key": "run_type",
+                  "operator": "=",
+                  "value": "warm"
+                },
+                {
+                  "condition": "AND",
+                  "key": "benchmark_type",
+                  "operator": "=",
+                  "value": "<class 'benchmark.ColdWarmBenchmark'>"
+                }
+              ]
+            }
+          ],
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "CPU-Usage",
+          "transform": "table",
+          "type": "table"
+        },
+        {
+          "columns": [],
+          "datasource": "glx_benchmarker",
+          "fontSize": "100%",
+          "gridPos": {
+            "h": 5,
+            "w": 12,
+            "x": 12,
+            "y": 47
+          },
+          "id": 31,
+          "links": [],
+          "options": {},
+          "pageSize": null,
+          "scroll": true,
+          "showHeader": true,
+          "sort": {
+            "col": 0,
+            "desc": true
+          },
+          "styles": [
+            {
+              "alias": "Time",
+              "dateFormat": "YYYY-MM-DD HH:mm:ss",
+              "pattern": "Time",
+              "type": "hidden"
+            },
+            {
+              "alias": "",
+              "colorMode": null,
+              "colors": [
+                "rgba(245, 54, 54, 0.9)",
+                "rgba(237, 129, 40, 0.89)",
+                "rgba(50, 172, 45, 0.97)"
+              ],
+              "decimals": 2,
+              "pattern": "/.*/",
+              "thresholds": [],
+              "type": "number",
+              "unit": "ns"
+            }
+          ],
+          "targets": [
+            {
+              "alias": "CPU-Time per Workflow",
+              "groupBy": [
+                {
+                  "params": [
+                    "benchmark_uid"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "destination_name"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "workflow_name"
+                  ],
+                  "type": "tag"
+                }
+              ],
+              "measurement": "cpuacct.usage",
+              "orderByTime": "ASC",
+              "policy": "default",
+              "query": "SELECT median(\"sum\"), mean(\"sum\"), max(\"sum\"), min(\"sum\") FROM (SELECT sum(\"value\") FROM \"cpuacct.usage\" WHERE (\"benchmark_type\" = '<class \\'benchmark.BurstBenchmark\\'>') AND \"benchmark_uuid\" =~ /$selected_benchmark_uuid/ AND $timeFilter GROUP BY \"destination_name\", \"workflow_name\", \"benchmark_uuid\", \"history_name\") WHERE $timeFilter GROUP BY \"benchmark_uuid\", \"workflow_name\" ",
+              "rawQuery": true,
+              "refId": "A",
+              "resultFormat": "table",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "value"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "sum"
+                  }
+                ]
+              ],
+              "tags": [
+                {
+                  "key": "run_type",
+                  "operator": "=",
+                  "value": "warm"
+                },
+                {
+                  "condition": "AND",
+                  "key": "benchmark_type",
+                  "operator": "=",
+                  "value": "<class 'benchmark.ColdWarmBenchmark'>"
+                }
+              ]
+            }
+          ],
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "CPU-Usage per Benchmark and Workflow",
+          "transform": "table",
+          "type": "table"
+        }
+      ],
+      "title": "CPU Time",
+      "type": "row"
+    },
+    {
+      "collapsed": true,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 47
+      },
+      "id": 21,
+      "panels": [
+        {
+          "columns": [],
+          "datasource": "glx_benchmarker",
+          "fontSize": "100%",
+          "gridPos": {
+            "h": 13,
+            "w": 12,
+            "x": 0,
+            "y": 61
+          },
+          "id": 29,
+          "links": [],
+          "options": {},
+          "pageSize": null,
+          "scroll": true,
+          "showHeader": true,
+          "sort": {
+            "col": 0,
+            "desc": true
+          },
+          "styles": [
+            {
+              "alias": "Time",
+              "dateFormat": "YYYY-MM-DD HH:mm:ss",
+              "pattern": "Time",
+              "type": "date"
+            },
+            {
+              "alias": "",
+              "colorMode": null,
+              "colors": [
+                "rgba(245, 54, 54, 0.9)",
+                "rgba(237, 129, 40, 0.89)",
+                "rgba(50, 172, 45, 0.97)"
+              ],
+              "decimals": 2,
+              "pattern": "/.*/",
+              "thresholds": [],
+              "type": "number",
+              "unit": "short"
+            }
+          ],
+          "targets": [
+            {
+              "groupBy": [
+                {
+                  "params": [
+                    "$__interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "orderByTime": "ASC",
+              "policy": "default",
+              "query": "SELECT sum(\"value\") FROM \"staging_time\" WHERE (\"benchmark_type\" =  '<class \\'benchmark.BurstBenchmark\\'>') AND \"benchmark_uuid\" =~ /$selected_benchmark_uuid/ AND $timeFilter GROUP BY \"destination_name\", \"workflow_name\", \"benchmark_uuid\", \"history_name\"",
+              "rawQuery": true,
+              "refId": "A",
+              "resultFormat": "table",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "value"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": []
+            }
+          ],
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "Staging-Time per Workflow-Run",
+          "transform": "table",
+          "type": "table"
+        },
+        {
+          "columns": [],
+          "datasource": "glx_benchmarker",
+          "fontSize": "100%",
+          "gridPos": {
+            "h": 5,
+            "w": 12,
+            "x": 12,
+            "y": 61
+          },
+          "id": 32,
+          "links": [],
+          "options": {},
+          "pageSize": null,
+          "scroll": true,
+          "showHeader": true,
+          "sort": {
+            "col": 0,
+            "desc": true
+          },
+          "styles": [
+            {
+              "alias": "Time",
+              "dateFormat": "YYYY-MM-DD HH:mm:ss",
+              "pattern": "Time",
+              "type": "hidden"
+            },
+            {
+              "alias": "",
+              "colorMode": null,
+              "colors": [
+                "rgba(245, 54, 54, 0.9)",
+                "rgba(237, 129, 40, 0.89)",
+                "rgba(50, 172, 45, 0.97)"
+              ],
+              "decimals": 2,
+              "pattern": "/.*/",
+              "thresholds": [],
+              "type": "number",
+              "unit": "s"
+            }
+          ],
+          "targets": [
+            {
+              "alias": "CPU-Time per Workflow",
+              "groupBy": [
+                {
+                  "params": [
+                    "benchmark_uid"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "destination_name"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "workflow_name"
+                  ],
+                  "type": "tag"
+                }
+              ],
+              "measurement": "staging_time",
+              "orderByTime": "ASC",
+              "policy": "default",
+              "query": "SELECT median(\"sum\"), mean(\"sum\"), max(\"sum\"), min(\"sum\") FROM (SELECT sum(\"value\") FROM \"staging_time\" WHERE (\"benchmark_type\" =  '<class \\'benchmark.BurstBenchmark\\'>') AND \"benchmark_uuid\" =~ /$selected_benchmark_uuid/ AND $timeFilter GROUP BY \"workflow_name\", \"benchmark_uuid\", \"history_name\") WHERE $timeFilter GROUP BY \"benchmark_uuid\", \"workflow_name\" ",
+              "rawQuery": true,
+              "refId": "A",
+              "resultFormat": "table",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "value"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "sum"
+                  }
+                ]
+              ],
+              "tags": [
+                {
+                  "key": "run_type",
+                  "operator": "=",
+                  "value": "warm"
+                },
+                {
+                  "condition": "AND",
+                  "key": "benchmark_type",
+                  "operator": "=",
+                  "value": "<class 'benchmark.ColdWarmBenchmark'>"
+                }
+              ]
+            }
+          ],
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "Staging-Time per Benchmark and Workflow",
+          "transform": "table",
+          "type": "table"
+        },
+        {
+          "aliasColors": {},
+          "bars": true,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "glx_benchmarker",
+          "fill": 1,
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 66
+          },
+          "id": 33,
+          "legend": {
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "show": false,
+            "total": false,
+            "values": false
+          },
+          "lines": false,
+          "linewidth": 1,
+          "links": [],
+          "nullPointMode": "null",
+          "options": {},
+          "percentage": false,
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "alias": "CPU-Time per Workflow",
+              "groupBy": [
+                {
+                  "params": [
+                    "benchmark_uid"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "destination_name"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "workflow_name"
+                  ],
+                  "type": "tag"
+                }
+              ],
+              "measurement": "staging_time",
+              "orderByTime": "ASC",
+              "policy": "default",
+              "query": "SELECT sum FROM (SELECT sum(\"value\") FROM \"staging_time\" WHERE (\"benchmark_type\" =  '<class \\'benchmark.BurstBenchmark\\'>') AND \"benchmark_uuid\" =~ /$selected_benchmark_uuid/ AND $timeFilter GROUP BY \"destination_name\", \"workflow_name\", \"benchmark_uuid\", \"history_name\")",
+              "rawQuery": true,
+              "refId": "A",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "value"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "sum"
+                  }
+                ]
+              ],
+              "tags": [
+                {
+                  "key": "run_type",
+                  "operator": "=",
+                  "value": "warm"
+                },
+                {
+                  "condition": "AND",
+                  "key": "benchmark_type",
+                  "operator": "=",
+                  "value": "<class 'benchmark.ColdWarmBenchmark'>"
+                }
+              ]
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "Staging-Time distribution",
+          "tooltip": {
+            "shared": false,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "histogram",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "none",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": false
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        }
+      ],
+      "title": "Staging Time",
+      "type": "row"
     }
   ],
   "refresh": false,
@@ -1090,10 +1579,38 @@
   "style": "dark",
   "tags": [],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "allValue": null,
+        "current": {
+          "text": "CondorBurstBenchmark_2019-07-23 12:20:14.249471",
+          "value": [
+            "CondorBurstBenchmark_2019-07-23 12:20:14.249471"
+          ]
+        },
+        "datasource": "glx_benchmarker",
+        "definition": "SELECT benchmark_uuid , value FROM \"runtime_seconds\" WHERE \"benchmark_type\" =  '<class \\'benchmark.BurstBenchmark\\'>'",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Benchmark UUID",
+        "multi": true,
+        "name": "selected_benchmark_uuid",
+        "options": [],
+        "query": "SELECT benchmark_uuid , value FROM \"runtime_seconds\" WHERE \"benchmark_type\" =  '<class \\'benchmark.BurstBenchmark\\'>'",
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 4,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      }
+    ]
   },
   "time": {
-    "from": "now-3h",
+    "from": "now-24h",
     "to": "now"
   },
   "timepicker": {
@@ -1122,7 +1639,7 @@
     ]
   },
   "timezone": "",
-  "title": "Burst Benchmarks",
+  "title": "Condor Benchmark",
   "uid": "P1T8PsnWk",
-  "version": 16
+  "version": 10
 }
