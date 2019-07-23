@@ -193,13 +193,16 @@ class CondorDestination(BaseDestination):
 
         total_workflow_runtime = time.monotonic() - start_time
 
+        log.info("Fetching condor_history")
+        jobs = condor_bridge.get_condor_history(ssh_client, float(job_ids["id"]), float(job_ids["id"]))
+
         result = {
             "id": job_ids["id"],
             "id_range": job_ids["range"],
             "status": "success" if status == "done" else "error",
             "total_workflow_runtime": total_workflow_runtime,
             "submit_time": submit_time,
-            "jobs": condor_bridge.get_condor_history(ssh_client, float(job_ids["id"]), float(job_ids["id"]))
+            "jobs": jobs
         }
 
         ssh_client.close()
