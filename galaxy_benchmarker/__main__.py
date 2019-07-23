@@ -15,7 +15,9 @@ log.setLevel(logging.INFO)
 log_handler = logging.StreamHandler(sys.stdout)
 log_handler.setLevel(logging.DEBUG)
 
-logging.getLogger("ephemeris").setLevel(logging.WARNING)
+# Log to file
+fh = logging.FileHandler(r'logs/{filename}.log'.format(filename=time.time()))
+log.addHandler(fh)
 
 s = requests.Session()
 s.mount('http://', HTTPAdapter(max_retries=20))
