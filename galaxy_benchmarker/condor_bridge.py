@@ -69,7 +69,9 @@ def get_condor_history(client: paramiko.SSHClient, first_id: float, last_id: flo
     """
     Returns condor_history as a list of jobs. Returns all job_ids >= first_id
     """
-    stdin, stdout, stderr = client.exec_command("condor_history -backwards -json -since {i}".format(i=int(first_id)-1))
+    output_filename = "condor_history_" + str(datetime.now().timestamp()) + ".json"
+    stdin, stdout, stderr = client.exec_command("condor_history -backwards -json -since {i} > {filename}"
+                                                .format(i=int(first_id)-1, filename=output_filename))
 
     error = ""
     for err in stderr:
@@ -78,11 +80,13 @@ def get_condor_history(client: paramiko.SSHClient, first_id: float, last_id: flo
     if error != "":
         raise ValueError("An error with condor_history occurred: {error}".format(error=error))
 
-    json_output = ""
-    for output in stdout:
-        json_output += output
+    # Get output file
+    ftp_client = client.open_sftp()
+    ftp_client.get(output_filename, "results/"+output_filename)
+    ftp_client.close()
+    with open("results/"+output_filename) as json_file:
+        job_list = json.load(json_file)
 
-    job_list = json.loads(json_output)
     result = {}
     for job in job_list:
         job["parsed_job_metrics"] = metrics.parse_condor_job_metrics(job)
