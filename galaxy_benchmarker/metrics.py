@@ -25,6 +25,7 @@ galaxy_float_metrics = {"processor_count", "memtotal", "swaptotal", "runtime_sec
                         "memory.stat.total_inactive_anon"}
 condor_float_metrics = {"NumRestarts", "NumJobRestarts", "JobStatus"}
 condor_string_metrics = {"LastRemoteHost", "GlobalJobId", "Cmd"}
+condor_time_metrics = {"JobStartDate", "JobCurrentStartDate", "CompletionDate"}
 
 
 def parse_galaxy_job_metrics(job_metrics: List) -> Dict[str, Dict]:
@@ -81,6 +82,13 @@ def parse_condor_job_metrics(job_metrics: Dict) -> Dict[str, Dict]:
                 "type": "string",
                 "plugin": "condor_history",
                 "value": value
+            }
+        if key in condor_time_metrics:
+            parsed_metrics[key] = {
+                "name": key,
+                "type": "timestamp",
+                "plugin": "condor_history",
+                "value": value * 1000
             }
         if key == "JobStatus":
             if value == 1:
