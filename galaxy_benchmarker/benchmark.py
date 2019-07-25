@@ -34,7 +34,7 @@ class BaseBenchmark:
                  workflows: List[BaseWorkflow], runs_per_workflow=1):
         self.name = name
         self.benchmarker = benchmarker
-        self.uuid = name + "_" + datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
+        self.uuid = "_" + datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f") + "_" + name
         self.destinations = destinations
         self.workflows = workflows
         self.runs_per_workflow = runs_per_workflow
@@ -165,7 +165,7 @@ class DestinationComparisonBenchmark(BaseBenchmark):
 
 
 class BurstBenchmark(BaseBenchmark):
-    allowed_dest_types = [GalaxyDestination, PulsarMQDestination, CondorDestination]
+    allowed_dest_types = [GalaxyDestination, GalaxyCondorDestination, PulsarMQDestination, CondorDestination]
     allowed_workflow_types = [GalaxyWorkflow, CondorWorkflow]
 
     background_tasks: List[Dict] = list()
