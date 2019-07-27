@@ -1,3 +1,3 @@
 #!/bin/bash
-echo "$(hostname)"
 sleep 1
+echo "$(hostname)"
