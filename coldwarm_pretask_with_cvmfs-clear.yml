@@ -29,11 +29,11 @@
       when: conda_base_directory.stat.exists and conda_base_directory.stat.isdir
     - name: Delete persisted_data-folder
       file:
-        path: "{{tool_dependency_dir}}/persisted_data"
+        path: "{{persistence_dir}}"
         state: absent
     - name: Delete staging-folder
       file:
-        path: "{{tool_dependency_dir}}/staging"
+        path: "{{jobs_directory_dir}}"
         state: absent
     - name: Clear CVMFS (cvmfs_config wipecache)
       command: "cvmfs_config wipecache"

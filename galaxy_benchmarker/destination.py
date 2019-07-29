@@ -80,7 +80,9 @@ class GalaxyDestination(BaseDestination):
         Runs the given AnsiblePlaybookTask on the destination.
         """
         ansible_bridge.run_playbook(task.playbook, self.host, self.host_user, self.ssh_key,
-                                    {"tool_dependency_dir": self.tool_dependency_dir})
+                                    {"tool_dependency_dir": self.tool_dependency_dir,
+                                     "jobs_directory_dir": self.jobs_directory_dir,
+                                     "persistence_dir": self.persistence_dir})
 
     def get_jobs(self, history_name) -> Dict:
         """
