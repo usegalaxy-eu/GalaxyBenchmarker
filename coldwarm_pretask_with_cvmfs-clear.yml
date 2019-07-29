@@ -15,7 +15,7 @@
       register: conda_base_directory
     - name: Check if _conda folder already exists
       stat:
-        path: "{{tool_dependency_dir}}/_conda-base"
+        path: "{{tool_dependency_dir}}/_conda"
       register: conda_directory
     - name: Move _conda to old-folder, so it can be removed at the end of benchmark (to speedup benchmark)
       command: "mv {{tool_dependency_dir}}/_conda {{tool_dependency_dir}}/old/_conda-{{ansible_date_time.iso8601_basic_short}}"
