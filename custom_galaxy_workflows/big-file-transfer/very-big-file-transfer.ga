@@ -1,0 +1,78 @@
+{
+  "uuid": "cec65567-724c-40f6-9079-b79a241be7a4",
+  "tags": [],
+  "format-version": "0.1",
+  "name": "Big-File",
+  "version": 1,
+  "steps": {
+    "0": {
+      "tool_id": null,
+      "tool_version": null,
+      "outputs": [],
+      "workflow_outputs": [{
+        "output_name": "output",
+        "uuid": "c1221d53-4d6b-4735-a39d-c8e9a4cd3492",
+        "label": null
+      }],
+      "input_connections": {},
+      "tool_state": "{}",
+      "id": 0,
+      "uuid": "2d85b49e-97c0-4200-be9f-7b20d7546b7e",
+      "errors": null,
+      "name": "Input dataset",
+      "label": "big-file",
+      "inputs": [
+          {
+              "description": "",
+              "name": "big-file"
+          }
+      ],
+      "position": {
+        "top": 133,
+        "left": 155.5
+      },
+      "annotation": "",
+      "content_id": null,
+      "type": "data_input"
+    },
+    "1": {
+      "tool_id": "Show beginning1",
+      "tool_version": "1.0.0",
+      "outputs": [{
+        "type": "input",
+        "name": "out_file1"
+      }],
+      "workflow_outputs": [{
+        "output_name": "out_file1",
+        "uuid": "af594591-07e2-412e-840a-f6460edc1531",
+        "label": null
+      }],
+      "input_connections": {
+        "input": {
+          "output_name": "output",
+          "id": 0
+        }
+      },
+      "tool_state": "{\"__page__\": null, \"input\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\", \"__rerun_remap_job_id__\": null, \"lineNum\": \"\\\"1\\\"\"}",
+      "id": 1,
+      "uuid": "010ee8b9-bd5d-4f99-87b9-a7dad0e0f985",
+      "errors": null,
+      "name": "Select first",
+      "post_job_actions": {},
+      "label": "Select first line ",
+      "inputs": [{
+        "name": "input",
+        "description": "runtime parameter for tool Select first"
+      }],
+      "position": {
+        "top": 446,
+        "left": 481.5
+      },
+      "annotation": "",
+      "content_id": "Show beginning1",
+      "type": "tool"
+    }
+  },
+  "annotation": "",
+  "a_galaxy_workflow": "true"
+}
