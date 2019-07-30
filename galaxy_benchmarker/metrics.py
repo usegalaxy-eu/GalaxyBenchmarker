@@ -23,6 +23,7 @@ galaxy_float_metrics = {"processor_count", "memtotal", "swaptotal", "runtime_sec
                         "memory.max_usage_in_bytes", "memory.stat.total_active_file", "memory.stat.total_mapped_file",
                         "cpu.cfs_period_us", "memory.stat.pgfault", "memory.stat.total_pgpgin",
                         "memory.stat.total_inactive_anon"}
+galaxy_string_metrics = {"cpuacct.usage_percpu"}
 condor_float_metrics = {"NumRestarts", "NumJobRestarts", "JobStatus"}
 condor_string_metrics = {"LastRemoteHost", "GlobalJobId", "Cmd"}
 condor_time_metrics = {"JobStartDate", "JobCurrentStartDate", "CompletionDate"}
@@ -50,7 +51,13 @@ def parse_galaxy_job_metrics(job_metrics: List) -> Dict[str, Dict]:
                 "plugin": metric["plugin"],
                 "value": float(metric["raw_value"])
             }
-
+        if metric["name"] in galaxy_string_metrics:
+            parsed_metrics[metric["name"]] = {
+                "name": metric["name"],
+                "type": "string",
+                "plugin": metric["plugin"],
+                "value": metric["raw_value"]
+            }
         # For calculating the staging time (if the metrics exist)
         if metric["plugin"] == "jobstatus" and metric["name"] == "queued":
             jobstatus_queued = datetime.strptime(metric["value"], "%Y-%m-%d %H:%M:%S.%f")
