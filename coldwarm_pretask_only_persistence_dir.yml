@@ -13,6 +13,7 @@
       file:
         path: "{{jobs_directory_dir}}"
         state: absent
+      ignore_errors: yes
     - name: Start Pulsar
       service:
         name: pulsar

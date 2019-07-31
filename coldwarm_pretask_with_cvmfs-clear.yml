@@ -35,6 +35,7 @@
       file:
         path: "{{jobs_directory_dir}}"
         state: absent
+      ignore_errors: yes
     - name: Clear CVMFS (cvmfs_config wipecache)
       command: "cvmfs_config wipecache"
       become: yes
