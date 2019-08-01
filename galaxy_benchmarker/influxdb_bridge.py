@@ -23,7 +23,7 @@ class InfluxDB:
                 metric_tags["job_id"] = job_results["id"]
             if "tool_id" in job_results:
                 metric_tags["tool_id"] = job_results["tool_id"]
-                
+
             if "plugin" in metric:
                 metric_tags["plugin"] = metric["plugin"]
 

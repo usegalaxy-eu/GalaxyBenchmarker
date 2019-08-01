@@ -34,7 +34,7 @@ class BaseBenchmark:
                  workflows: List[BaseWorkflow], runs_per_workflow=1):
         self.name = name
         self.benchmarker = benchmarker
-        self.uuid = "_" + datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f") + "_" + name
+        self.uuid = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f") + "_" + name
         self.destinations = destinations
         self.workflows = workflows
         self.runs_per_workflow = runs_per_workflow
