@@ -28,6 +28,7 @@
                 {% for key, value in job_destination_params[destination.name].items() %}
                     <param id="{{ key }}">{{ value }}</param>
                 {% endfor %}
+                <env id="_JAVA_OPTIONS">$_JAVA_OPTIONS -Xmx2048M -Xms256m</env>
             </destination>
         {% endfor %}
         {% for destination in galaxy_condor_destinations %}
