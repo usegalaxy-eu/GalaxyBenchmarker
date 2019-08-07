@@ -29,7 +29,7 @@ class StagingTimePlugin(InstrumentPlugin):
         preprocess_time_path = self._instrument_file_path(job_directory, "preprocessing_time")
         if os.path.isfile(preprocess_time_path):
             with open(preprocess_time_path) as f:
-                result["preprocess_time"] = f.read()
+                result["preprocessing_time"] = f.read()
 
         return result
 
