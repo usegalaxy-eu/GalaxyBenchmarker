@@ -23,12 +23,14 @@
         <destination id="local" runner="local" />
         {% for destination in pulsar_destinations %}
             <destination id="{{ destination.name|lower }}" runner="{{ destination.name|lower }}_runner">
+                <param id="metadata_directory">/data/share/staging</param>
                 <param id="jobs_directory">{{ destination.jobs_directory_dir }}</param>
                 <param id="persistence_directory">{{ destination.persistence_dir }}</param>
                 {% for key, value in job_destination_params[destination.name].items() %}
                     <param id="{{ key }}">{{ value }}</param>
                 {% endfor %}
                 <env id="_JAVA_OPTIONS">$_JAVA_OPTIONS -Xmx2048M -Xms256m</env>
+                <param id="file_action_config">{{ galaxy.galaxy_config_dir }}/pulsar_actions.yml</param>
             </destination>
         {% endfor %}
         {% for destination in galaxy_condor_destinations %}
