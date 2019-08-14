@@ -14,6 +14,7 @@
 
   <!-- Core plugin captures Galaxy slots, start and end of job (in seconds
        since epoch) and computes runtime in seconds. -->
+  <staging_time />
   <jobstatus />
   <core />
 
@@ -29,7 +30,7 @@
 
   <!-- Uncomment to record operating system each job is executed on - linux
        only. -->
-  <!-- <uname /> -->
+  <uname />
 
   <!-- Uncomment following to enable plugin dumping complete environment
        for each job, potentially useful for debuging -->
