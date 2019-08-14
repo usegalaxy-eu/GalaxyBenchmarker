@@ -36,6 +36,11 @@ class StagingTimePlugin(InstrumentPlugin):
             with open(tool_preparation_time_path) as f:
                 result["tool_preparation_time"] = f.read()
 
+        collection_time_path = self._instrument_file_path(job_directory, "down_collection_time")
+        if os.path.isfile(collection_time_path):
+            with open(collection_time_path) as f:
+                result["down_collection_time"] = f.read()
+
         return result
 
 
