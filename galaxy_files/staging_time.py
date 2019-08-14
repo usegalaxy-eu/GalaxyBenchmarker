@@ -23,6 +23,9 @@ class StagingTimePlugin(InstrumentPlugin):
     def __init__(self, **kwargs):
         pass
 
+    def pre_execute_instrument(self, job_directory):
+        return "touch %s" % self._instrument_file_path(job_directory, "down_collection_time")
+
     def job_properties(self, job_id, job_directory):
         result = {}
 
