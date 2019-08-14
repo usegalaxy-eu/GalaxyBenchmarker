@@ -6,6 +6,13 @@
         name: galaxy
         state: restarted
   tasks:
+    - name: Copy pulsar_actions.yml
+      copy:
+        src: galaxy_files/pulsar_actions.yml
+        dest: "{{ galaxy_config_dir }}/pulsar_actions.yml"
+        owner: "{{ galaxy_user }}"
+        group: "{{ galaxy_user }}"
+      notify: restart galaxy
     - name: Copy job_conf.xml
       copy:
         src: galaxy_files/job_conf.xml.tmp
@@ -24,6 +31,13 @@
       copy:
         src: galaxy_files/job_status.py
         dest: "{{ galaxy_root_path }}/server/lib/galaxy/jobs/metrics/instrumenters/job_status.py"
+        owner: "{{ galaxy_user }}"
+        group: "{{ galaxy_user }}"
+      notify: restart galaxy
+    - name: Copy StagingTime-MetricPlugin
+      copy:
+        src: galaxy_files/staging_time.py
+        dest: "{{ galaxy_root_path }}/server/lib/galaxy/jobs/metrics/instrumenters/staging_time.py"
         owner: "{{ galaxy_user }}"
         group: "{{ galaxy_user }}"
       notify: restart galaxy
