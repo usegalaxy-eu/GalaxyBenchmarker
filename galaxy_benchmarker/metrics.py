@@ -22,7 +22,8 @@ galaxy_float_metrics = {"processor_count", "memtotal", "swaptotal", "runtime_sec
                         "cpu.cfs_quota_us", "cpuacct.stat.system", "memory.stat.total_active_anon",
                         "memory.max_usage_in_bytes", "memory.stat.total_active_file", "memory.stat.total_mapped_file",
                         "cpu.cfs_period_us", "memory.stat.pgfault", "memory.stat.total_pgpgin",
-                        "memory.stat.total_inactive_anon", "preprocessing_time", "tool_preparation_time"}
+                        "memory.stat.total_inactive_anon", "preprocessing_time", "tool_preparation_time",
+                        "down_collection_time"}
 galaxy_string_metrics = {"cpuacct.usage_percpu"}
 condor_float_metrics = {"NumRestarts", "NumJobRestarts", "JobStatus"}
 condor_string_metrics = {"LastRemoteHost", "GlobalJobId", "Cmd"}
