@@ -392,7 +392,7 @@ def run_galaxy_benchmark(benchmark, galaxy, destinations: List[PulsarMQDestinati
                         if result["status"] == "error":
                             log.info("Result won't be considered.")
 
-                            if retries < 2:
+                            if retries < 4:
                                 retry_wait = 60 * 2 ** retries
                                 log.info("Retrying after {wait} seconds..".format(wait=retry_wait))
                                 time.sleep(retry_wait)
