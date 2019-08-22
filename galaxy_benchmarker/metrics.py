@@ -68,7 +68,8 @@ def parse_galaxy_job_metrics(job_metrics: List) -> Dict[str, Dict]:
             if metric["plugin"] == "jobstatus" and metric["name"] == "running":
                 jobstatus_running = datetime.strptime(metric["value"], "%Y-%m-%d %H:%M:%S.%f")
         except ValueError as e:
-            log.error("Error while trying to parse Galaxy job metrics: {error}. Ignoring..".format(error=e))
+            log.error("Error while trying to parse Galaxy job metrics '{name} = {value}': {error}. Ignoring.."
+                      .format(error=e, name=metric["name"], value=metric["raw_value"]))
 
     # Calculate staging time
     if jobstatus_queued is not None and jobstatus_running is not None:
@@ -133,6 +134,7 @@ def parse_condor_job_metrics(job_metrics: Dict) -> Dict[str, Dict]:
                     "value": float(value)
                 }
         except ValueError as e:
-            log.error("Error while trying to parse Condor job metrics: {error}. Ignoring..".format(error=e))
+            log.error("Error while trying to parse Condor job metrics '{key} = {value}': {error}. Ignoring.."
+                      .format(error=e, key=key, value=value))
 
     return parsed_metrics
