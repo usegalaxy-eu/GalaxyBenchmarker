@@ -1,5 +1,8 @@
 from typing import List, Dict
 from datetime import datetime
+import logging
+
+log = logging.getLogger("GalaxyBenchmarker")
 
 # All the metrics that can safely be parsed as a float_metric (see parse_galaxy_job_metrics)
 galaxy_float_metrics = {"processor_count", "memtotal", "swaptotal", "runtime_seconds", "memory.stat.pgmajfault",
@@ -43,27 +46,29 @@ def parse_galaxy_job_metrics(job_metrics: List) -> Dict[str, Dict]:
     }
 
     jobstatus_queued = jobstatus_running = None
-
     for metric in job_metrics:
-        if metric["name"] in galaxy_float_metrics:
-            parsed_metrics[metric["name"]] = {
-                "name": metric["name"],
-                "type": "float",
-                "plugin": metric["plugin"],
-                "value": float(metric["raw_value"])
-            }
-        if metric["name"] in galaxy_string_metrics:
-            parsed_metrics[metric["name"]] = {
-                "name": metric["name"],
-                "type": "string",
-                "plugin": metric["plugin"],
-                "value": metric["raw_value"]
-            }
-        # For calculating the staging time (if the metrics exist)
-        if metric["plugin"] == "jobstatus" and metric["name"] == "queued":
-            jobstatus_queued = datetime.strptime(metric["value"], "%Y-%m-%d %H:%M:%S.%f")
-        if metric["plugin"] == "jobstatus" and metric["name"] == "running":
-            jobstatus_running = datetime.strptime(metric["value"], "%Y-%m-%d %H:%M:%S.%f")
+        try:
+            if metric["name"] in galaxy_float_metrics:
+                parsed_metrics[metric["name"]] = {
+                    "name": metric["name"],
+                    "type": "float",
+                    "plugin": metric["plugin"],
+                    "value": float(metric["raw_value"])
+                }
+            if metric["name"] in galaxy_string_metrics:
+                parsed_metrics[metric["name"]] = {
+                    "name": metric["name"],
+                    "type": "string",
+                    "plugin": metric["plugin"],
+                    "value": metric["raw_value"]
+                }
+            # For calculating the staging time (if the metrics exist)
+            if metric["plugin"] == "jobstatus" and metric["name"] == "queued":
+                jobstatus_queued = datetime.strptime(metric["value"], "%Y-%m-%d %H:%M:%S.%f")
+            if metric["plugin"] == "jobstatus" and metric["name"] == "running":
+                jobstatus_running = datetime.strptime(metric["value"], "%Y-%m-%d %H:%M:%S.%f")
+        except ValueError as e:
+            log.error("Error while trying to parse Galaxy job metrics: {error}. Ignoring..".format(error=e))
 
     # Calculate staging time
     if jobstatus_queued is not None and jobstatus_running is not None:
@@ -77,54 +82,57 @@ def parse_condor_job_metrics(job_metrics: Dict) -> Dict[str, Dict]:
     parsed_metrics = {}
 
     for key, value in job_metrics.items():
-        if key in condor_float_metrics:
-            parsed_metrics[key] = {
-                "name": key,
-                "type": "float",
-                "plugin": "condor_history",
-                "value": float(value)
-            }
-        if key in condor_string_metrics:
-            parsed_metrics[key] = {
-                "name": key,
-                "type": "string",
-                "plugin": "condor_history",
-                "value": value
-            }
-        if key in condor_time_metrics:
-            parsed_metrics[key] = {
-                "name": key,
-                "type": "timestamp",
-                "plugin": "condor_history",
-                "value": value * 1000
-            }
-        if key == "JobStatus":
-            if value == 1:
-                status = "idle"
-            elif value == 2:
-                status = "running"
-            elif value == 3:
-                status = "removed"
-            elif value == 4:
-                status = "success"
-            elif value == 5:
-                status = "held"
-            elif value == 6:
-                status = "transferring output"
-            else:
-                status = "unknown"
-            parsed_metrics["job_status"] = {
-                "name": "job_status",
-                "type": "string",
-                "plugin": "condor_history",
-                "value": status
-            }
-        if key == "RemoteWallClockTime":
-            parsed_metrics["runtime_seconds"] = {
-                "name": "runtime_seconds",
-                "type": "float",
-                "plugin": "condor_history",
-                "value": float(value)
-            }
+        try:
+            if key in condor_float_metrics:
+                parsed_metrics[key] = {
+                    "name": key,
+                    "type": "float",
+                    "plugin": "condor_history",
+                    "value": float(value)
+                }
+            if key in condor_string_metrics:
+                parsed_metrics[key] = {
+                    "name": key,
+                    "type": "string",
+                    "plugin": "condor_history",
+                    "value": value
+                }
+            if key in condor_time_metrics:
+                parsed_metrics[key] = {
+                    "name": key,
+                    "type": "timestamp",
+                    "plugin": "condor_history",
+                    "value": value * 1000
+                }
+            if key == "JobStatus":
+                if value == 1:
+                    status = "idle"
+                elif value == 2:
+                    status = "running"
+                elif value == 3:
+                    status = "removed"
+                elif value == 4:
+                    status = "success"
+                elif value == 5:
+                    status = "held"
+                elif value == 6:
+                    status = "transferring output"
+                else:
+                    status = "unknown"
+                parsed_metrics["job_status"] = {
+                    "name": "job_status",
+                    "type": "string",
+                    "plugin": "condor_history",
+                    "value": status
+                }
+            if key == "RemoteWallClockTime":
+                parsed_metrics["runtime_seconds"] = {
+                    "name": "runtime_seconds",
+                    "type": "float",
+                    "plugin": "condor_history",
+                    "value": float(value)
+                }
+        except ValueError as e:
+            log.error("Error while trying to parse Condor job metrics: {error}. Ignoring..".format(error=e))
 
     return parsed_metrics
