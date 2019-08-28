@@ -1,0 +1,14 @@
+<tool id="Sleep" name="Sleep" version="1.0.0">
+    <description>sleep</description>
+    <inputs>
+        <param type="text" name="time" value="60" />
+        <param name="input" type="data" optional="True" />
+    </inputs>
+    <outputs>
+        <data format="input" name="out_file1" metadata_source="input"/>
+    </outputs>
+    <command>
+sleep $time; echo "finished after $time seconds" > $out_file1
+    </command>
+    <help>Sleep for x seconds. Arbitrary data can be uploaded just for fun..</help>
+</tool>
