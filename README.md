@@ -95,8 +95,10 @@ python3 galaxy_benchmarker --config benchmark_config.yml
 ```
 
 ## Additional options
+All possible options can be found in the [configuration examples](https://github.com/AndreasSko/Galaxy-Benchmarker/blob/master/benchmark_config.yml.example).
+
 ### InfluxDB
-In normal cases, GalaxyBenchmarker will save the results in a json file under the `results` directory. However, jobs 
+In normal cases, GalaxyBenchmarker will save the results in a json file under the `results` directory. However, job
 metrics can also be submitted to InfluxDB for further analysis.
 ```yaml
 influxdb:
