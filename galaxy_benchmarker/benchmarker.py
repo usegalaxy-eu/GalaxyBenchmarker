@@ -20,7 +20,7 @@ class Benchmarker:
 
     def __init__(self, config):
         glx_conf = config["galaxy"]
-        self.glx = Galaxy(glx_conf["url"], glx_conf["user_key"], glx_conf["shed_install"],
+        self.glx = Galaxy(glx_conf["url"], glx_conf["user_key"], glx_conf.get("shed_install", False),
                           glx_conf.get("ssh_user", None), glx_conf.get("ssh_key", None),
                           glx_conf.get("galaxy_root_path", None), glx_conf.get("galaxy_config_dir", None),
                           glx_conf.get("galaxy_user", None))
