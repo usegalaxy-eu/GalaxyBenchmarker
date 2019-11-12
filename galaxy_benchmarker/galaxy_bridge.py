@@ -12,7 +12,7 @@ log = logging.getLogger("GalaxyBenchmarker")
 
 
 class Galaxy:
-    def __init__(self, url, user_key, shed_install,
+    def __init__(self, url, user_key, shed_install=False,
                  ssh_user=None, ssh_key=None, galaxy_root_path=None,
                  galaxy_config_dir=None, galaxy_user=None):
         self.url = url
