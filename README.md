@@ -109,3 +109,44 @@ influxdb:
   db_name: glx_benchmarker
 ```
 Example Dashboards for Grafana can be found at [grafana_dashboards](https://github.com/AndreasSko/Galaxy-Benchmarker/tree/master/grafana_dashboards)
+
+### Let GalaxyBenchmarker handle the configuration 
+The GalaxyBenchmarker can configure Galaxy to use different job destinations and to install 
+tool dependencies. For that, you need have an admin user and SSH access to the instance.
+```yaml
+galaxy:
+  ...
+  # Install tool dependencies
+  shed_install: true 
+  # Should Galaxy be configured to use the given Destinations or is everything already set?
+  configure_job_destinations: true
+  ssh_user: ubuntu
+  ssh_key: /local/path/to/ssh/key.cert
+  galaxy_root_path: /srv/galaxy
+  galaxy_config_dir: /srv/galaxy/server/config
+  galaxy_user: galaxy
+```
+The settings for a new destination can then be defined as follows:
+```yaml
+destinations:
+  - name: PulsarDestination
+    type: PulsarMQ
+    amqp_url: "pyamqp://username:password@rabbitmq.example.com:5672//"
+    # If used for ColdWarmBenchmark, we need to have ssh-access to the Pulsar-Server
+    host: pulsar.example.com
+    host_user: centos
+    ssh_key: /local/path/to/ssh/key.cert
+    tool_dependency_dir: /data/share/tools
+    jobs_directory_dir: /data/share/staging
+    persistence_dir: /data/share/persisted_data
+    # To configure additional params in job_conf.xml
+    job_plugin_params:
+      manager: __default__
+    job_destination_params:
+      dependency_resolution: remote
+      default_file_action: remote_transfer
+      remote_metadata: false
+      rewrite_parameters: true
+      amqp_acknowledge: true
+      amqp_ack_republish_time: 10
+```
