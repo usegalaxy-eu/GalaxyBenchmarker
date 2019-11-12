@@ -51,7 +51,7 @@ class Benchmarker:
             self.benchmarks[bm_config["name"]] = benchmark.configure_benchmark(bm_config, self.destinations,
                                                                                self.workflows, self.glx, self)
 
-        if glx_conf["configure_job_destinations"]:
+        if glx_conf.get("configure_job_destinations", False):
             log.info("Creating job_conf for Galaxy and deploying it")
             destination.create_galaxy_job_conf(self.glx, self.destinations)
             self.glx.deploy_job_conf()
