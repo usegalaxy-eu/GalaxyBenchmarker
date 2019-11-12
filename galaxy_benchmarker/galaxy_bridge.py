@@ -12,11 +12,11 @@ log = logging.getLogger("GalaxyBenchmarker")
 
 
 class Galaxy:
-    def __init__(self, url, admin_key, shed_install,
+    def __init__(self, url, user_key, shed_install,
                  ssh_user=None, ssh_key=None, galaxy_root_path=None,
                  galaxy_config_dir=None, galaxy_user=None):
         self.url = url
-        self.admin_key = admin_key
+        self.user_key = user_key
         self.shed_install = shed_install
         self.ssh_user = ssh_user
         self.ssh_key = ssh_key
@@ -25,7 +25,7 @@ class Galaxy:
         self.galaxy_config_dir = galaxy_config_dir
         self.galaxy_user = galaxy_user
 
-        self.instance = GalaxyInstance(url, key=admin_key)
+        self.instance = GalaxyInstance(url, key=user_key)
 
     def impersonate(self, user=None, user_key=None) -> GalaxyInstance:
         """

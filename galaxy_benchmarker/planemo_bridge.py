@@ -48,7 +48,7 @@ def _cli(ctx, paths, glx, user_key, **kwds) -> Dict:
     kwds["engine"] = "external_galaxy"
     kwds["shed_install"] = False
     kwds["galaxy_url"] = glx.url
-    kwds["galaxy_admin_key"] = glx.admin_key
+    kwds["galaxy_admin_key"] = glx.user_key
     kwds["history_name"] = "galaxy_benchmarker-" + str(time.time_ns()) + str(random.randrange(0, 99999))
 
     if user_key is not None:
