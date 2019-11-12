@@ -21,9 +21,9 @@ class Benchmarker:
     def __init__(self, config):
         glx_conf = config["galaxy"]
         self.glx = Galaxy(glx_conf["url"], glx_conf["admin_key"], glx_conf["shed_install"],
-                          glx_conf["ssh_user"], glx_conf["ssh_key"],
-                          glx_conf["galaxy_root_path"], glx_conf["galaxy_config_dir"],
-                          glx_conf["galaxy_user"])
+                          glx_conf.get("ssh_user", None), glx_conf.get("ssh_key", None),
+                          glx_conf.get("galaxy_root_path", None), glx_conf.get("galaxy_config_dir", None),
+                          glx_conf.get("galaxy_user", None))
 
         if "influxdb" in config:
             inf_conf = config["influxdb"]

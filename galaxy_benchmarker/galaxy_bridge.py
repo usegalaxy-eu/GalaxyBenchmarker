@@ -12,7 +12,9 @@ log = logging.getLogger("GalaxyBenchmarker")
 
 
 class Galaxy:
-    def __init__(self, url, admin_key, shed_install, ssh_user, ssh_key, galaxy_root_path, galaxy_config_dir, galaxy_user):
+    def __init__(self, url, admin_key, shed_install,
+                 ssh_user=None, ssh_key=None, galaxy_root_path=None,
+                 galaxy_config_dir=None, galaxy_user=None):
         self.url = url
         self.admin_key = admin_key
         self.shed_install = shed_install
@@ -78,6 +80,11 @@ class Galaxy:
         # Hostname parsed from the Galaxy-URL
         host = re.findall("^[a-z][a-z0-9+\-.]*://([a-z0-9\-._~%!$&'()*+,;=]+@)?([a-z0-9\-._~%]+|\[[a-z0-9\-."
                           + "_~%!$&'()*+,;=:]+\])", self.url)[0][1]
+
+        if None in (self.ssh_user, self.ssh_key, self.galaxy_root_path, self.galaxy_config_dir, self.galaxy_user):
+            raise ValueError("ssh_user, ssh_key, galaxy_root_path, galaxy_config_dir, and galaxy_user need "
+                             "to be set in order to deploy the job_conf.xml-file!")
+
         values = {
             "galaxy_root_path": self.galaxy_root_path,
             "galaxy_config_dir": self.galaxy_config_dir,
