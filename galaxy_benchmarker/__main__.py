@@ -7,6 +7,7 @@ from benchmarker import Benchmarker
 import logging
 import time
 import requests
+import os
 from requests.adapters import HTTPAdapter
 
 logging.basicConfig()
@@ -16,7 +17,9 @@ log_handler = logging.StreamHandler(sys.stdout)
 log_handler.setLevel(logging.DEBUG)
 
 # Log to file
-fh = logging.FileHandler(r'logs/{filename}.log'.format(filename=time.time()))
+log_filename = r'logs/{filename}.log'.format(filename=time.time())
+os.makedirs(os.path.dirname(log_filename), exist_ok=True)
+fh = logging.FileHandler(log_filename, mode='w') # TODO: Check if folder exists!
 log.addHandler(fh)
 
 s = requests.Session()
@@ -46,6 +49,7 @@ def main():
 
             results_filename = "results/results_{time}".format(time=time.time())
             log.info("Saving results to file: '{filename}.json'.".format(filename=results_filename))
+            os.makedirs(os.path.dirname(results_filename), exist_ok=True)
             benchmarker.save_results(results_filename)
 
             if benchmarker.inflx_db is not None:
