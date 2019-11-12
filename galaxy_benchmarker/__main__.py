@@ -19,7 +19,7 @@ log_handler.setLevel(logging.DEBUG)
 # Log to file
 log_filename = r'logs/{filename}.log'.format(filename=time.time())
 os.makedirs(os.path.dirname(log_filename), exist_ok=True)
-fh = logging.FileHandler(log_filename, mode='w') # TODO: Check if folder exists!
+fh = logging.FileHandler(log_filename, mode='w')
 log.addHandler(fh)
 
 s = requests.Session()
