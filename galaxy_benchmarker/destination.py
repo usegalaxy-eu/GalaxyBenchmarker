@@ -170,7 +170,7 @@ class CondorDestination(BaseDestination):
 
     def run_workflow(self, workflow: CondorWorkflow) -> Dict:
         """
-        Runs the given workflow on PulsarMQDestination. Returns Dict of ...
+        Runs the given workflow on CondorDestination. Returns Dict of ...
         """
         ssh_client = condor_bridge.get_paramiko_client(self.host, self.host_user, self.ssh_key)
 
