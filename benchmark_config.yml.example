@@ -102,8 +102,8 @@ benchmarks:
       type: "ansible-playbook"
       playbook: "cleanup-pulsar.yml"
     post_task:
-      - type: "shell-script"
-      - script: "./benchmark2_post-task.sh" # Call some script after ending benchmark (like for cleaning up)
+      type: "ansible-playbook"
+      playbook: "cleanup-pulsar.yml" # Call some script after ending benchmark (like for cleaning up)
     destinations:
       - LocalPulsar
       - RemotePulsar1
