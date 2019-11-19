@@ -94,6 +94,90 @@ The GalaxyBenchmarker can use different configuration files. If none is given, i
 python3 galaxy_benchmarker --config benchmark_config.yml
 ```
 
+## Benchmark Types
+### Destination Comparison
+Used to compare the performance of different destinations.
+
+#### Requirements
+* 1-n Galaxy destinations
+* 1-n Galaxy workflows
+* `runs_per_workflow` >= 1: How many times should a workflow be run on every destination?
+
+#### Optional settings
+* `warmup`: if set to true, a "warmup run" will be performed for every workflow
+on every destination, while its results won't be counted
+* ``pre_task``/`post_task`: a task that will be run before or after the benchmark has been completed
+
+### Cold vs Warm
+Used to compare the performance of a cold run (workflows hasn't been run before) to a warm run. To 
+simulate a cold run, you can define pre tasks that will be run before every cold workflow run, to
+clean up caches etc.
+
+Note: This benchmark type can only use one destination!
+
+#### Requirements
+* 1 Galaxy destination
+* 1-n Galaxy workflows
+* `runs_per_workflow` >= 1: How many times should a workflow be run on every destination?
+* `cold_pre_task`: a task task that will be run in the cold phase before every workflow run
+
+#### Optional settings
+* ``pre_task``/`post_task`: a task that will be run before or after the benchmark has been completed
+* `warm_pre_task`: a task task that will be run in the warm phase before every workflow run
+
+### Burst
+Used to start a burst of workflows at the same time. 
+
+#### Requirements
+* 1-n Galaxy destinations
+* 1-n Galaxy workflows
+* `runs_per_workflow` >= 1: How many times should a workflow be run on every destination?
+* `burst_rate` > 0: How many workflows should be submitted per second? 
+(for example: 0.5 results in a workflow submit every two seconds)
+
+#### Optional settings
+* `warmup`: if set to true, a "warmup run" will be performed for every workflow
+on every destination, while its results won't be counted
+* ``pre_task``/`post_task`: a task that will be run before or after the benchmark has been completed
+
+## Destination Types
+### Galaxy Destination
+TODO
+
+### Condor Destination
+TODO
+
+## Task Types
+### Ansible Playbook
+An Ansible Playbook can be run on every destination defined in a benchmark. 
+Note: You will need to add `host`, `host_user` and `ssh_key` to the definition of 
+every destination.
+ 
+Define a task as follows:
+```yaml
+type: ansible-playbook
+playbook: /path/to/playbook.yml
+```
+
+### Benchmarker Task
+These are tasks defined in ``task.py``. Currently, there exist the following tasks:
+* `delete_old_histories`: This will delete all histories of a user on Galaxy
+* ``reboot_openstack_servers``: This will reboot all OpenStack instance which name correspond to
+``name_contains``
+* ``reboot_random_openstack_server``: This will reboot a randomly chosen OpenStack instance 
+which name correspond to ``name_contains``
+* ``rebuild_random_openstack_server``: This will rebuild a randomly chosen OpenStack instance 
+which name correspond to ``name_contains``
+
+Define a task as follows:
+````yaml
+type: benchmarker-task
+name: task-name
+params:
+  param1: ab
+  param2: cd
+````
+
 ## Additional options
 All possible options can be found in the [configuration examples](https://github.com/AndreasSko/Galaxy-Benchmarker/blob/master/benchmark_config.yml.example).
 
@@ -109,6 +193,20 @@ influxdb:
   db_name: glx_benchmarker
 ```
 Example Dashboards for Grafana can be found at [grafana_dashboards](https://github.com/AndreasSko/Galaxy-Benchmarker/tree/master/grafana_dashboards)
+
+### OpenStack
+There exist some tasks that need access to OpenStack to work properly. For this,
+you can define your credentials:
+```yaml
+openstack:
+  auth_url: https://auth.url.com:5000/v3/
+  compute_endpoint_version: 2.1
+  username: username
+  password: password
+  project_id: id
+  region_name: region
+  user_domain_name: Default
+```
 
 ### Let GalaxyBenchmarker handle the configuration 
 The GalaxyBenchmarker can configure Galaxy to use different job destinations and to install 
