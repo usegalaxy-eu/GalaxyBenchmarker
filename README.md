@@ -129,8 +129,8 @@ Note: This benchmark type can only use one destination!
 Used to start a burst of workflows at the same time. 
 
 #### Requirements
-* 1-n Galaxy destinations
-* 1-n Galaxy workflows
+* 1-n Galaxy or Condor destinations
+* 1-n Galaxy or Condor workflows
 * `runs_per_workflow` >= 1: How many times should a workflow be run on every destination?
 * `burst_rate` > 0: How many workflows should be submitted per second? 
 (for example: 0.5 results in a workflow submit every two seconds)
@@ -141,11 +141,75 @@ on every destination, while its results won't be counted
 * ``pre_task``/`post_task`: a task that will be run before or after the benchmark has been completed
 
 ## Destination Types
+Currently, the benchmarks can be run on two main types of destinations, while the first
+is the best supported.
 ### Galaxy Destination
-TODO
+#### Regular
+All you need to define is the username and api key to be used. This type expects, that
+routing to destinations is handled by Galaxy and is user-based (e.g. one user per
+destination).
+```yaml
+name: DestinationName
+type: Galaxy
+galaxy_user_name: me@andreas-sk.de
+galaxy_user_key: f4284f9728e430a8140435861b17a454
+```
+
+#### PulsarMQ
+This type is used, if you want GalaxyBenchmarker to configure Galaxy to use a Pulsar
+destination.
+````yaml
+name: PulsarDestinationName
+type: PulsarMQ
+amqp_url: "pyamqp://username:password@rabbitmq.example.com:5672//"
+tool_dependency_dir: /data/share/tools
+jobs_directory_dir: /data/share/staging
+persistence_dir: /data/share/persisted_data
+# To configure additional params in job_conf.xml
+job_plugin_params:
+  manager: __default__
+job_destination_params:
+  dependency_resolution: remote
+  other_parameter: abc
+````
 
 ### Condor Destination
-TODO
+This destination type was defined in order to benchmark HTCondor directly. You need
+to set the credentials to your Condor submit node. GalaxyBenchmarker directly 
+connects to the host via SSH and runs ``condor_submit``.
+````yaml
+name: CondorDestinationName
+type: Condor
+host: submit.htcondor.com
+host_user: ssh-user
+ssh_key: /local/path/to/ssh/key.cert
+jobs_directory_dir: /data/share/condor
+````
+
+## Workflow Types
+### Galaxy Workflow
+The benchmarker uses the test functionality of [Planemo](https://github.com/galaxyproject/planemo) to 
+submit workflows. Examples can be found at: https://github.com/usegalaxy-eu/workflow-testing. For a start, you
+can clone this repository and use those workflows for benchmarking. Workflows are defined in the
+configuration as following:
+```yaml
+name: GalaxyWorkflowName
+type: Galaxy
+path: path/to/galaxy/workflow/file.ga
+timeout: 100
+```
+
+### Condor Workflow
+A Condor Workflow is defined by the path to the folder containing its
+files and the actual job file. GalaxyBenchmarker will upload the folder to
+the Condor submit node using an Ansible Playbook and will trigger a 
+``condor_submit`` to start the workflow.
+````yaml
+name: CondorWorkflowName
+type: Condor
+path: path/to/condor/workflow/folder
+job_file: job.job
+````
 
 ## Task Types
 ### Ansible Playbook
