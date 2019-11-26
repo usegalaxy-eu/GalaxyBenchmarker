@@ -35,10 +35,10 @@ workflows:
     timeout: 1200
 
 benchmarks:
-  - name: DestinationComparison
+  - name: BenchmarkName
     type: DestinationComparison
     destinations:
-      - UseGalaxy
+      - YourDestinationName
     workflows:
       - ard
       - adaboost

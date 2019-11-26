@@ -26,14 +26,18 @@ How does a destination handle a big burst of requests?
 
 
 ## Requirements
-* A Galaxy-Instance with admin rights
+* A Galaxy-Instance
 * InfluxDB for saving the benchmark results
 * Some job-destinations to benchmark
 * Python 3.7
 * Ansible
+* Docker (if you want to use the docker-compose setup)
 
 ## Usage
-### Install all dependencies
+A docker-compose setup is already provided that ships with InfluxDB and Grafana for easy
+analysis of the metrics. 
+
+### Install all dependencies (not needed if using docker-compose setup)
 Some additional packages are needed in order for GalaxyBenchmarker to function properly. 
 To install those, run the following command:
 ```shell
@@ -42,23 +46,23 @@ pip3 install -r requirements.txt
 
 ### Configure the GalaxyBenchmarker
 To use the benchmarker, you first need to create a yaml-configuration file.
-We need to have access to a Galaxy instance in order to submit workflows:
-```yaml
-galaxy:
-  url: https://usegalaxy.eu
-  user_key: YOUR-KEY
-```
+You can find a basic example in `benchmark_config.yml.usegalaxyeu`. As a start,
+rename it to `benchmark_config.yml` and fill in the credentials for your regular
+UseGalaxy.eu user and, additionally, the user key for which the jobs are routed
+to your wanted destination.
 
 Next, we need to define the workflows that should be run. The benchmarker
 uses the test functionality of [Planemo](https://github.com/galaxyproject/planemo) to 
-submit workflows. Examples can be found at: https://github.com/usegalaxy-eu/workflow-testing. For a start, you
-can clone this repository and use those workflows for benchmarking. Workflows are defined in the
-configuration as following:
+submit workflows. The docker-compose setup already clones the examples from
+https://github.com/usegalaxy-eu/workflow-testing. These are available at the 
+the path `/workflow-testing`. 
+
+Workflows are defined in the configuration as following:
 ```yaml
 workflows:
   - name: ARDWorkflow
     type: Galaxy
-    path: /../workflow-testing/sklearn/ard/ard.ga
+    path: /workflow-testing/sklearn/ard/ard.ga
 ```
 
 The benchmarker can submit jobs to multiple job destinations to compare the performance of each. For routing
@@ -71,7 +75,6 @@ users for each destination and link them in the configuration of the benchmarker
 destinations:
   - name: Destination1
     type: Galaxy
-    galaxy_user_name: USERNAME
     galaxy_user_key: USERKEY
 ```
 
@@ -88,7 +91,22 @@ benchmarks:
     runs_per_workflow: 1
 ```
 
-### Run the benchmarks
+### Run the benchmark using docker-compose
+Now you should be ready to run the benchmark. Simply run:
+````shell
+docker-compose up
+````
+This will spin up a InfluxDB and Grafana container, together with a container
+running the benchmarker. After the benchmarking has been finished, you can
+view the results using Grafana at http://localhost:3000 
+(username: admin, password: admin).
+
+:warning:
+
+The data of InfluxDB is stored inside the container. Before running
+`docker-compose down` remember to back up your data!
+
+### Run the benchmarks (without docker-compose)
 The GalaxyBenchmarker can use different configuration files. If none is given, it will look for `benchmark_config.yml`
 ```shell
 python3 galaxy_benchmarker --config benchmark_config.yml
