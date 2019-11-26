@@ -1,0 +1,9 @@
+apiVersion: 1
+datasources:
+  - name: glx_benchmarker
+    type: influxdb
+    url: http://influxdb:8086
+    user: glx_benchmarker
+    password: glx_benchmarker
+    database: glx_benchmarker
+    isDefault: true

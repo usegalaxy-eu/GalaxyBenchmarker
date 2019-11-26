@@ -1,0 +1,56 @@
+galaxy:
+  url: "https://usegalaxy.eu"
+  # Check, if tools need to be installed when running GalaxyWorkflow (can be turned off after first benchmark-run)
+  shed_install: false
+  # Should Galaxy be configured to use the given Destinations or is everything already set?
+  configure_job_destinations: false
+  user_key: YOUR-REGULAR-USER-KEY
+
+# Configure all the Destinations that should be benchmarked
+destinations:
+  - name: YourDestinationName
+    type: Galaxy
+    galaxy_user_key: YOUR-USER-KEY-FOR-DESTINATION-USER
+
+workflows:
+  - name: ard
+    type: Galaxy
+    path: /workflow-testing/sklearn/ard/ard.ga
+    timeout: 5000 # Optional. Workflow will be canceled after timeout.
+  - name: gromacs
+    type: Galaxy
+    path: /workflow-testing/training/computational-chemistry/gromacs/gromacs.ga
+    timeout: 5400
+  - name: mapping_by_sequencing
+    type: Galaxy
+    path: /workflow-testing/training/variant-analysis/mapping-by-sequencing/mapping_by_sequencing.ga
+    timeout: 5400
+  - name: adaboost
+    type: Galaxy
+    path: /workflow-testing/sklearn/adaboost/adaboost.ga
+    timeout: 1200
+  - name: ard
+    type: Galaxy
+    path: /workflow-testing/sklearn/ard/ard.ga
+    timeout: 1200
+
+benchmarks:
+  - name: DestinationComparison
+    type: DestinationComparison
+    destinations:
+      - UseGalaxy
+    workflows:
+      - ard
+      - adaboost
+      - gromacs
+      - mapping_by_sequencing
+    runs_per_workflow: 5
+    warmup: true
+
+# Please do not change!
+influxdb:
+  host: influxdb
+  port: 8086
+  username: glx_benchmarker
+  password: glx_benchmarker
+  db_name: glx_benchmarker
