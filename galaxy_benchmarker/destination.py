@@ -94,10 +94,9 @@ class GalaxyDestination(BaseDestination):
         infos = dict()
         for job_id in job_ids:
             infos[job_id] = self.galaxy.instance.jobs.show_job(job_id, full_details=True)
-            if "job_metrics" not in infos[job_id]:
-                log.info("Did not get job metrics from Galaxy (missing permissions?). Skip parsing..")
-                continue
-            # Parse JobMetrics for future usage in influxDB
+
+            # Get JobMetrics and parse them for future usage in influxDB
+            infos[job_id]["job_metrics"] = self.galaxy.instance.jobs.get_metrics(job_id)
             infos[job_id]["parsed_job_metrics"] = metrics.parse_galaxy_job_metrics(infos[job_id]["job_metrics"])
 
         return infos
