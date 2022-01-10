@@ -2,17 +2,14 @@
 Definition of different destination-types for workflows.
 """
 from __future__ import annotations
-from galaxy_benchmarker import ansible_bridge
-from galaxy_benchmarker import planemo_bridge
-from galaxy_benchmarker import condor_bridge
+from galaxy_benchmarker.bridge import ansible,planemo, condor
 from galaxy_benchmarker import metrics
 import logging
 import time
 from multiprocessing import Pool, TimeoutError
 from typing import Dict
 from galaxy_benchmarker.task import BaseTask, AnsiblePlaybookTask, BenchmarkerTask
-from galaxy_benchmarker.galaxy_bridge import Galaxy
-from bioblend.galaxy import GalaxyInstance
+from galaxy_benchmarker.bridge.galaxy import Galaxy, GalaxyInstance
 from jinja2 import Template
 # from workflow import GalaxyWorkflow, CondorWorkflow
 
@@ -79,7 +76,7 @@ class GalaxyDestination(BaseDestination):
         """
         Runs the given AnsiblePlaybookTask on the destination.
         """
-        ansible_bridge.run_playbook(task.playbook, self.host, self.host_user, self.ssh_key,
+        ansible.run_playbook(task.playbook, self.host, self.host_user, self.ssh_key,
                                     {"tool_dependency_dir": self.tool_dependency_dir,
                                      "jobs_directory_dir": self.jobs_directory_dir,
                                      "persistence_dir": self.persistence_dir})
@@ -111,11 +108,11 @@ class GalaxyDestination(BaseDestination):
         start_time = time.monotonic()
 
         if workflow.timeout is None:
-            result = planemo_bridge.run_planemo(self.galaxy, self, workflow.path)
+            result = planemo.run_planemo(self.galaxy, self, workflow.path)
         else:
             # Run inside a Process to enable timeout
             pool = Pool(processes=1)
-            pool_result = pool.apply_async(planemo_bridge.run_planemo, (self.galaxy, self, workflow.path))
+            pool_result = pool.apply_async(planemo.run_planemo, (self.galaxy, self, workflow.path))
 
             try:
                 result = pool_result.get(timeout=workflow.timeout)
@@ -165,20 +162,20 @@ class CondorDestination(BaseDestination):
             "workflow_directory_path": workflow.path,
             "condor_user": self.host_user
         }
-        ansible_bridge.run_playbook("deploy_condor_workflow.yml", self.host, self.host_user, self.ssh_key, values)
+        ansible.run_playbook("deploy_condor_workflow.yml", self.host, self.host_user, self.ssh_key, values)
 
     def run_workflow(self, workflow: CondorWorkflow) -> Dict:
         """
         Runs the given workflow on CondorDestination. Returns Dict of ...
         """
-        ssh_client = condor_bridge.get_paramiko_client(self.host, self.host_user, self.ssh_key)
+        ssh_client = condor.get_paramiko_client(self.host, self.host_user, self.ssh_key)
 
         remote_workflow_dir = "{jobs_dir}/{wf_name}".format(jobs_dir=self.jobs_directory_dir,
                                                             wf_name=workflow.name)
 
         log.info("Submitting workflow '{wf}' to '{dest}'".format(wf=workflow, dest=self))
         start_time = time.monotonic()
-        job_ids = condor_bridge.submit_job(ssh_client, remote_workflow_dir, workflow.job_file)
+        job_ids = condor.submit_job(ssh_client, remote_workflow_dir, workflow.job_file)
         submit_time = time.monotonic() - start_time
         log.info("Submitted in {seconds} seconds".format(seconds=submit_time))
 
@@ -186,7 +183,7 @@ class CondorDestination(BaseDestination):
         status = "unknown"
         while status != "done":
             try:
-                job_status = condor_bridge.get_job_status(ssh_client, job_ids["id"])
+                job_status = condor.get_job_status(ssh_client, job_ids["id"])
             except ValueError as error:
                 status = "error"
                 log.error("There was an error with run of {workflow}: {error}".format(workflow=self.name,
@@ -198,7 +195,7 @@ class CondorDestination(BaseDestination):
         total_workflow_runtime = time.monotonic() - start_time
 
         log.info("Fetching condor_history")
-        jobs = condor_bridge.get_condor_history(ssh_client, float(job_ids["id"]), float(job_ids["id"]))
+        jobs = condor.get_condor_history(ssh_client, float(job_ids["id"]), float(job_ids["id"]))
 
         result = {
             "id": job_ids["id"],

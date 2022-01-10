@@ -1,8 +1,7 @@
 from bioblend.galaxy import GalaxyInstance
 from typing import Tuple, List
 from galaxy_benchmarker.workflow import BaseWorkflow, GalaxyWorkflow
-from galaxy_benchmarker import ansible_bridge
-from galaxy_benchmarker import planemo_bridge
+from galaxy_benchmarker.bridge import ansible, planemo
 import logging
 import string
 import random
@@ -71,7 +70,7 @@ class Galaxy:
         for workflow in workflows:
             if type(workflow) is GalaxyWorkflow:
                 log.info("Installing tools for workflow '{workflow}'".format(workflow=workflow.name))
-                planemo_bridge.install_workflow([workflow.path], self.instance)
+                planemo.install_workflow([workflow.path], self.instance)
 
     def deploy_job_conf(self):
         """
@@ -90,4 +89,4 @@ class Galaxy:
             "galaxy_config_dir": self.galaxy_config_dir,
             "galaxy_user": self.galaxy_user
         }
-        ansible_bridge.run_playbook("prepare_galaxy.yml", host, self.ssh_user, self.ssh_key, values)
+        ansible.run_playbook("prepare_galaxy.yml", host, self.ssh_user, self.ssh_key, values)

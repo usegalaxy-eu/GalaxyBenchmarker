@@ -11,7 +11,7 @@ from galaxy_benchmarker.workflow import BaseWorkflow, GalaxyWorkflow, CondorWork
 from galaxy_benchmarker.task import BaseTask, AnsiblePlaybookTask, BenchmarkerTask
 from typing import List, Dict, Union
 from galaxy_benchmarker.task import configure_task
-from influxdb_bridge import InfluxDB
+from galaxy_benchmarker.bridge import influxdb
 from bioblend import ConnectionError
 
 
@@ -62,7 +62,7 @@ class BaseBenchmark:
     def run(self, benchmarker):
         raise NotImplementedError
 
-    def save_results_to_influxdb(self, inflxdb: InfluxDB):
+    def save_results_to_influxdb(self, inflxdb: influxdb.InfluxDB):
         """
         Sends all the metrics of the benchmark_results to influxDB.
         """

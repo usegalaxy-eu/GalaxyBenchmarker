@@ -7,7 +7,7 @@ import bioblend
 import time
 import logging
 import urllib3
-from galaxy_bridge import Galaxy
+from galaxy_benchmarker.bridge.galaxy import Galaxy
 # from destination import PulsarMQDestination
 from planemo import options
 from planemo.cli import Context

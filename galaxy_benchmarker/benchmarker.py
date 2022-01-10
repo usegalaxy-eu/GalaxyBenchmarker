@@ -2,11 +2,11 @@ from typing import Dict
 from galaxy_benchmarker import workflow
 from galaxy_benchmarker import destination
 from galaxy_benchmarker import benchmark
-from galaxy_benchmarker.galaxy_bridge import Galaxy
+from galaxy_benchmarker.bridge.galaxy import Galaxy
+from galaxy_benchmarker.bridge.influxdb import InfluxDB
+from galaxy_benchmarker.bridge.openstack import OpenStackCompute
 import logging
 import json
-from galaxy_benchmarker.influxdb_bridge import InfluxDB
-from galaxy_benchmarker.openstack_bridge import OpenStackCompute
 
 log = logging.getLogger("GalaxyBenchmarker")
 
