@@ -3,7 +3,6 @@ Bridge between Planemo and GalaxyBenchmarker
 """
 from __future__ import annotations
 import random
-import bioblend
 import time
 import logging
 import urllib3

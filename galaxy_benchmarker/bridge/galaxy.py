@@ -90,3 +90,24 @@ class Galaxy:
             "galaxy_user": self.galaxy_user
         }
         ansible.run_playbook("prepare_galaxy.yml", host, self.ssh_user, self.ssh_key, values)
+
+
+    def get_job_ids_from_history_name(self, history_name: str, user_key: str) -> List:
+        """
+        For a given history_name return all its associated job-ids. As a history is only accessible from the user it
+        was created by, an impersonated_instance is needed.
+        """
+        impersonated = self.impersonate(user_key=user_key)
+        histories = impersonated.histories.get_histories(name=history_name)
+
+        if len(histories) >= 1:
+            history_id = histories[0]["id"]
+            dataset_ids = impersonated.histories.show_history(history_id)["state_ids"]["ok"]
+            job_ids = list()
+
+            for dataset_id in dataset_ids:
+                job_ids.append(impersonated.histories.show_dataset(history_id, dataset_id)["creating_job"])
+
+            return job_ids
+
+        return []

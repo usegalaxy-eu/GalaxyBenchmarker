@@ -9,7 +9,7 @@ import time
 from multiprocessing import Pool, TimeoutError
 from typing import Dict
 from galaxy_benchmarker.task import BaseTask, AnsiblePlaybookTask, BenchmarkerTask
-from galaxy_benchmarker.bridge.galaxy import Galaxy, GalaxyInstance
+from galaxy_benchmarker.bridge.galaxy import Galaxy
 from jinja2 import Template
 # from workflow import GalaxyWorkflow, CondorWorkflow
 
@@ -85,8 +85,7 @@ class GalaxyDestination(BaseDestination):
         """
         Get all jobs together with their details from a given history_name.
         """
-        glx_instance = self.galaxy.impersonate(user_key=self.galaxy_user_key)
-        job_ids = get_job_ids_from_history_name(history_name, glx_instance)
+        job_ids = self.glx.get_job_ids_from_history_name(history_name, self.galaxy_user_key)
 
         infos = dict()
         for job_id in job_ids:
@@ -286,24 +285,3 @@ def create_galaxy_job_conf(glx: Galaxy, destinations: Dict[str, BaseDestination]
 
     with open("galaxy_files/job_conf.xml.tmp", "w") as fh:
         fh.write(job_conf)
-
-
-def get_job_ids_from_history_name(history_name, impersonated_instance: GalaxyInstance):
-    """
-    For a given history_name return all its associated job-ids. As a history is only accessible from the user it
-    was created by, an impersonated_instance is needed.
-    """
-    histories = impersonated_instance.histories.get_histories(name=history_name)
-
-    if len(histories) >= 1:
-        history_id = histories[0]["id"]
-        dataset_ids = impersonated_instance.histories.show_history(history_id)["state_ids"]["ok"]
-        job_ids = list()
-
-        for dataset_id in dataset_ids:
-            job_ids.append(impersonated_instance.histories.show_dataset(history_id, dataset_id)["creating_job"])
-
-        return job_ids
-
-    return []
-
