@@ -1,6 +1,6 @@
 from bioblend.galaxy import GalaxyInstance
 from typing import Tuple, List
-from galaxy_benchmarker.workflow import BaseWorkflow, GalaxyWorkflow
+from galaxy_benchmarker.models.workflow import BaseWorkflow, GalaxyWorkflow
 from galaxy_benchmarker.bridge import ansible, planemo
 import logging
 import string

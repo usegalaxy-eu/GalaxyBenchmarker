@@ -8,7 +8,7 @@ import logging
 import time
 from multiprocessing import Pool, TimeoutError
 from typing import Dict
-from galaxy_benchmarker.task import BaseTask, AnsiblePlaybookTask, BenchmarkerTask
+from galaxy_benchmarker.models.task import BaseTask, AnsiblePlaybookTask, BenchmarkerTask
 from galaxy_benchmarker.bridge.galaxy import Galaxy
 from jinja2 import Template
 # from workflow import GalaxyWorkflow, CondorWorkflow
