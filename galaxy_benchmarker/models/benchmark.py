@@ -358,7 +358,7 @@ def run_galaxy_benchmark(benchmark, galaxy, destinations: List[PulsarMQDestinati
                     else:
                         if run_type == "cold" and benchmark.cold_pre_task is not None:
                             log.info("Running cold pre-task for Cleanup.")
-                            destination.run_task(benchmark.cold_pre_task)
+                            benchmark.cold_pre_task.run()
 
                         log.info("Running {type} '{workflow}' for the {i} time on {dest}.".format(type=run_type,
                                                                                                   workflow=workflow.name,
@@ -432,11 +432,11 @@ def configure_benchmark(bm_config: Dict, destinations: Dict, workflows: Dict, gl
         benchmark.galaxy = glx
         if "cold_pre_task" in bm_config:
             if bm_config["cold_pre_task"]["type"] == "AnsiblePlaybook":
-                benchmark.cold_pre_task = AnsiblePlaybookTask(benchmark, bm_config["cold_pre_task"]["playbook"])
+                benchmark.cold_pre_task = AnsiblePlaybookTask(benchmark.destinations, bm_config["cold_pre_task"]["playbook"])
 
         if "warm_pre_task" in bm_config:
             if bm_config["warm_pre_task"]["type"] == "AnsiblePlaybook":
-                benchmark.warm_pre_task = AnsiblePlaybookTask(benchmark, bm_config["warm_pre_task"]["playbook"])
+                benchmark.warm_pre_task = AnsiblePlaybookTask(benchmark.destinations, bm_config["warm_pre_task"]["playbook"])
 
     if bm_config["type"] == "DestinationComparison":
         warmup = True if "warmup" not in bm_config else bm_config["warmup"]
@@ -464,9 +464,9 @@ def configure_benchmark(bm_config: Dict, destinations: Dict, workflows: Dict, gl
         benchmark.pre_tasks = list()
         for task in bm_config["pre_tasks"]:
             if task["type"] == "AnsiblePlaybook":
-                benchmark.pre_tasks.append(AnsiblePlaybookTask(benchmark, task["playbook"]))
+                benchmark.pre_tasks.append(AnsiblePlaybookTask(benchmark.destinations, task["playbook"]))
             elif task["type"] == "BenchmarkerTask":
-                benchmark.pre_tasks.append(BenchmarkerTask(benchmark, task["name"]))
+                benchmark.pre_tasks.append(BenchmarkerTask(benchmark.destinations, task["name"]))
             else:
                 raise ValueError("Task of type '{type}' is not supported".format(type=task["type"]))
 
@@ -474,9 +474,9 @@ def configure_benchmark(bm_config: Dict, destinations: Dict, workflows: Dict, gl
         benchmark.post_tasks = list()
         for task in bm_config["post_tasks"]:
             if task["type"] == "AnsiblePlaybook":
-                benchmark.post_tasks.append(AnsiblePlaybookTask(benchmark, task["playbook"]))
+                benchmark.post_tasks.append(AnsiblePlaybookTask(benchmark.destinations, task["playbook"]))
             elif task["type"] == "BenchmarkerTask":
-                benchmark.post_tasks.append(BenchmarkerTask(benchmark, task["name"]))
+                benchmark.post_tasks.append(BenchmarkerTask(benchmark.destinations, task["name"]))
             else:
                 raise ValueError("Task of type '{type}' is not supported".format(type=task["type"]))
 

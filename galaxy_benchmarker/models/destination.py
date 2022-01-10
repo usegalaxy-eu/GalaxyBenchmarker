@@ -27,15 +27,6 @@ class BaseDestination:
         """
         raise NotImplementedError
 
-    def run_task(self, task: BaseTask):
-        """
-        Runs a given task on the Destination.
-        """
-        if task is None:
-            return
-        if type(task) is AnsiblePlaybookTask:
-            self.run_ansible_playbook_task(task)
-
     def run_ansible_playbook_task(self, task: AnsiblePlaybookTask):
         raise NotImplementedError
 
