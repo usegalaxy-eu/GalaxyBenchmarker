@@ -6,11 +6,11 @@ import time
 import threading
 import random
 from datetime import datetime
-from destination import BaseDestination, GalaxyDestination, PulsarMQDestination, GalaxyCondorDestination, CondorDestination
-from workflow import BaseWorkflow, GalaxyWorkflow, CondorWorkflow
-from task import BaseTask, AnsiblePlaybookTask, BenchmarkerTask
+from galaxy_benchmarker.destination import BaseDestination, GalaxyDestination, PulsarMQDestination, GalaxyCondorDestination, CondorDestination
+from galaxy_benchmarker.workflow import BaseWorkflow, GalaxyWorkflow, CondorWorkflow
+from galaxy_benchmarker.task import BaseTask, AnsiblePlaybookTask, BenchmarkerTask
 from typing import List, Dict, Union
-from task import configure_task
+from galaxy_benchmarker.task import configure_task
 from influxdb_bridge import InfluxDB
 from bioblend import ConnectionError
 

@@ -5,7 +5,7 @@ services:
     volumes:
       - .:/src
     working_dir: /src
-    entrypoint: python3 galaxy_benchmarker
+    entrypoint: python3 -m galaxy_benchmarker
     depends_on: 
       - influxdb
   influxdb:

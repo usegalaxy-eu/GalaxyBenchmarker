@@ -2,16 +2,16 @@
 Definition of different destination-types for workflows.
 """
 from __future__ import annotations
-import ansible_bridge
-import planemo_bridge
-import condor_bridge
-import metrics
+from galaxy_benchmarker import ansible_bridge
+from galaxy_benchmarker import planemo_bridge
+from galaxy_benchmarker import condor_bridge
+from galaxy_benchmarker import metrics
 import logging
 import time
 from multiprocessing import Pool, TimeoutError
 from typing import Dict
-from task import BaseTask, AnsiblePlaybookTask, BenchmarkerTask
-from galaxy_bridge import Galaxy
+from galaxy_benchmarker.task import BaseTask, AnsiblePlaybookTask, BenchmarkerTask
+from galaxy_benchmarker.galaxy_bridge import Galaxy
 from bioblend.galaxy import GalaxyInstance
 from jinja2 import Template
 # from workflow import GalaxyWorkflow, CondorWorkflow

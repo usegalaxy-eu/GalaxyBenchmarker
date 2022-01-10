@@ -3,7 +3,7 @@ import re
 from typing import List, Dict
 from datetime import datetime
 import json
-import metrics
+from galaxy_benchmarker import metrics
 
 
 def get_paramiko_client(host, username, key_file):

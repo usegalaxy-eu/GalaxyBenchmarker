@@ -3,7 +3,7 @@ import argparse
 import sys
 import bioblend
 from time import sleep
-from benchmarker import Benchmarker
+from galaxy_benchmarker.benchmarker import Benchmarker
 import logging
 import time
 import requests
