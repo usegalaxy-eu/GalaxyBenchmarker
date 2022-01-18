@@ -103,6 +103,97 @@ class BaseBenchmark:
                             }
                             inflxdb.save_job_metrics(tags, job)
 
+    @staticmethod
+    def run_galaxy_benchmark(benchmark, galaxy, destinations: List[PulsarMQDestination],
+                            workflows: List[GalaxyWorkflow], runs_per_workflow=1, run_type="warm", warmup=True):
+        """
+        Runs the given list of Workflows on the given list of Destinations as a cold or warm benchmark on a
+        PulsarMQDestination for runs_per_workflow times. Handles failures too and retries up to one time.
+        """
+        if run_type not in ["cold", "warm"]:
+            raise ValueError("'run_type' must be of type 'cold' or 'warm'.")
+
+        benchmark_results = dict()
+
+        # Add +1 to warm up Pulsar, if run_type is "warm" and warmup should happen
+        if warmup and run_type == "warm":
+            runs_per_workflow += 1
+
+        log.info("Starting to run {type} benchmarks.".format(type=run_type))
+        try:
+            for destination in destinations:
+                benchmark_results[destination.name] = dict()
+
+                log.info("Running {type} benchmark for destination: {dest}.".format(type=run_type, dest=destination.name))
+                for workflow in workflows:
+                    benchmark_results[destination.name][workflow.name] = list()
+                    retries = 0
+                    i = 0
+                    while i < runs_per_workflow:
+                        if warmup and run_type == "warm" and i == 0:
+                            log.info("First run! Warming up. Results won't be considered for the first time.")
+                            result = destination.run_workflow(workflow)
+                            if result["status"] == "error":
+                                retries += 1
+                        else:
+                            if run_type == "cold" and benchmark.cold_pre_task is not None:
+                                log.info("Running cold pre-task for Cleanup.")
+                                benchmark.cold_pre_task.run()
+
+                            log.info("Running {type} '{workflow}' for the {i} time on {dest}.".format(type=run_type,
+                                                                                                    workflow=workflow.name,
+                                                                                                    i=i + 1,
+                                                                                                    dest=destination.name))
+                            result = destination.run_workflow(workflow)
+
+                            if "history_name" in result and result["status"] == "success":
+                                result["jobs"] = destination.get_jobs(result["history_name"])
+
+                            result["workflow_metrics"] = {
+                                "status": {
+                                    "name": "workflow_status",
+                                    "type": "string",
+                                    "plugin": "benchmarker",
+                                    "value": result["status"]
+                                },
+                                "total_runtime": {
+                                    "name": "total_workflow_runtime",
+                                    "type": "float",
+                                    "plugin": "benchmarker",
+                                    "value": result["total_workflow_runtime"]
+                                }
+                            }
+
+                            log.info("Finished running '{workflow}' with status '{status}' in {time} seconds."
+                                    .format(workflow=workflow.name, status=result["status"],
+                                            time=result["total_workflow_runtime"]))
+
+                            # Handle possible errors and maybe retry
+                            if result["status"] == "error":
+                                log.info("Result won't be considered.")
+
+                                if retries < 4:
+                                    retry_wait = 60 * 2 ** retries
+                                    log.info("Retrying after {wait} seconds..".format(wait=retry_wait))
+                                    time.sleep(retry_wait)
+                                    retries += 1
+                                    i -= 1
+                                # If too many retries, continue with next workflow
+                                else:
+                                    break
+                            else:
+                                benchmark_results[destination.name][workflow.name].append(result)
+                                retries = 0
+
+                        i += 1
+        except KeyboardInterrupt:
+            log.info("Received KeyboardInterrupt. Stopping benchmark and saving current results.")
+            # So previous results are saved
+            raise KeyboardInterrupt(benchmark_results)
+
+        return benchmark_results
+
+
     def __str__(self):
         return self.name
 
@@ -130,7 +221,7 @@ class ColdWarmBenchmark(BaseBenchmark):
 
         for run_type in ["cold", "warm"]:
             try:
-                self.benchmark_results[run_type] = run_galaxy_benchmark(self, benchmarker.glx, self.destinations,
+                self.benchmark_results[run_type] = self.run_galaxy_benchmark(self, benchmarker.glx, self.destinations,
                                                                         self.workflows,
                                                                         self.runs_per_workflow, run_type)
             except KeyboardInterrupt as e:
@@ -157,7 +248,7 @@ class DestinationComparisonBenchmark(BaseBenchmark):
         any metrics.
         """
         try:
-            self.benchmark_results["warm"] = run_galaxy_benchmark(self, benchmarker.glx, self.destinations,
+            self.benchmark_results["warm"] = self.run_galaxy_benchmark(self, benchmarker.glx, self.destinations,
                                                                   self.workflows,
                                                                   self.runs_per_workflow, "warm", self.warmup)
         except KeyboardInterrupt as e:
@@ -288,7 +379,7 @@ class BurstBenchmark(BaseBenchmark):
             log.info("Running with thread_id {thread_id}".format(thread_id=self.thread_id))
             if self.bm.destination_type is PulsarMQDestination:
                 try:
-                    res = run_galaxy_benchmark(self, self.bm.galaxy, self.bm.destinations, self.bm.workflows,
+                    res = BurstBenchmark.run_galaxy_benchmark(self, self.bm.galaxy, self.bm.destinations, self.bm.workflows,
                                                1, "warm", False)
                     self.results[self.thread_id] = res[self.bm.destinations[0].name][self.bm.workflows[0].name][0] # TODO: Handle error-responses
                 except ConnectionError:
@@ -322,96 +413,6 @@ class BurstBenchmark(BaseBenchmark):
                         }
 
                 self.results[self.thread_id] = result
-
-
-def run_galaxy_benchmark(benchmark, galaxy, destinations: List[PulsarMQDestination],
-                         workflows: List[GalaxyWorkflow], runs_per_workflow=1, run_type="warm", warmup=True):
-    """
-    Runs the given list of Workflows on the given list of Destinations as a cold or warm benchmark on a
-    PulsarMQDestination for runs_per_workflow times. Handles failures too and retries up to one time.
-    """
-    if run_type not in ["cold", "warm"]:
-        raise ValueError("'run_type' must be of type 'cold' or 'warm'.")
-
-    benchmark_results = dict()
-
-    # Add +1 to warm up Pulsar, if run_type is "warm" and warmup should happen
-    if warmup and run_type == "warm":
-        runs_per_workflow += 1
-
-    log.info("Starting to run {type} benchmarks.".format(type=run_type))
-    try:
-        for destination in destinations:
-            benchmark_results[destination.name] = dict()
-
-            log.info("Running {type} benchmark for destination: {dest}.".format(type=run_type, dest=destination.name))
-            for workflow in workflows:
-                benchmark_results[destination.name][workflow.name] = list()
-                retries = 0
-                i = 0
-                while i < runs_per_workflow:
-                    if warmup and run_type == "warm" and i == 0:
-                        log.info("First run! Warming up. Results won't be considered for the first time.")
-                        result = destination.run_workflow(workflow)
-                        if result["status"] == "error":
-                            retries += 1
-                    else:
-                        if run_type == "cold" and benchmark.cold_pre_task is not None:
-                            log.info("Running cold pre-task for Cleanup.")
-                            benchmark.cold_pre_task.run()
-
-                        log.info("Running {type} '{workflow}' for the {i} time on {dest}.".format(type=run_type,
-                                                                                                  workflow=workflow.name,
-                                                                                                  i=i + 1,
-                                                                                                  dest=destination.name))
-                        result = destination.run_workflow(workflow)
-
-                        if "history_name" in result and result["status"] == "success":
-                            result["jobs"] = destination.get_jobs(result["history_name"])
-
-                        result["workflow_metrics"] = {
-                            "status": {
-                                "name": "workflow_status",
-                                "type": "string",
-                                "plugin": "benchmarker",
-                                "value": result["status"]
-                            },
-                            "total_runtime": {
-                                "name": "total_workflow_runtime",
-                                "type": "float",
-                                "plugin": "benchmarker",
-                                "value": result["total_workflow_runtime"]
-                            }
-                        }
-
-                        log.info("Finished running '{workflow}' with status '{status}' in {time} seconds."
-                                 .format(workflow=workflow.name, status=result["status"],
-                                         time=result["total_workflow_runtime"]))
-
-                        # Handle possible errors and maybe retry
-                        if result["status"] == "error":
-                            log.info("Result won't be considered.")
-
-                            if retries < 4:
-                                retry_wait = 60 * 2 ** retries
-                                log.info("Retrying after {wait} seconds..".format(wait=retry_wait))
-                                time.sleep(retry_wait)
-                                retries += 1
-                                i -= 1
-                            # If too many retries, continue with next workflow
-                            else:
-                                break
-                        else:
-                            benchmark_results[destination.name][workflow.name].append(result)
-                            retries = 0
-
-                    i += 1
-    except KeyboardInterrupt:
-        log.info("Received KeyboardInterrupt. Stopping benchmark and saving current results.")
-        # So previous results are saved
-        raise KeyboardInterrupt(benchmark_results)
-
-    return benchmark_results
 
 
 def configure_benchmark(bm_config: Dict, destinations: Dict, workflows: Dict, glx, benchmarker) -> BaseBenchmark:
