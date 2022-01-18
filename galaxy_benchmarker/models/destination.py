@@ -7,11 +7,12 @@ from galaxy_benchmarker import metrics
 import logging
 import time
 from multiprocessing import Pool, TimeoutError
-from typing import Dict
+from typing import Dict, List
 from galaxy_benchmarker.models.task import BaseTask, AnsiblePlaybookTask, BenchmarkerTask
 from galaxy_benchmarker.bridge.galaxy import Galaxy
 from jinja2 import Template
 # from workflow import GalaxyWorkflow, CondorWorkflow
+from datetime import datetime
 
 log = logging.getLogger("GalaxyBenchmarker")
 
@@ -84,7 +85,7 @@ class GalaxyDestination(BaseDestination):
 
             # Get JobMetrics and parse them for future usage in influxDB
             infos[job_id]["job_metrics"] = self.galaxy.instance.jobs.get_metrics(job_id)
-            infos[job_id]["parsed_job_metrics"] = metrics.parse_galaxy_job_metrics(infos[job_id]["job_metrics"])
+            infos[job_id]["parsed_job_metrics"] = self.parse_galaxy_job_metrics(infos[job_id]["job_metrics"])
 
         return infos
 
@@ -113,6 +114,53 @@ class GalaxyDestination(BaseDestination):
         result["total_workflow_runtime"] = time.monotonic() - start_time
 
         return result
+
+    @staticmethod
+    def parse_galaxy_job_metrics(job_metrics: List) -> Dict[str, Dict]:
+        """
+        Parses the more or less "raw" metrics from Galaxy, so they can later be ingested by InfluxDB.
+        """
+        parsed_metrics = {
+            "staging_time": {
+                "name": "staging_time",
+                "type": "float",
+                "value": float(0)
+            },
+        }
+
+        jobstatus_queued = jobstatus_running = None
+        for metric in job_metrics:
+            try:
+                if metric["name"] in metrics.galaxy_float_metrics:
+                    parsed_metrics[metric["name"]] = {
+                        "name": metric["name"],
+                        "type": "float",
+                        "plugin": metric["plugin"],
+                        "value": float(metric["raw_value"])
+                    }
+                if metric["name"] in metrics.galaxy_string_metrics:
+                    parsed_metrics[metric["name"]] = {
+                        "name": metric["name"],
+                        "type": "string",
+                        "plugin": metric["plugin"],
+                        "value": metric["raw_value"]
+                    }
+                # For calculating the staging time (if the metrics exist)
+                if metric["plugin"] == "jobstatus" and metric["name"] == "queued":
+                    jobstatus_queued = datetime.strptime(metric["value"], "%Y-%m-%d %H:%M:%S.%f")
+                if metric["plugin"] == "jobstatus" and metric["name"] == "running":
+                    jobstatus_running = datetime.strptime(metric["value"], "%Y-%m-%d %H:%M:%S.%f")
+            except ValueError as e:
+                log.error("Error while trying to parse Galaxy job metrics '{name} = {value}': {error}. Ignoring.."
+                        .format(error=e, name=metric["name"], value=metric["raw_value"]))
+
+        # Calculate staging time
+        if jobstatus_queued is not None and jobstatus_running is not None:
+            parsed_metrics["staging_time"]["value"] = float((jobstatus_running - jobstatus_queued).seconds +
+                                                            (jobstatus_running - jobstatus_queued).microseconds * 0.000001)
+
+        return parsed_metrics
+
 
 
 class PulsarMQDestination(GalaxyDestination):

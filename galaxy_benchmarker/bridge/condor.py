@@ -1,10 +1,13 @@
 import paramiko
 import re
-from typing import List, Dict
+from typing import Dict
 from datetime import datetime
 import json
 from galaxy_benchmarker import metrics
 
+import logging
+
+log = logging.getLogger("GalaxyBenchmarker")
 
 def get_paramiko_client(host, username, key_file):
     key = paramiko.RSAKey.from_private_key_file(key_file)
@@ -89,8 +92,68 @@ def get_condor_history(client: paramiko.SSHClient, first_id: float, last_id: flo
 
     result = {}
     for job in job_list:
-        job["parsed_job_metrics"] = metrics.parse_condor_job_metrics(job)
+        job["parsed_job_metrics"] = parse_condor_job_metrics(job)
         job["id"] = job["GlobalJobId"]
         result[job["id"]] = job
 
     return result
+
+def parse_condor_job_metrics(job_metrics: Dict) -> Dict[str, Dict]:
+    parsed_metrics = {}
+
+    for key, value in job_metrics.items():
+        try:
+            if key in metrics.condor_float_metrics:
+                parsed_metrics[key] = {
+                    "name": key,
+                    "type": "float",
+                    "plugin": "condor_history",
+                    "value": float(value)
+                }
+            if key in metrics.condor_string_metrics:
+                parsed_metrics[key] = {
+                    "name": key,
+                    "type": "string",
+                    "plugin": "condor_history",
+                    "value": value
+                }
+            if key in metrics.condor_time_metrics:
+                parsed_metrics[key] = {
+                    "name": key,
+                    "type": "timestamp",
+                    "plugin": "condor_history",
+                    "value": value * 1000
+                }
+            if key == "JobStatus":
+                if value == 1:
+                    status = "idle"
+                elif value == 2:
+                    status = "running"
+                elif value == 3:
+                    status = "removed"
+                elif value == 4:
+                    status = "success"
+                elif value == 5:
+                    status = "held"
+                elif value == 6:
+                    status = "transferring output"
+                else:
+                    status = "unknown"
+                parsed_metrics["job_status"] = {
+                    "name": "job_status",
+                    "type": "string",
+                    "plugin": "condor_history",
+                    "value": status
+                }
+            if key == "RemoteWallClockTime":
+                parsed_metrics["runtime_seconds"] = {
+                    "name": "runtime_seconds",
+                    "type": "float",
+                    "plugin": "condor_history",
+                    "value": float(value)
+                }
+        except ValueError as e:
+            log.error("Error while trying to parse Condor job metrics '{key} = {value}': {error}. Ignoring.."
+                      .format(error=e, key=key, value=value))
+
+    return parsed_metrics
