@@ -9,7 +9,7 @@ import urllib3
 from galaxy_benchmarker.bridge.galaxy import Galaxy
 # from destination import PulsarMQDestination
 from planemo import options
-from planemo.cli import Context
+from planemo.cli import PlanemoContext
 from planemo.engine import engine_context
 from planemo.galaxy.test import handle_reports_and_summary
 from planemo.runnable import for_paths
@@ -23,7 +23,7 @@ def run_planemo(glx: Galaxy, dest: PulsarMQDestination, workflow_path) -> Dict:
     """
     Runs workflow with Planemo and returns a dict of the status and history_name of the finished workflow.
     """
-    return _cli(Context(), [workflow_path], glx, dest.galaxy_user_key)
+    return _cli(PlanemoContext(), [workflow_path], glx, dest.galaxy_user_key)
 
 
 def install_workflow(workflow_path, glx_instance):

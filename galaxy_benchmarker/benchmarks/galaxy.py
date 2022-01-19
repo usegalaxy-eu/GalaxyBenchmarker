@@ -1,67 +1,33 @@
 """
 Definition of different benchmark-types.
 """
+from __future__ import annotations
+from typing import TYPE_CHECKING
 import logging
 import time
-from datetime import datetime
-from galaxy_benchmarker.models.destination import BaseDestination, GalaxyDestination, PulsarMQDestination
-from galaxy_benchmarker.models.workflow import BaseWorkflow, GalaxyWorkflow
-from galaxy_benchmarker.models.task import BaseTask, AnsiblePlaybookTask
-from typing import List
-from galaxy_benchmarker.bridge import influxdb
+from dataclasses import dataclass
+from galaxy_benchmarker.models import task
+from galaxy_benchmarker.bridge import influxdb, galaxy
+from galaxy_benchmarker.benchmarks import base
+
+if TYPE_CHECKING:
+    from galaxy_benchmarker.benchmarker import BenchmarkerConfig
+
+log = logging.getLogger(__name__)
 
 
-log = logging.getLogger("GalaxyBenchmarker")
+@base.register_benchmark
+class ColdWarmBenchmark(base.Benchmark):
+    """Compare the runtime between a cold and a warm start"""
 
+    def __init__(self, config: dict, global_config: BenchmarkerConfig):
+        super().__init__(config, global_config)
+        # self.destinations = destinations
+        # self.workflows = workflows
+        # self.galaxy: galaxy.Galaxy = global_config.glx
 
-class ColdWarmBenchmark:
-    """
-    The Base-Class of Benchmark. All Benchmarks should inherit from it.
-    """
-    allowed_dest_types = []
-    allowed_workflow_types = []
-    benchmarker = None
-    galaxy = None
-    benchmark_results = dict()
-    pre_tasks: List[BaseTask] = None
-    post_tasks: List[BaseTask] = None
-
-    allowed_dest_types = [GalaxyDestination, PulsarMQDestination]
-    allowed_workflow_types = [GalaxyWorkflow]
-    cold_pre_task: AnsiblePlaybookTask = None
-    warm_pre_task: AnsiblePlaybookTask = None
-
-
-    def __init__(self, name, benchmarker, destinations: List[BaseDestination],
-                 workflows: List[BaseWorkflow], galaxy, runs_per_workflow=1):
-        self.name = name
-        self.benchmarker = benchmarker
-        self.uuid = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f") + "_" + name
-        self.destinations = destinations
-        self.workflows = workflows
-        self.runs_per_workflow = runs_per_workflow
-        self.galaxy = galaxy
-
-
-    def run_pre_task(self):
-        """
-        Runs a Task before starting the actual Benchmark.
-        """
-        if self.pre_tasks is None:
-            return
-        for task in self.pre_tasks:
-            log.info("Running task {task}".format(task=task))
-            task.run()
-
-    def run_post_task(self):
-        """
-        Runs a Task after Benchmark finished (useful for cleaning up etc.).
-        """
-        if self.post_tasks is None:
-            return
-        for task in self.post_tasks:
-            log.info("Running task {task}".format(task=task))
-            task.run()
+        self.cold_pre_task = None
+        self.warm_pre_task = None
 
     def run(self):
         """
@@ -100,9 +66,7 @@ class ColdWarmBenchmark:
         except KeyboardInterrupt:
             log.info("Received KeyboardInterrupt. Stopping current benchmark")
 
-
-
-    def save_results_to_influxdb(self, inflxdb: influxdb.InfluxDB):
+    def save_results_to_influxdb(self, inflxdb: influxdb.InfluxDb):
         """
         Sends all the metrics of the benchmark_results to influxDB.
         """
@@ -177,9 +141,3 @@ class ColdWarmBenchmark:
             return result
         # In case of to many failures, return an empty result
         return {}
-
-
-    def __str__(self):
-        return self.name
-
-    __repr__ = __str__

@@ -1,11 +1,27 @@
 from influxdb import InfluxDBClient
 from typing import Dict
+from dataclasses import dataclass
+from serde import serde
 
+@serde
+@dataclass
+class InfluxDbConfig:
+    host: str
+    port: int
+    username: str
+    password: str
+    db_name: str
 
-class InfluxDB:
-    def __init__(self, host, port, username, password, db_name):
-        self.client = InfluxDBClient(host=host, port=port, username=username, password=password,
-                                     ssl=False, database=db_name, retries=20)
+class InfluxDb:
+    def __init__(self, config: InfluxDbConfig):
+        self.client = InfluxDBClient(
+            host=config.host,
+            port=config.port,
+            username=config.username,
+            password=config.password,
+            database=config.db_name,
+            ssl=False,
+            retries=20)
 
     def save_job_metrics(self, tags: Dict, job_results: Dict):
         """

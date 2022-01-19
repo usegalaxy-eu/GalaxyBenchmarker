@@ -6,25 +6,37 @@ import logging
 import string
 import random
 import re
+from dataclasses import dataclass
+from serde import serde
 
 log = logging.getLogger("GalaxyBenchmarker")
 
+@serde
+@dataclass
+class GalaxyConfig:
+    url: str
+    user_key: str
+    shed_install: bool
+    ssh_user: str = ""
+    ssh_key: str = ""
+    galaxy_root_path: str = ""
+    galaxy_config_dir: str = ""
+    galaxy_user: str = ""
+    configure_job_destinations: bool = False
 
 class Galaxy:
-    def __init__(self, url, user_key, shed_install=False,
-                 ssh_user=None, ssh_key=None, galaxy_root_path=None,
-                 galaxy_config_dir=None, galaxy_user=None):
-        self.url = url
-        self.user_key = user_key
-        self.shed_install = shed_install
-        self.ssh_user = ssh_user
-        self.ssh_key = ssh_key
+    def __init__(self, config: GalaxyConfig):
+        self.url = config.url
+        self.user_key = config.user_key
+        self.shed_install = config.shed_install
+        self.ssh_user = config.ssh_user
+        self.ssh_key = config.ssh_key
 
-        self.galaxy_root_path = galaxy_root_path
-        self.galaxy_config_dir = galaxy_config_dir
-        self.galaxy_user = galaxy_user
+        self.galaxy_root_path = config.galaxy_root_path
+        self.galaxy_config_dir = config.galaxy_config_dir
+        self.galaxy_user = config.galaxy_user
 
-        self.instance = GalaxyInstance(url, key=user_key)
+        self.instance = GalaxyInstance(self.url, key=self.user_key)
 
     def impersonate(self, user=None, user_key=None) -> GalaxyInstance:
         """

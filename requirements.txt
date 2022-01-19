@@ -7,3 +7,4 @@ influxdb
 paramiko
 ansible
 python-openstackclient
+pyserde

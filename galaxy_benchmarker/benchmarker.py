@@ -1,76 +1,75 @@
-from typing import Dict
+from typing import Optional
 from galaxy_benchmarker.models import workflow
 from galaxy_benchmarker.models import destination
 from galaxy_benchmarker.models import benchmark
-from galaxy_benchmarker.bridge.galaxy import Galaxy
-from galaxy_benchmarker.bridge.influxdb import InfluxDB
-from galaxy_benchmarker.bridge.openstack import OpenStackCompute
+from galaxy_benchmarker.bridge.galaxy import Galaxy, GalaxyConfig
+from galaxy_benchmarker.bridge.influxdb import InfluxDb, InfluxDbConfig
+from galaxy_benchmarker.bridge.openstack import OpenStackCompute, OpenStackComputeConfig
+from galaxy_benchmarker.benchmarks.base import Benchmark
 import logging
 import json
+from dataclasses import dataclass
+from pathlib import Path
+
+from serde import serde
+from serde.yaml import from_yaml
 
 log = logging.getLogger("GalaxyBenchmarker")
 
 
+@serde
+@dataclass
+class BenchmarkerConfig:
+    openstack: Optional[OpenStackComputeConfig]
+    galaxy: GalaxyConfig
+    influxdb: Optional[InfluxDbConfig]
+    benchmarks: list[dict]
+    shared: Optional[list[dict]]
+
+
 class Benchmarker:
-    glx: Galaxy
-    inflx_db: InfluxDB
-    workflows: Dict[str, workflow.BaseWorkflow]
-    destinations: Dict[str, destination.BaseDestination]
-    benchmarks: Dict[str, benchmark.BaseBenchmark]
+    def __init__(self, config: BenchmarkerConfig):
+        self.config = config
+        self.glx = Galaxy(config.galaxy)
+        self.influxdb = InfluxDb(config.influxdb) if config.influxdb else None
+        self.openstack = OpenStackCompute(config.openstack) if config.openstack else None
 
-    def __init__(self, config):
-        glx_conf = config["galaxy"]
-        self.glx = Galaxy(glx_conf["url"], glx_conf["user_key"], glx_conf.get("shed_install", False),
-                          glx_conf.get("ssh_user", None), glx_conf.get("ssh_key", None),
-                          glx_conf.get("galaxy_root_path", None), glx_conf.get("galaxy_config_dir", None),
-                          glx_conf.get("galaxy_user", None))
+        self.benchmarks = [Benchmark.create(b_config, config) for b_config in config.benchmarks]
 
-        if "influxdb" in config:
-            inf_conf = config["influxdb"]
-            self.inflx_db = InfluxDB(inf_conf["host"], inf_conf["port"], inf_conf["username"], inf_conf["password"],
-                                     inf_conf["db_name"])
-        else:
-            self.inflx_db = None
+        # self.benchmarks = benchmarks.parse_from_dic(config)
+        # self.workflows = dict()
+        # for wf_config in config["workflows"]:
+        #     self.workflows[wf_config["name"]] = workflow.configure_workflow(wf_config)
 
-        if "openstack" in config:
-            os_conf = config["openstack"]
-            self.openstack = OpenStackCompute(os_conf["auth_url"], os_conf["compute_endpoint_version"],
-                                              os_conf["username"], os_conf["password"], os_conf["project_id"],
-                                              os_conf["region_name"], os_conf["user_domain_name"])
+        # self.destinations = dict()
+        # for dest_config in config["destinations"]:
+        #     self.destinations[dest_config["name"]] = destination.configure_destination(dest_config, self.glx)
 
-        self.workflows = dict()
-        for wf_config in config["workflows"]:
-            self.workflows[wf_config["name"]] = workflow.configure_workflow(wf_config)
+        # self.benchmarks = dict()
+        # for bm_config in config["benchmarks"]:
+        #     self.benchmarks[bm_config["name"]] = benchmark.configure_benchmark(bm_config, self.destinations,
+        #                                                                        self.workflows, self.glx, self)
 
-        self.destinations = dict()
-        for dest_config in config["destinations"]:
-            self.destinations[dest_config["name"]] = destination.configure_destination(dest_config, self.glx)
+        # if glx_conf.get("configure_job_destinations", False):
+        #     log.info("Creating job_conf for Galaxy and deploying it")
+        #     destination.create_galaxy_job_conf(self.glx, self.destinations)
+        #     self.glx.deploy_job_conf()
 
-        self.benchmarks = dict()
-        for bm_config in config["benchmarks"]:
-            self.benchmarks[bm_config["name"]] = benchmark.configure_benchmark(bm_config, self.destinations,
-                                                                               self.workflows, self.glx, self)
-
-        if glx_conf.get("configure_job_destinations", False):
-            log.info("Creating job_conf for Galaxy and deploying it")
-            destination.create_galaxy_job_conf(self.glx, self.destinations)
-            self.glx.deploy_job_conf()
-
-        if glx_conf["shed_install"]:
-            self.glx.install_tools_for_workflows(list(self.workflows.values()))
+        # if glx_conf["shed_install"]:
+        #     self.glx.install_tools_for_workflows(list(self.workflows.values()))
 
     def run_pre_tasks(self):
         log.info("Running pre-tasks for benchmarks")
-        for bm in self.benchmarks.values():
+        for bm in self.benchmarks:
             bm.run_pre_task()
 
     def run_post_tasks(self):
         log.info("Running post-tasks for benchmarks")
-        for bm in self.benchmarks.values():
+        for bm in self.benchmarks:
             bm.run_post_task()
 
     def run(self):
-        for bm in self.benchmarks.values():
+        for bm in self.benchmarks:
             log.info("Running benchmark '{bm_name}'".format(bm_name=bm.name))
             bm.run(self)
 
@@ -91,4 +90,15 @@ class Benchmarker:
         for bm in self.benchmarks.values():
             bm.save_results_to_influxdb(self.inflx_db)
 
+    @staticmethod
+    def from_config(path: str) -> "Benchmarker":
+        """Construct a benchmarker based on a config
 
+        path: Path to yaml
+        """
+        config_path = Path(path)
+        if not config_path.is_file():
+            raise ValueError(f"Path to config '{path}' is not a file")
+
+        benchmarker_config = from_yaml(BenchmarkerConfig, config_path.read_text())
+        return Benchmarker(benchmarker_config)

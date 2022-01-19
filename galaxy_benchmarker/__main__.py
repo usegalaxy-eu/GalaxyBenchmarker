@@ -32,36 +32,28 @@ def main():
     args = parser.parse_args()
 
     log.debug("Loading Configuration from file {filename}".format(filename=args.config))
-    with open(args.config, "r") as stream:
-        try:
-            config = yaml.safe_load(stream)
 
-            log.info("Initializing Benchmarker.")
-            benchmarker = Benchmarker(config)
+    log.info("Initializing Benchmarker.")
+    benchmarker = Benchmarker.from_config(args.config)
 
-            benchmarker.run_pre_tasks()
+    benchmarker.run_pre_tasks()
 
-            log.info("Starting to run benchmarks.")
-            try:
-                benchmarker.run()
-            except bioblend.ConnectionError:
-                log.error("There was a problem with the connection. Benchmark canceled.")
+    log.info("Starting to run benchmarks.")
+    try:
+        benchmarker.run()
+    except bioblend.ConnectionError:
+        log.error("There was a problem with the connection. Benchmark canceled.")
 
-            results_filename = "results/results_{time}".format(time=time.time())
-            log.info("Saving results to file: '{filename}.json'.".format(filename=results_filename))
-            os.makedirs(os.path.dirname(results_filename), exist_ok=True)
-            benchmarker.save_results(results_filename)
+    results_filename = "results/results_{time}".format(time=time.time())
+    log.info("Saving results to file: '{filename}.json'.".format(filename=results_filename))
+    os.makedirs(os.path.dirname(results_filename), exist_ok=True)
+    benchmarker.save_results(results_filename)
 
-            if benchmarker.inflx_db is not None:
-                log.info("Sending results to influxDB.")
-                benchmarker.send_results_to_influxdb()
+    if benchmarker.inflx_db is not None:
+        log.info("Sending results to influxDB.")
+        benchmarker.send_results_to_influxdb()
 
-            benchmarker.run_post_tasks()
-
-        except yaml.YAMLError as exc:
-            print(exc)
-        except IOError as err:
-            print(err)
+    benchmarker.run_post_tasks()
 
 
 if __name__ == '__main__':

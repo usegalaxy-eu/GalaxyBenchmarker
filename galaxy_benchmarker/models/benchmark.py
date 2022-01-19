@@ -62,7 +62,7 @@ class BaseBenchmark:
     def run(self, benchmarker):
         raise NotImplementedError
 
-    def save_results_to_influxdb(self, inflxdb: influxdb.InfluxDB):
+    def save_results_to_influxdb(self, inflxdb: influxdb.InfluxDb):
         """
         Sends all the metrics of the benchmark_results to influxDB.
         """

@@ -1,11 +1,22 @@
+from __future__ import annotations
 import abc
 
 from random import randrange
 from typing import Dict, List
 
-from galaxy_benchmarker.models.destination import BaseDestination
-from galaxy_benchmarker.models.benchmark import BaseBenchmark
+# from galaxy_benchmarker.models.destination import BaseDestination
+# from galaxy_benchmarker.models.benchmark import BaseBenchmark
 from galaxy_benchmarker.bridge.openstack import OpenStackCompute
+
+
+def resolve_config(taskname, global_config):
+    tasks_config = global_config.get("tasks", {})
+
+    task_config = tasks_config.get(taskname, {})
+    if not task_config:
+        raise ValueError(f"No definition found for task '{taskname}'")
+    return task_config
+
 
 class BaseTask(abc.ABC):
     def __init__(self, destinations: List[BaseDestination]):

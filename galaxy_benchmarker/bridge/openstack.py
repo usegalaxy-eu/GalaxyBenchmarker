@@ -2,16 +2,34 @@ import novaclient.v2.servers
 import novaclient.client
 from typing import List
 import logging
+from dataclasses import dataclass
+from serde import serde
 
 log = logging.getLogger("GalaxyBenchmarker")
 
 
+@serde
+@dataclass
+class OpenStackComputeConfig:
+    auth_url: str
+    compute_endpoint_version: str
+    password: str
+    project_id: str
+    region_name: str
+    user_domain_name: str
+    username: str
+
+
 class OpenStackCompute:
-    def __init__(self, auth_url, compute_endpoint_version, username, password,
-                 project_id, region_name, user_domain_name):
-        self.client = novaclient.client.Client(compute_endpoint_version, username=username, password=password,
-                                               project_id=project_id, auth_url=auth_url,
-                                               user_domain_name=user_domain_name, region_name=region_name)
+    def __init__(self, config: OpenStackComputeConfig):
+        self.client = novaclient.client.Client(
+            config.compute_endpoint_version,
+            username=config.username,
+            password=config.password,
+            project_id=config.project_id,
+            auth_url=config.auth_url,
+            user_domain_name=config.user_domain_name,
+            region_name=config.region_name)
 
     def get_servers(self, name_contains="") -> List[novaclient.v2.servers.Server]:
         """
