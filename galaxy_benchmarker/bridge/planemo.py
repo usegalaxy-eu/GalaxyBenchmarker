@@ -16,7 +16,7 @@ from planemo.runnable import for_paths
 from planemo.galaxy.workflows import install_shed_repos
 from typing import Dict
 
-log = logging.getLogger("GalaxyBenchmarker")
+log = logging.getLogger(__name__)
 
 
 def run_planemo(glx: Galaxy, dest: PulsarMQDestination, workflow_path) -> Dict:

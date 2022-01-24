@@ -15,7 +15,7 @@ from galaxy_benchmarker.bridge import influxdb
 from bioblend import ConnectionError
 
 
-log = logging.getLogger("GalaxyBenchmarker")
+log = logging.getLogger(__name__)
 
 
 class BaseBenchmark:

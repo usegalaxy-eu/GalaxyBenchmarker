@@ -14,7 +14,7 @@ from pathlib import Path
 from serde import serde
 from serde.yaml import from_yaml
 
-log = logging.getLogger("GalaxyBenchmarker")
+log = logging.getLogger(__name__)
 
 
 @serde

@@ -11,7 +11,7 @@ import os
 from requests.adapters import HTTPAdapter
 
 logging.basicConfig()
-log = logging.getLogger("GalaxyBenchmarker")
+log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 log_handler = logging.StreamHandler(sys.stdout)
 log_handler.setLevel(logging.DEBUG)

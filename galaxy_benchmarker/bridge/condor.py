@@ -7,7 +7,7 @@ from galaxy_benchmarker import metrics
 
 import logging
 
-log = logging.getLogger("GalaxyBenchmarker")
+log = logging.getLogger(__name__)
 
 def get_paramiko_client(host, username, key_file):
     key = paramiko.RSAKey.from_private_key_file(key_file)

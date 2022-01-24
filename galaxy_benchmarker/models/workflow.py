@@ -5,7 +5,7 @@ import os
 import logging
 from typing import Dict
 
-log = logging.getLogger("GalaxyBenchmarker")
+log = logging.getLogger(__name__)
 
 
 class BaseWorkflow:

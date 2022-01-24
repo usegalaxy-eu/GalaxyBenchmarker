@@ -7,7 +7,7 @@ from galaxy_benchmarker.bridge.influxdb import InfluxDb
 if TYPE_CHECKING:
     from galaxy_benchmarker.benchmarker import BenchmarkerConfig
 
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 _registered_benchmarks: dict[str,Type["Benchmark"]] = {}
 
@@ -15,7 +15,7 @@ def register_benchmark(cls: Type):
     """Register a benchmark for factory method"""
 
     name = cls.__name__
-    logger.debug("Registering benchmark %s", name)
+    log.debug("Registering benchmark %s", name)
 
     if name in _registered_benchmarks:
         module = cls.__module__
@@ -74,13 +74,13 @@ class Benchmark:
     def run_pre_task(self):
         """Run setup tasks"""
         for task in self.pre_tasks:
-            logger.info("Pre-task: Running {task}".format(task=task))
+            log.info("Pre-task: Running {task}".format(task=task))
             task.run()
 
     def run_post_task(self):
         """Run clean up task"""
         for task in self.post_tasks:
-            logger.info("Post-task: Running {task}".format(task=task))
+            log.info("Post-task: Running {task}".format(task=task))
             task.run()
 
     def run(self):

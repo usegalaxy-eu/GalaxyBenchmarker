@@ -14,7 +14,7 @@ from jinja2 import Template
 # from workflow import GalaxyWorkflow, CondorWorkflow
 from datetime import datetime
 
-log = logging.getLogger("GalaxyBenchmarker")
+log = logging.getLogger(__name__)
 
 
 class BaseDestination:
