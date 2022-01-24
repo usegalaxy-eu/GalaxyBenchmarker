@@ -3,6 +3,7 @@ from galaxy_benchmarker.bridge.galaxy import Galaxy, GalaxyConfig
 from galaxy_benchmarker.bridge.influxdb import InfluxDb, InfluxDbConfig
 from galaxy_benchmarker.bridge.openstack import OpenStackCompute, OpenStackComputeConfig
 from galaxy_benchmarker.benchmarks.base import Benchmark
+from galaxy_benchmarker.models.task import Task
 import logging
 import json
 from dataclasses import dataclass
@@ -21,6 +22,8 @@ class BenchmarkerConfig:
     openstack: Optional[OpenStackComputeConfig]
     galaxy: GalaxyConfig
     influxdb: Optional[InfluxDbConfig]
+    tasks: Optional[dict[str, dict]]
+
     benchmarks: dict[str, dict]
     shared: Optional[list[dict]]
 
@@ -36,6 +39,10 @@ class Benchmarker:
         self.glx = Galaxy(config.galaxy)
         self.influxdb = InfluxDb(config.influxdb) if config.influxdb else None
         self.openstack = OpenStackCompute(config.openstack) if config.openstack else None
+
+        self.tasks: dict[str, Task] = {}
+        for name, t_config in config.tasks.items():
+            self.tasks[name] = Task.create(name, t_config)
 
         self.benchmarks: list[Benchmark] = []
         for name, b_config in config.benchmarks.items():
