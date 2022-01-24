@@ -24,7 +24,7 @@ class BenchmarkerConfig:
     openstack: Optional[OpenStackComputeConfig]
     galaxy: GalaxyConfig
     influxdb: Optional[InfluxDbConfig]
-    benchmarks: list[dict]
+    benchmarks: dict[str, dict]
     shared: Optional[list[dict]]
 
     results_path: str = "results/"
@@ -40,7 +40,9 @@ class Benchmarker:
         self.influxdb = InfluxDb(config.influxdb) if config.influxdb else None
         self.openstack = OpenStackCompute(config.openstack) if config.openstack else None
 
-        self.benchmarks = [Benchmark.create(b_config, config) for b_config in config.benchmarks]
+        self.benchmarks = []
+        for name, b_config in config.benchmarks.items():
+            self.benchmarks.append(Benchmark.create(name, b_config, config))
 
         self.results = Path(config.results_path)
         if self.results.exists():

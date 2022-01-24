@@ -30,10 +30,8 @@ class Benchmark:
     The Base-Class of Benchmark. All Benchmarks should inherit from it.
     """
 
-    def __init__(self, config: dict, global_config: BenchmarkerConfig):
-        self.name:str = config.get("name", "")
-        if not self.name:
-            raise ValueError(f"'name' property is missing for benchmark {config}")
+    def __init__(self, name: str, config: dict, global_config: BenchmarkerConfig):
+        self.name = name
 
         runs_per_workflow = config.get("runs_per_workflow", None)
         if not runs_per_workflow:
@@ -53,9 +51,10 @@ class Benchmark:
         self.post_tasks = []
 
     @classmethod
-    def create(cls, config: dict, global_config: BenchmarkerConfig):
+    def create(cls, name: str, config: dict, global_config: BenchmarkerConfig):
         """Factory method for benchmarks
-        
+
+        name: benchmark name
         config: benchmark specific config
         global_config: global config for lookups
         """
@@ -68,7 +67,7 @@ class Benchmark:
             raise ValueError(f"Unkown benchmark type: {benchmark_type}")
 
         benchmark_class = _registered_benchmarks[benchmark_type]
-        return benchmark_class(config, global_config)
+        return benchmark_class(name, config, global_config)
 
 
     def run_pre_task(self):

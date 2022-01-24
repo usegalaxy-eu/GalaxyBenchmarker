@@ -20,8 +20,8 @@ log = logging.getLogger(__name__)
 class ColdWarmBenchmark(base.Benchmark):
     """Compare the runtime between a cold and a warm start"""
 
-    def __init__(self, config: dict, global_config: BenchmarkerConfig):
-        super().__init__(config, global_config)
+    def __init__(self, name: str, config: dict, global_config: BenchmarkerConfig):
+        super().__init__(name, config, global_config)
         # self.destinations = destinations
         # self.workflows = workflows
         # self.galaxy: galaxy.Galaxy = global_config.glx
