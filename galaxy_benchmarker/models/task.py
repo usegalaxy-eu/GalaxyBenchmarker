@@ -63,8 +63,7 @@ class Task(abc.ABC):
 
 
 @register_task
-class AnsibleTask:
-
+class AnsibleTask(Task):
     def __init__(self, name: str, config: dict) -> None:
         super().__init__(name, config)
 
@@ -77,6 +76,18 @@ class AnsibleTask:
         self.playbook = Path(playbook_folder) / playbook_name
         if not self.playbook.is_file():
             raise ValueError(f"Playbook for task {name} is not a vaild file. Path: '{self.playbook}'")
+
+    def run():
+        raise NotImplementedError()
+
+@register_task
+class AnsibleNoopTask(AnsibleTask):
+    """Does nothing, acts as placeholder"""
+    def __init__(self, name: str, config: dict):
+        self.name = "AnsibleNoopTask"
+
+    def run(self):
+        pass
 
 
 

@@ -5,7 +5,7 @@ from datetime import datetime
 from galaxy_benchmarker.bridge.influxdb import InfluxDb
 
 if TYPE_CHECKING:
-    from galaxy_benchmarker.benchmarker import BenchmarkerConfig
+    from galaxy_benchmarker.benchmarker import Benchmarker
 
 log = logging.getLogger(__name__)
 
@@ -30,7 +30,7 @@ class Benchmark:
     The Base-Class of Benchmark. All Benchmarks should inherit from it.
     """
 
-    def __init__(self, name: str, config: dict, global_config: BenchmarkerConfig):
+    def __init__(self, name: str, config: dict, benchmarker: Benchmarker):
         self.name = name
 
         runs_per_workflow = config.get("runs_per_workflow", None)
@@ -51,7 +51,7 @@ class Benchmark:
         self.post_tasks = []
 
     @staticmethod
-    def create(name: str, config: dict, global_config: BenchmarkerConfig):
+    def create(name: str, config: dict, benchmarker: Benchmarker):
         """Factory method for benchmarks
 
         name: benchmark name
@@ -67,7 +67,7 @@ class Benchmark:
             raise ValueError(f"Unkown benchmark type: {benchmark_type}")
 
         benchmark_class = _registered_benchmarks[benchmark_type]
-        return benchmark_class(name, config, global_config)
+        return benchmark_class(name, config, benchmarker)
 
 
     def run_pre_task(self):

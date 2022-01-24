@@ -46,7 +46,7 @@ class Benchmarker:
 
         self.benchmarks: list[Benchmark] = []
         for name, b_config in config.benchmarks.items():
-            self.benchmarks.append(Benchmark.create(name, b_config, config))
+            self.benchmarks.append(Benchmark.create(name, b_config, self))
 
         self.results = Path(config.results_path)
         if self.results.exists():
