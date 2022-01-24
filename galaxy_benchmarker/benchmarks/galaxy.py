@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 import logging
 import time
 from galaxy_benchmarker.models import task
-from galaxy_benchmarker.bridge import influxdb
+from galaxy_benchmarker.bridge import influxdb, ansible
 from galaxy_benchmarker.benchmarks import base
 
 if TYPE_CHECKING:
@@ -22,43 +22,18 @@ class ColdWarmBenchmark(base.Benchmark):
     def __init__(self, name: str, config: dict, benchmarker: Benchmarker):
         super().__init__(name, config, benchmarker)
 
-        cold_pre_task = config.get("cold_pre_task", None)
+        self.cold_pre_task = ansible.get_ansibletask_from_config(
+            "cold_pre_task",
+            config.get("cold_pre_task", None),
+            benchmarker)
 
-        self.cold_pre_task: task.AnsibleTask
-        match cold_pre_task:
-            case None:
-                self.cold_pre_task = task.AnsibleNoopTask()
-                log.warning("No cold_pre_task defined for benchmark %s", name)
-            case str():
-                self.cold_pre_task = benchmarker.tasks.get(cold_pre_task, None)
-                if not self.cold_pre_task:
-                    raise ValueError(f"Unknown cold_pre_task '{cold_pre_task}' for benchmark '{name}'")
-            case dict():
-                self.cold_pre_task = task.Task.create("cold_pre_task", cold_pre_task)
-            case _:
-                raise ValueError(f"Unknown value for 'cold_pre_task' for benchmark {name}")
+        self.warm_pre_task = ansible.get_ansibletask_from_config(
+            "warm_pre_task",
+            config.get("warm_pre_task", None),
+            benchmarker)
 
-        if not isinstance(self.cold_pre_task, task.AnsibleTask):
-            raise ValueError(f"'cold_pre_task' for {name} is not an AnsibleTask")
+        self.destinations: list[ansible.AnsibleDestination] = [] # TODO
 
-        warm_pre_task = config.get("warm_pre_task", None)
-
-        self.warm_pre_task: task.AnsibleTask
-        match warm_pre_task:
-            case None:
-                self.warm_pre_task = task.AnsibleNoopTask()
-                log.warning("No warm_pre_task defined for benchmark %s", name)
-            case str():
-                self.warm_pre_task = benchmarker.tasks.get(warm_pre_task, None)
-                if not self.warm_pre_task:
-                    raise ValueError(f"Unknown warm_pre_task '{warm_pre_task}' for benchmark '{name}'")
-            case dict():
-                self.warm_pre_task = task.Task.create("warm_pre_task", warm_pre_task)
-            case _:
-                raise ValueError(f"Unknown value for 'warm_pre_task' for benchmark {name}")
-
-        if not isinstance(self.warm_pre_task, task.AnsibleTask):
-            raise ValueError(f"'warm_pre_task' for {name} is not an AnsibleTask")
 
     def run(self):
         """
@@ -79,7 +54,7 @@ class ColdWarmBenchmark(base.Benchmark):
                         # Cold runs
                         for i in range(self.runs_per_workflow):
                             log.debug(f"({i+1}/{self.runs_per_workflow}): Running cold pre-task")
-                            self.cold_pre_task.run() # TODO: currently runs on all destinations
+                            self.cold_pre_task.run_at(destination)
 
                             log.debug(f"({i+1}/{self.runs_per_workflow}): Running workflow")
                             result = self._run_workflow(destination, workflow, max_retires=0)
@@ -88,7 +63,7 @@ class ColdWarmBenchmark(base.Benchmark):
                         # Warm runs
                         for i in range(self.runs_per_workflow):
                             log.debug(f"({i+1}/{self.runs_per_workflow}): Running warm pre-task")
-                            self.warm_pre_task.run() # TODO: currently runs on all destinations
+                            self.warm_pre_task.run_at(destination)
 
                             log.debug(f"({i+1}/{self.runs_per_workflow}): Running workflow")
                             result = self._run_workflow(destination, workflow)

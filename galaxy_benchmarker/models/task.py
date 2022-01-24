@@ -62,34 +62,6 @@ class Task(abc.ABC):
     __repr__ = __str__
 
 
-@register_task
-class AnsibleTask(Task):
-    def __init__(self, name: str, config: dict) -> None:
-        super().__init__(name, config)
-
-        playbook_name = config.get("playbook", "")
-        playbook_folder = config.get("folder", "playbooks/")
-
-        if not playbook_name:
-            raise ValueError(f"'playbook' property is missing for task {name}")
-        
-        self.playbook = Path(playbook_folder) / playbook_name
-        if not self.playbook.is_file():
-            raise ValueError(f"Playbook for task {name} is not a vaild file. Path: '{self.playbook}'")
-
-    def run():
-        raise NotImplementedError()
-
-@register_task
-class AnsibleNoopTask(AnsibleTask):
-    """Does nothing, acts as placeholder"""
-    def __init__(self, name: str, config: dict):
-        self.name = "AnsibleNoopTask"
-
-    def run(self):
-        pass
-
-
 
 #     def run(self):
 #         if self.name == "delete_old_histories":
