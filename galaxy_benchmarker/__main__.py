@@ -3,9 +3,7 @@ import sys
 from galaxy_benchmarker.benchmarker import Benchmarker
 import logging
 import time
-import requests
 import os
-from requests.adapters import HTTPAdapter
 
 logging.basicConfig()
 log = logging.getLogger(__name__)
@@ -19,8 +17,6 @@ os.makedirs(os.path.dirname(log_filename), exist_ok=True)
 fh = logging.FileHandler(log_filename, mode='w')
 log.addHandler(fh)
 
-s = requests.Session()
-s.mount('http://', HTTPAdapter(max_retries=20))
 
 
 def main():

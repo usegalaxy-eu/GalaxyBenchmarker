@@ -50,8 +50,8 @@ class Benchmark:
         self.pre_tasks = []
         self.post_tasks = []
 
-    @classmethod
-    def create(cls, name: str, config: dict, global_config: BenchmarkerConfig):
+    @staticmethod
+    def create(name: str, config: dict, global_config: BenchmarkerConfig):
         """Factory method for benchmarks
 
         name: benchmark name

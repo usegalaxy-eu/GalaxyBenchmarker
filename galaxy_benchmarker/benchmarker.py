@@ -1,7 +1,4 @@
 from typing import Optional
-from galaxy_benchmarker.models import workflow
-from galaxy_benchmarker.models import destination
-from galaxy_benchmarker.models import benchmark
 from galaxy_benchmarker.bridge.galaxy import Galaxy, GalaxyConfig
 from galaxy_benchmarker.bridge.influxdb import InfluxDb, InfluxDbConfig
 from galaxy_benchmarker.bridge.openstack import OpenStackCompute, OpenStackComputeConfig
@@ -40,7 +37,7 @@ class Benchmarker:
         self.influxdb = InfluxDb(config.influxdb) if config.influxdb else None
         self.openstack = OpenStackCompute(config.openstack) if config.openstack else None
 
-        self.benchmarks = []
+        self.benchmarks: list[Benchmark] = []
         for name, b_config in config.benchmarks.items():
             self.benchmarks.append(Benchmark.create(name, b_config, config))
 
