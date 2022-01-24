@@ -29,7 +29,7 @@ class BenchmarkerConfig:
 
     results_path: str = "results/"
     results_save_to_file: bool = True
-    results_save_to_influxdb: bool = True
+    results_save_to_influxdb: bool = False
     results_print: bool = True
 
 
@@ -41,7 +41,8 @@ class Benchmarker:
         self.openstack = OpenStackCompute(config.openstack) if config.openstack else None
 
         self.tasks: dict[str, Task] = {}
-        for name, t_config in config.tasks.items():
+        task_configs = self.tasks or {}
+        for name, t_config in task_configs:
             self.tasks[name] = Task.create(name, t_config)
 
         self.benchmarks: list[Benchmark] = []
@@ -94,12 +95,13 @@ class Benchmarker:
 
         for benchmark in self.benchmarks:
             log.info("Pre task for %s", benchmark.name)
-            benchmark.run_pre_task()
+            benchmark.run_pre_tasks()
 
             log.info("Start run for %s", benchmark.name)
             benchmark.run()
 
             if self.config.results_print:
+                print(f"#### Results for benchmark {benchmark}")
                 print(benchmark.benchmark_results)
 
             if self.config.results_save_to_file:
@@ -107,7 +109,7 @@ class Benchmarker:
 
             if self.config.results_save_to_influxdb:
                 log.info("Sending results to influxDB.")
-                benchmark.save_results_to_influxdb(self.inflx_db)
+                benchmark.save_results_to_influxdb(self.influxdb)
 
             log.info("Post task for %s", benchmark.name)
             benchmark.run_post_tasks()

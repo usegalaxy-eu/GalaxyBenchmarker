@@ -22,12 +22,12 @@ class ColdWarmBenchmark(base.Benchmark):
     def __init__(self, name: str, config: dict, benchmarker: Benchmarker):
         super().__init__(name, config, benchmarker)
 
-        self.cold_pre_task = ansible.get_ansibletask_from_config(
+        self.cold_pre_task = ansible.AnsibleTask.from_config(
             "cold_pre_task",
             config.get("cold_pre_task", None),
             benchmarker)
 
-        self.warm_pre_task = ansible.get_ansibletask_from_config(
+        self.warm_pre_task = ansible.AnsibleTask.from_config(
             "warm_pre_task",
             config.get("warm_pre_task", None),
             benchmarker)

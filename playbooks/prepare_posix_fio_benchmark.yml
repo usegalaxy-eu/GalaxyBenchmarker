@@ -1,0 +1,10 @@
+- hosts: all
+  tasks:
+    - name: "Check if fio is installed"
+      shell: fio --help
+      register: package_check
+      ignore_errors: true
+    - name: "Error handling"
+      fail:
+        msg: "fio has to be installed"
+      when: package_check is failed

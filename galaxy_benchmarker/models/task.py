@@ -3,8 +3,11 @@ import abc
 import logging
 
 from random import randrange
-from typing import List, Type
+from typing import List, Type, Optional, TYPE_CHECKING, Any
 from pathlib import Path
+
+if TYPE_CHECKING:
+    from galaxy_benchmarker.benchmarker import Benchmarker
 
 # from galaxy_benchmarker.models.destination import BaseDestination
 # from galaxy_benchmarker.models.benchmark import BaseBenchmark
@@ -52,6 +55,23 @@ class Task(abc.ABC):
         task_class = _registered_tasks[task_type]
         return task_class(name, config)
 
+    @staticmethod
+    def from_config(name: str, task_config: Any, benchmarker: Benchmarker) -> Task:
+        """Create a task from task_config. Config can be:
+        - an object defining the task
+        - a string refering to a task definition
+        """
+        match task_config:
+            case str():
+                potential_task = benchmarker.tasks.get(task_config, None)
+                if not potential_task:
+                    raise ValueError(f"Unknown task reference '{task_config}' for '{name}'")
+            case dict():
+                potential_task = Task.create(name, task_config)
+            case _:
+                raise ValueError(f"Unknown value for '{name}': {task_config}")
+        return potential_task
+
     @abc.abstractmethod
     def run(self):
         """Execute the task"""
@@ -60,7 +80,6 @@ class Task(abc.ABC):
         return f"{self.__class__.__name__}({self.name})"
 
     __repr__ = __str__
-
 
 
 #     def run(self):

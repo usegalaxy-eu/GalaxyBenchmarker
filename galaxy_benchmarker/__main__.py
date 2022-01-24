@@ -1,22 +1,31 @@
 import argparse
-import sys
 from galaxy_benchmarker.benchmarker import Benchmarker
 import logging
 import time
 import os
 
-logging.basicConfig()
-log = logging.getLogger(__name__)
-log.setLevel(logging.INFO)
-log_handler = logging.StreamHandler(sys.stdout)
-log_handler.setLevel(logging.DEBUG)
 
-# Log to file
+# Formatter
+fmt_with_time = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+fmt_no_time = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+
+# Create logger
+log = logging.getLogger("galaxy_benchmarker")
+log.setLevel(logging.INFO)
+
+# Create console handler
+stream_handler = logging.StreamHandler()
+stream_handler.setLevel(logging.DEBUG)
+stream_handler.setFormatter(fmt_no_time)
+log.addHandler(stream_handler)
+
+# Create file handler
 log_filename = r'logs/{filename}.log'.format(filename=time.time())
 os.makedirs(os.path.dirname(log_filename), exist_ok=True)
-fh = logging.FileHandler(log_filename, mode='w')
-log.addHandler(fh)
-
+file_handler = logging.FileHandler(log_filename, mode='w')
+file_handler.setLevel(logging.DEBUG)
+file_handler.setFormatter(fmt_with_time)
+log.addHandler(file_handler)
 
 
 def main():

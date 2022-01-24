@@ -3,6 +3,7 @@ import logging
 from typing import Type, Optional, TYPE_CHECKING
 from datetime import datetime
 from galaxy_benchmarker.bridge.influxdb import InfluxDb
+from galaxy_benchmarker.models import task
 
 if TYPE_CHECKING:
     from galaxy_benchmarker.benchmarker import Benchmarker
@@ -46,9 +47,13 @@ class Benchmark:
         self.uuid = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f") + "_" + self.name
         self.benchmark_results = {}
 
-        #TODO: pre/post_tasks
-        self.pre_tasks = []
-        self.post_tasks = []
+        self.pre_tasks: list[task.Task] = []
+        for task_config in config.get("pre_tasks", []):
+            self.pre_tasks.append(task.Task.from_config("pre_task", task_config, benchmarker))
+
+        self.post_tasks: list[task.Task] = []
+        for task_config in config.get("post_tasks", []):
+            self.post_tasks.append(task.Task.from_config("post_task", task_config, benchmarker))
 
     @staticmethod
     def create(name: str, config: dict, benchmarker: Benchmarker):
@@ -70,13 +75,13 @@ class Benchmark:
         return benchmark_class(name, config, benchmarker)
 
 
-    def run_pre_task(self):
+    def run_pre_tasks(self):
         """Run setup tasks"""
         for task in self.pre_tasks:
             log.info("Pre-task: Running {task}".format(task=task))
             task.run()
 
-    def run_post_task(self):
+    def run_post_tasks(self):
         """Run clean up task"""
         for task in self.post_tasks:
             log.info("Post-task: Running {task}".format(task=task))
