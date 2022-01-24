@@ -10,6 +10,7 @@ import logging
 import json
 from dataclasses import dataclass
 from pathlib import Path
+from datetime import datetime
 
 from serde import serde
 from serde.yaml import from_yaml
@@ -26,6 +27,11 @@ class BenchmarkerConfig:
     benchmarks: list[dict]
     shared: Optional[list[dict]]
 
+    results_path: str = "results/"
+    results_save_to_file: bool = True
+    results_save_to_influxdb: bool = True
+    results_print: bool = True
+
 
 class Benchmarker:
     def __init__(self, config: BenchmarkerConfig):
@@ -35,6 +41,16 @@ class Benchmarker:
         self.openstack = OpenStackCompute(config.openstack) if config.openstack else None
 
         self.benchmarks = [Benchmark.create(b_config, config) for b_config in config.benchmarks]
+
+        self.results = Path(config.results_path)
+        if self.results.exists():
+            if not self.results.is_dir():
+                raise ValueError("'results_path' has to be a folder")
+        else:
+            self.results.mkdir(parents=True)
+
+        if config.results_save_to_influxdb and not self.influxdb:
+            raise ValueError("'influxdb' is required when 'results_save_to_influxdb'=True")
 
         # self.benchmarks = benchmarks.parse_from_dic(config)
         # self.workflows = dict()
@@ -58,37 +74,37 @@ class Benchmarker:
         # if glx_conf["shed_install"]:
         #     self.glx.install_tools_for_workflows(list(self.workflows.values()))
 
-    def run_pre_tasks(self):
-        log.info("Running pre-tasks for benchmarks")
-        for bm in self.benchmarks:
-            bm.run_pre_task()
-
-    def run_post_tasks(self):
-        log.info("Running post-tasks for benchmarks")
-        for bm in self.benchmarks:
-            bm.run_post_task()
-
     def run(self):
-        for bm in self.benchmarks:
-            log.info("Running benchmark '{bm_name}'".format(bm_name=bm.name))
-            bm.run(self)
+        """Run all benchmarks sequentially
 
-    def get_results(self):
-        for bm in self.benchmarks.values():
-            print(bm.benchmark_results)
+        Steps:
+        - Run pre_tasks
+        - Run benchmark
+        - Print results (optional)
+        - Save results to file (optional)
+        - Save results to influxdb (optional)
+        - Run post_tasks
+        """
 
-    def save_results(self, filename="results"):
-        results = list()
-        for bm in self.benchmarks.values():
-            results.append(bm.benchmark_results)
+        for benchmark in self.benchmarks:
+            log.info("Pre task for %s", benchmark.name)
+            benchmark.run_pre_task()
 
-        json_results = json.dumps(results, indent=2)
-        with open(filename+".json", "w") as fh:
-            fh.write(json_results)
+            log.info("Start run for %s", benchmark.name)
+            benchmark.run()
 
-    def send_results_to_influxdb(self):
-        for bm in self.benchmarks.values():
-            bm.save_results_to_influxdb(self.inflx_db)
+            if self.config.results_print:
+                print(benchmark.benchmark_results)
+
+            if self.config.results_save_to_file:
+                self._save_results_to_file(benchmark)
+
+            if self.config.results_save_to_influxdb:
+                log.info("Sending results to influxDB.")
+                benchmark.save_results_to_influxdb(self.inflx_db)
+
+            log.info("Post task for %s", benchmark.name)
+            benchmark.run_post_tasks()
 
     @staticmethod
     def from_config(path: str) -> "Benchmarker":
@@ -102,3 +118,16 @@ class Benchmarker:
 
         benchmarker_config = from_yaml(BenchmarkerConfig, config_path.read_text())
         return Benchmarker(benchmarker_config)
+
+    def _save_results_to_file(self, benchmark: Benchmark):
+        """Save results as json to file"""
+        # Construct filename
+        timestamp = datetime.now().replace(microsecond=0)
+        filename = f"{timestamp.isoformat()}_{benchmark}.json"
+        file =  self.results / filename
+
+        log.info("Saving results to file: '%s'.", file)
+
+        # Write results
+        json_results = json.dumps(benchmark.benchmark_results, indent=2)
+        file.write_text(json_results)
