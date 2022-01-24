@@ -82,7 +82,7 @@ benchmarks:
     type: ColdvsWarm
     destinations:
       - LocalPulsar
-    runs_per_workflow: 5
+    repetitions: 5
     workflows:
       - GalaxyWorkflow1
     # Pre task to clean up Pulsar, so the workflow-run is actually cold (i.e. run for the "first time")
@@ -108,13 +108,13 @@ benchmarks:
       - LocalPulsar
       - RemotePulsar1
       - RemotePulsar2
-    runs_per_workflow: 5
+    repetitions: 5
     warmup: true # Should a warmup-run happen before the actual benchmarking?
     workflows:
       - GalaxyWorkflow1
   - name: PulsarBurstBenchmark
     type: Burst
-    runs_per_workflow: 100
+    repetitions: 100
     burst_rate: 1 # How many workflows should be submitted per second
     destinations:
       - RemotePulsar1 # Only one destination allowed!
@@ -122,7 +122,7 @@ benchmarks:
       - GalaxyWorkflow1
   - name: CondorBurstBenchmark
     type: Burst
-    runs_per_workflow: 1000
+    repetitions: 1000
     burst_rate: 20
     destinations:
       - CondorManager

@@ -33,14 +33,14 @@ class Benchmark:
     def __init__(self, name: str, config: dict, benchmarker: Benchmarker):
         self.name = name
 
-        runs_per_workflow = config.get("runs_per_workflow", None)
-        if not runs_per_workflow:
-            raise ValueError(f"'runs_per_workflow' property is missing for {config}")
+        repetitions = config.get("repetitions", None)
+        if not repetitions:
+            raise ValueError(f"'repetitions' property is missing for {config}")
 
         try:
-            self.runs_per_workflow = int(runs_per_workflow)
+            self.repetitions = int(repetitions)
         except ValueError as e:
-            raise ValueError(f"'runs_per_workflow' has to be a number for {config}") from e
+            raise ValueError(f"'repetitions' has to be a number for {config}") from e
 
 
         self.uuid = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f") + "_" + self.name

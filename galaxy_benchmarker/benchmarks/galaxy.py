@@ -52,20 +52,20 @@ class ColdWarmBenchmark(base.Benchmark):
                         log.info("Up next: {type} run for workflow {workflow} for destination: {dest}.".format(type=run_type, workflow=workflow.name, dest=destination.name))
 
                         # Cold runs
-                        for i in range(self.runs_per_workflow):
-                            log.debug(f"({i+1}/{self.runs_per_workflow}): Running cold pre-task")
+                        for i in range(self.repetitions):
+                            log.debug(f"({i+1}/{self.repetitions}): Running cold pre-task")
                             self.cold_pre_task.run_at(destination)
 
-                            log.debug(f"({i+1}/{self.runs_per_workflow}): Running workflow")
+                            log.debug(f"({i+1}/{self.repetitions}): Running workflow")
                             result = self._run_workflow(destination, workflow, max_retires=0)
                             results.append(result)
 
                         # Warm runs
-                        for i in range(self.runs_per_workflow):
-                            log.debug(f"({i+1}/{self.runs_per_workflow}): Running warm pre-task")
+                        for i in range(self.repetitions):
+                            log.debug(f"({i+1}/{self.repetitions}): Running warm pre-task")
                             self.warm_pre_task.run_at(destination)
 
-                            log.debug(f"({i+1}/{self.runs_per_workflow}): Running workflow")
+                            log.debug(f"({i+1}/{self.repetitions}): Running workflow")
                             result = self._run_workflow(destination, workflow)
                             results.append(result)
 

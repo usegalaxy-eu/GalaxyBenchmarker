@@ -72,8 +72,8 @@ class ColdWarmBenchmark(BaseBenchmark):
     warm_pre_task: AnsiblePlaybookTask = None
 
     def __init__(self, name, benchmarker, destinations: List[Union[PulsarMQDestination, GalaxyDestination]],
-                 workflows: List[GalaxyWorkflow], galaxy, runs_per_workflow=1):
-        super().__init__(name, benchmarker, destinations, workflows, runs_per_workflow)
+                 workflows: List[GalaxyWorkflow], galaxy, repetitions=1):
+        super().__init__(name, benchmarker, destinations, workflows, repetitions)
         self.destinations = destinations
         self.workflows = workflows
         self.galaxy = galaxy
@@ -88,7 +88,7 @@ class ColdWarmBenchmark(BaseBenchmark):
             try:
                 self.benchmark_results[run_type] = self.run_galaxy_benchmark(self, benchmarker.glx, self.destinations,
                                                                         self.workflows,
-                                                                        self.runs_per_workflow, run_type)
+                                                                        self.repetitions, run_type)
             except KeyboardInterrupt as e:
                 self.benchmark_results[run_type] = e.args[0]
                 break
@@ -99,8 +99,8 @@ class DestinationComparisonBenchmark(BaseBenchmark):
     allowed_workflow_types = [GalaxyWorkflow]
 
     def __init__(self, name, benchmarker, destinations: List[Union[PulsarMQDestination, GalaxyDestination]],
-                 workflows: List[GalaxyWorkflow], galaxy, runs_per_workflow=1, warmup=True):
-        super().__init__(name, benchmarker, destinations, workflows, runs_per_workflow)
+                 workflows: List[GalaxyWorkflow], galaxy, repetitions=1, warmup=True):
+        super().__init__(name, benchmarker, destinations, workflows, repetitions)
         self.destinations = destinations
         self.workflows = workflows
         self.galaxy = galaxy
@@ -115,7 +115,7 @@ class DestinationComparisonBenchmark(BaseBenchmark):
         try:
             self.benchmark_results["warm"] = self.run_galaxy_benchmark(self, benchmarker.glx, self.destinations,
                                                                   self.workflows,
-                                                                  self.runs_per_workflow, "warm", self.warmup)
+                                                                  self.repetitions, "warm", self.warmup)
         except KeyboardInterrupt as e:
             self.benchmark_results["warm"] = e.args[0]
 
@@ -127,8 +127,8 @@ class BurstBenchmark(BaseBenchmark):
     background_tasks: List[Dict] = list()
 
     def __init__(self, name, benchmarker, destinations: List[BaseDestination],
-                 workflows: List[BaseWorkflow], runs_per_workflow=1, burst_rate=1):
-        super().__init__(name, benchmarker, destinations, workflows, runs_per_workflow)
+                 workflows: List[BaseWorkflow], repetitions=1, burst_rate=1):
+        super().__init__(name, benchmarker, destinations, workflows, repetitions)
         self.burst_rate = burst_rate
 
         if len(self.destinations) != 1:
@@ -156,18 +156,18 @@ class BurstBenchmark(BaseBenchmark):
         background_task_process.start()
 
         threads = []
-        results = [None]*self.runs_per_workflow
+        results = [None]*self.repetitions
         total_runs = next_runs = 0
-        while total_runs < self.runs_per_workflow:
+        while total_runs < self.repetitions:
             next_runs += self.burst_rate
             # If burst_rate < 1, workflow should be run less than 1x per second. So just wait, until next_runs > 1
             if next_runs < 1:
                 time.sleep(1)
                 continue
 
-            # Make sure, runs_per_workflow won't be exceeded
-            if total_runs + next_runs >= self.runs_per_workflow:
-                next_runs = self.runs_per_workflow - total_runs
+            # Make sure, repetitions won't be exceeded
+            if total_runs + next_runs >= self.repetitions:
+                next_runs = self.repetitions - total_runs
 
             for _ in range(0, int(next_runs)):
                 process = self.BurstThread(self, total_runs, results)
@@ -288,13 +288,13 @@ def configure_benchmark(bm_config: Dict, destinations: Dict, workflows: Dict, gl
     if bm_config["type"] not in ["ColdvsWarm", "DestinationComparison", "Burst"]:
         raise ValueError("Benchmark-Type '{type}' not valid".format(type=bm_config["type"]))
 
-    runs_per_workflow = bm_config["runs_per_workflow"] if "runs_per_workflow" in bm_config else 1
+    repetitions = bm_config["repetitions"] if "repetitions" in bm_config else 1
 
     if bm_config["type"] == "ColdvsWarm":
         benchmark = ColdWarmBenchmark(bm_config["name"], benchmarker,
                                       _get_needed_destinations(bm_config, destinations, ColdWarmBenchmark),
                                       _get_needed_workflows(bm_config, workflows, ColdWarmBenchmark), glx,
-                                      runs_per_workflow)
+                                      repetitions)
         benchmark.galaxy = glx
         if "cold_pre_task" in bm_config:
             if bm_config["cold_pre_task"]["type"] == "AnsiblePlaybook":
@@ -311,13 +311,13 @@ def configure_benchmark(bm_config: Dict, destinations: Dict, workflows: Dict, gl
                                                                             DestinationComparisonBenchmark),
                                                    _get_needed_workflows(bm_config, workflows,
                                                                          DestinationComparisonBenchmark),
-                                                   glx, runs_per_workflow, warmup)
+                                                   glx, repetitions, warmup)
 
     if bm_config["type"] == "Burst":
         benchmark = BurstBenchmark(bm_config["name"], benchmarker,
                                    _get_needed_destinations(bm_config, destinations, BurstBenchmark),
                                    _get_needed_workflows(bm_config, workflows, BurstBenchmark),
-                                   runs_per_workflow, bm_config["burst_rate"])
+                                   repetitions, bm_config["burst_rate"])
         benchmark.galaxy = glx
 
         if "background_tasks" in bm_config:

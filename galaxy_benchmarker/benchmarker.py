@@ -20,7 +20,7 @@ log = logging.getLogger(__name__)
 @dataclass
 class BenchmarkerConfig:
     openstack: Optional[OpenStackComputeConfig]
-    galaxy: GalaxyConfig
+    galaxy: Optional[GalaxyConfig]
     influxdb: Optional[InfluxDbConfig]
     tasks: Optional[dict[str, dict]]
 
@@ -36,7 +36,7 @@ class BenchmarkerConfig:
 class Benchmarker:
     def __init__(self, config: BenchmarkerConfig):
         self.config = config
-        self.glx = Galaxy(config.galaxy)
+        self.glx = Galaxy(config.galaxy) if config.galaxy else None
         self.influxdb = InfluxDb(config.influxdb) if config.influxdb else None
         self.openstack = OpenStackCompute(config.openstack) if config.openstack else None
 

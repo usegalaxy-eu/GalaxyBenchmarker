@@ -44,7 +44,7 @@ benchmarks:
       - adaboost
       - gromacs
       - mapping_by_sequencing
-    runs_per_workflow: 5
+    repetitions: 5
     warmup: true
 
 # Please do not change!

@@ -88,7 +88,7 @@ benchmarks:
       - Destination1
     workflows:
       - ARDWorkflow
-    runs_per_workflow: 1
+    repetitions: 1
 ```
 
 ### Run the benchmark using docker-compose
@@ -119,7 +119,7 @@ Used to compare the performance of different destinations.
 #### Requirements
 * 1-n Galaxy destinations
 * 1-n Galaxy workflows
-* `runs_per_workflow` >= 1: How many times should a workflow be run on every destination?
+* `repetitions` >= 1: How many times should a workflow be run on every destination?
 
 #### Optional settings
 * `warmup`: if set to true, a "warmup run" will be performed for every workflow
@@ -136,7 +136,7 @@ Note: This benchmark type can only use one destination!
 #### Requirements
 * 1 Galaxy destination
 * 1-n Galaxy workflows
-* `runs_per_workflow` >= 1: How many times should a workflow be run on every destination?
+* `repetitions` >= 1: How many times should a workflow be run on every destination?
 * `cold_pre_task`: a task task that will be run in the cold phase before every workflow run
 
 #### Optional settings
@@ -149,7 +149,7 @@ Used to start a burst of workflows at the same time.
 #### Requirements
 * 1-n Galaxy or Condor destinations
 * 1-n Galaxy or Condor workflows
-* `runs_per_workflow` >= 1: How many times should a workflow be run on every destination?
+* `repetitions` >= 1: How many times should a workflow be run on every destination?
 * `burst_rate` > 0: How many workflows should be submitted per second? 
 (for example: 0.5 results in a workflow submit every two seconds)
 
