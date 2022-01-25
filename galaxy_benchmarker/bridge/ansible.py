@@ -54,11 +54,8 @@ def run_playbook(playbook: Path, destination: AnsibleDestination, values: Dict =
             raise
 
 
-@task.register_task
-class AnsibleTask(task.Task):
+class AnsibleTask:
     def __init__(self, name: str, config: dict) -> None:
-        super().__init__(name, config)
-
         playbook_name = config.get("playbook", "")
         playbook_folder = config.get("folder", "playbooks/")
 
@@ -82,14 +79,18 @@ class AnsibleTask(task.Task):
         - an object defining the task
         - a string refering to a task definition
         """
-        if not task_config:
-            potential_task = AnsibleNoopTask()
-            log.warning("No task defined for '%s'", name)
-        else:
-            potential_task = task.Task.from_config(name, task_config, benchmarker)
-
-        if not isinstance(potential_task, AnsibleTask):
-            raise ValueError(f"'{name}' is not an AnsibleTask")
+        match task_config:
+            case None:
+                potential_task = AnsibleNoopTask()
+                log.warning("No task defined for '%s'", name)
+            case str():
+                potential_task = benchmarker.tasks.get(task_config, None)
+                if not potential_task:
+                    raise ValueError(f"Unknown task reference '{task_config}' for '{name}'")
+            case dict():
+                potential_task = AnsibleTask(name, task_config)
+            case _:
+                raise ValueError(f"Unknown value for '{name}': {task_config}")
 
         return potential_task
 
@@ -103,7 +104,6 @@ class AnsibleTask(task.Task):
     def run_at(self, destination: AnsibleDestination) -> None:
         run_playbook(self.playbook, destination, self.values)
 
-@task.register_task
 class AnsibleNoopTask(AnsibleTask):
     """Does nothing, acts as placeholder"""
     def __init__(self, *args, **kwargs):

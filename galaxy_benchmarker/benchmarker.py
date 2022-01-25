@@ -2,8 +2,8 @@ from typing import Optional
 from galaxy_benchmarker.bridge.galaxy import Galaxy, GalaxyConfig
 from galaxy_benchmarker.bridge.influxdb import InfluxDb, InfluxDbConfig
 from galaxy_benchmarker.bridge.openstack import OpenStackCompute, OpenStackComputeConfig
+from galaxy_benchmarker.bridge.ansible import AnsibleTask
 from galaxy_benchmarker.benchmarks.base import Benchmark
-from galaxy_benchmarker.models.task import Task
 import logging
 import json
 from dataclasses import dataclass
@@ -40,10 +40,10 @@ class Benchmarker:
         self.influxdb = InfluxDb(config.influxdb) if config.influxdb else None
         self.openstack = OpenStackCompute(config.openstack) if config.openstack else None
 
-        self.tasks: dict[str, Task] = {}
+        self.tasks: dict[str, AnsibleTask] = {}
         task_configs = self.tasks or {}
         for name, t_config in task_configs:
-            self.tasks[name] = Task.create(name, t_config)
+            self.tasks[name] = AnsibleTask(name, t_config)
 
         self.benchmarks: list[Benchmark] = []
         for name, b_config in config.benchmarks.items():

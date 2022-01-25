@@ -5,7 +5,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 import logging
 import time
-from galaxy_benchmarker.models import task
 from galaxy_benchmarker.bridge import influxdb, ansible
 from galaxy_benchmarker.benchmarks import base
 

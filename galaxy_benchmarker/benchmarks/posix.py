@@ -29,11 +29,14 @@ class PosixFioBenchmark(base.Benchmark):
         if not self.destinations:
             raise ValueError(f"At least one destination is required for benchmark {self.__class__.__name__}")
 
-        self.pre_tasks.append(ansible.AnsibleTask("prepare_posix_fio_benchmark", {
+        self._pre_task = ansible.AnsibleTask("prepare_posix_fio_benchmark", {
             "playbook": "prepare_posix_fio_benchmark.yml",
             "destinations": config.get("destinations")
-        }))
+        })
 
+
+    def run_pre_tasks(self):
+        self._pre_task.run()
 
     def run(self):
         """
