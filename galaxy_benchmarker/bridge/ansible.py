@@ -19,7 +19,7 @@ log = logging.getLogger(__name__)
 @dataclass
 class AnsibleDestination:
     host: str
-    user: str
+    user: Optional[str] = ""
     private_key: Optional[str] = ""
 
 def run_playbook(playbook: Path, destination: AnsibleDestination, values: Dict = {}):
@@ -30,10 +30,11 @@ def run_playbook(playbook: Path, destination: AnsibleDestination, values: Dict =
         "ansible-playbook",
         str(playbook),
         "-i",
-        f"{destination.host},",
-        "-u",
-        destination.user
+        f"{destination.host},"
     ]
+
+    if destination.user:
+        commands.extend(["-u", destination.user])
 
     if destination.private_key:
         commands.extend(["--private-key",destination.private_key])
