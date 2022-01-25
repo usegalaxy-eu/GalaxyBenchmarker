@@ -56,8 +56,11 @@ class Benchmarker:
         else:
             self.results.mkdir(parents=True)
 
-        if config.results_save_to_influxdb and not self.influxdb:
-            raise ValueError("'influxdb' is required when 'results_save_to_influxdb'=True")
+        if config.results_save_to_influxdb:
+            if self.influxdb:
+                self.influxdb.test_connection()
+            else:
+                raise ValueError("'influxdb' is required when 'results_save_to_influxdb'=True")
 
         # self.benchmarks = benchmarks.parse_from_dic(config)
         # self.workflows = dict()

@@ -2,6 +2,7 @@ from influxdb import InfluxDBClient
 from typing import Dict
 from dataclasses import dataclass
 from serde import serde
+from requests.exceptions import ConnectionError
 
 @serde
 @dataclass
@@ -22,6 +23,12 @@ class InfluxDb:
             database=config.db_name,
             ssl=False,
             retries=20)
+
+    def test_connection(self):
+        try:
+            self.client.ping()
+        except ConnectionError as exc:
+            raise ValueError("Unable to connect to influxdb") from exc
 
     def save_job_metrics(self, tags: Dict, job_results: Dict):
         """
