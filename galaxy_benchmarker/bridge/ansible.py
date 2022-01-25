@@ -1,7 +1,6 @@
 from __future__ import annotations
 import subprocess
 from typing import Dict, Any, TYPE_CHECKING, Optional
-from galaxy_benchmarker.models import task
 from pathlib import Path
 import logging
 from dataclasses import dataclass
@@ -56,16 +55,21 @@ def run_playbook(playbook: Path, destination: AnsibleDestination, values: Dict =
 
 
 class AnsibleTask:
-    def __init__(self, name: str, config: dict) -> None:
+    def __init__(self, config: dict, name: Optional[str] = None) -> None:
         playbook_name = config.get("playbook", "")
         playbook_folder = config.get("folder", "playbooks/")
 
+        if name:
+            self.name = name
+        else:
+            self.name = playbook_name.split(".")[0]
+
         if not playbook_name:
-            raise ValueError(f"'playbook' property is missing for task {name}")
+            raise ValueError(f"'playbook' property is missing for task {self.name}")
         
         self.playbook = Path(playbook_folder) / playbook_name
         if not self.playbook.is_file():
-            raise ValueError(f"Playbook for task {name} is not a vaild file. Path: '{self.playbook}'")
+            raise ValueError(f"Playbook for task {self.name} is not a vaild file. Path: '{self.playbook}'")
 
         self.destinations = []
         for destination in config.get("destinations", []):
@@ -74,7 +78,7 @@ class AnsibleTask:
         self.values = config.get("values", {})
 
     @staticmethod
-    def from_config(name: str, task_config: Any, benchmarker: Benchmarker) -> AnsibleTask:
+    def from_config(task_config: Any, name: str, benchmarker: Benchmarker) -> AnsibleTask:
         """Create a task from task_config. Config can be:
         - None for default Noop-Task
         - an object defining the task
@@ -89,7 +93,7 @@ class AnsibleTask:
                 if not potential_task:
                     raise ValueError(f"Unknown task reference '{task_config}' for '{name}'")
             case dict():
-                potential_task = AnsibleTask(name, task_config)
+                potential_task = AnsibleTask(task_config, name)
             case _:
                 raise ValueError(f"Unknown value for '{name}': {task_config}")
 

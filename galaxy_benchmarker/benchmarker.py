@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Any
 from galaxy_benchmarker.bridge.galaxy import Galaxy, GalaxyConfig
 from galaxy_benchmarker.bridge.influxdb import InfluxDb, InfluxDbConfig
 from galaxy_benchmarker.bridge.openstack import OpenStackCompute, OpenStackComputeConfig
@@ -43,7 +43,7 @@ class Benchmarker:
         self.tasks: dict[str, AnsibleTask] = {}
         task_configs = self.tasks or {}
         for name, t_config in task_configs:
-            self.tasks[name] = AnsibleTask(name, t_config)
+            self.tasks[name] = AnsibleTask(t_config, name)
 
         self.benchmarks: list[Benchmark] = []
         for name, b_config in config.benchmarks.items():
@@ -93,25 +93,32 @@ class Benchmarker:
         - Run post_tasks
         """
 
-        for benchmark in self.benchmarks:
-            log.info("Pre task for %s", benchmark.name)
+        for i, benchmark in enumerate(self.benchmarks):
+            current = f"({i+1}/{len(self.benchmarks)})"
+            log.info("%s Pre task for %s", current, benchmark.name)
             benchmark.run_pre_tasks()
 
-            log.info("Start run for %s", benchmark.name)
-            benchmark.run()
+            log.info("%s Start run for %s", current, benchmark.name)
+            try:
+                benchmark.run()
+            except KeyboardInterrupt:
+                log.warning("Received KeyboardInterrupt. Stopping current benchmark %s", benchmark)
+
 
             if self.config.results_print:
                 print(f"#### Results for benchmark {benchmark}")
                 print(benchmark.benchmark_results)
 
             if self.config.results_save_to_file:
-                self._save_results_to_file(benchmark)
+                file = self._get_result_file(benchmark)
+                log.info("%s Saving results to file: '%s'.", current, file)
+                self._save_results_to_file(benchmark.benchmark_results, file)
 
             if self.config.results_save_to_influxdb:
-                log.info("Sending results to influxDB.")
+                log.info("%s Sending results to influxDB.", current)
                 benchmark.save_results_to_influxdb(self.influxdb)
 
-            log.info("Post task for %s", benchmark.name)
+            log.info("%s Post task for %s", current, benchmark.name)
             benchmark.run_post_tasks()
 
     @staticmethod
@@ -127,15 +134,14 @@ class Benchmarker:
         benchmarker_config = from_yaml(BenchmarkerConfig, config_path.read_text())
         return Benchmarker(benchmarker_config)
 
-    def _save_results_to_file(self, benchmark: Benchmark):
-        """Save results as json to file"""
-        # Construct filename
+    def _get_result_file(self, benchmark) -> Path:
+        """Get the result file"""
         timestamp = datetime.now().replace(microsecond=0)
         filename = f"{timestamp.isoformat()}_{benchmark}.json"
         file =  self.results / filename
+        return file
 
-        log.info("Saving results to file: '%s'.", file)
-
-        # Write results
-        json_results = json.dumps(benchmark.benchmark_results, indent=2)
+    def _save_results_to_file(self, results: Any, file: Path):
+        """Save results as json to file"""
+        json_results = json.dumps(results, indent=2)
         file.write_text(json_results)

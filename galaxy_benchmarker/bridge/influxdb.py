@@ -74,3 +74,18 @@ class InfluxDb:
             })
 
         self.client.write_points(json_points)
+
+    def save_metric(self, tags, metric_name, values):
+        datapoints = []
+
+        for value in values:
+            datapoints.append({
+                "measurement": metric_name,
+                "tags": tags,
+                "fields": {
+                    "value": value
+                }
+            })
+            
+        self.client.write_points(datapoints)
+

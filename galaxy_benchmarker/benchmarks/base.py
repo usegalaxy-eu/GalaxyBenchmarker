@@ -80,6 +80,13 @@ class Benchmark:
         """Send all metrics to influxDB."""
         raise NotImplementedError("Benchmark.save_results_to_influxdb is not defined. Overwrite in child class")
 
+    def get_influxdb_tags(self) -> dict:
+        return {
+            "plugin": "benchmarker",
+            "benchmark_name": self.name,
+            "benchmark_uuid": self.uuid,
+            "benchmark_type": type(self),
+        }
 
     def __str__(self):
         return self.name
