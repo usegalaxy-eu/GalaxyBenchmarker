@@ -37,7 +37,7 @@ class BaseBenchmark:
                             # Save metrics per workflow-run
                             tags = {
                                 "benchmark_name": self.name,
-                                "benchmark_uuid": self.uuid,
+                                "benchmark_id": self.id,
                                 "benchmark_type": type(self),
                                 "destination_name": dest_name,
                                 "workflow_name": workflow_name,
@@ -54,7 +54,7 @@ class BaseBenchmark:
                         for job in run["jobs"].values():
                             tags = {
                                 "benchmark_name": self.name,
-                                "benchmark_uuid": self.uuid,
+                                "benchmark_id": self.id,
                                 "benchmark_type": type(self),
                                 "destination_name": dest_name,
                                 "workflow_name": workflow_name,

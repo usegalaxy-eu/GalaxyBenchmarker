@@ -82,17 +82,29 @@ class InfluxDb:
 
         self.client.write_points(json_points)
 
-    def save_metric(self, tags, metric_name, values):
+    def save_measurement(self, tags: dict, measurement: str, metrics: dict[str, list]):
+        """Save a measurement to influxDB
+        
+        tags: Tags associated with all data points
+        measurement: Name of the measurement
+        metrics: key=metric_name, values=list of results
+        """
         datapoints = []
 
-        for value in values:
-            datapoints.append({
-                "measurement": metric_name,
-                "tags": tags,
-                "fields": {
-                    "value": value
-                }
-            })
+        for metric_name, results in metrics.items():
+            for i, result in enumerate(results):
+                datapoints.append({
+                    "measurement": measurement,
+                    "tags": {
+                        **tags,
+                        # Required, otherwise influxdb would only save the
+                        # last data point
+                        "repetition": i+1
+                    },
+                    "fields": {
+                        metric_name: result
+                    }
+                })
             
         self.client.write_points(datapoints)
 

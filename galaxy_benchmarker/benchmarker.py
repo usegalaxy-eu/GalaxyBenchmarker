@@ -113,7 +113,8 @@ class Benchmarker:
                 print(benchmark.benchmark_results)
 
             if self.config.results_save_to_file:
-                file = self._get_result_file(benchmark)
+                filename = benchmark.get_result_filename()
+                file = self.results / filename
                 log.info("%s Saving results to file: '%s'.", current, file)
                 self._save_results_to_file(benchmark.benchmark_results, file)
 
@@ -136,13 +137,6 @@ class Benchmarker:
 
         benchmarker_config = from_yaml(BenchmarkerConfig, config_path.read_text())
         return Benchmarker(benchmarker_config)
-
-    def _get_result_file(self, benchmark) -> Path:
-        """Get the result file"""
-        timestamp = datetime.now().replace(microsecond=0)
-        filename = f"{timestamp.isoformat()}_{benchmark}.json"
-        file =  self.results / filename
-        return file
 
     def _save_results_to_file(self, results: Any, file: Path):
         """Save results as json to file"""

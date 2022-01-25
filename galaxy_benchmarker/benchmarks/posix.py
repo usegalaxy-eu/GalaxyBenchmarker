@@ -62,7 +62,10 @@ class PosixSetupTimeBenchmark(base.Benchmark):
                 "host": hostname
             }
 
-            inflxdb.save_metric(scoped_tags, "total_runtime", results)
+            inflxdb.save_measurement(
+                scoped_tags,
+                f"{self.name}_total_runtime",
+                {"time_in_s": results})
 
 
     def get_influxdb_tags(self) -> dict:

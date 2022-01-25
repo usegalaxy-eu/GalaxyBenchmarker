@@ -42,8 +42,7 @@ class Benchmark:
         except ValueError as e:
             raise ValueError(f"'repetitions' has to be a number for {config}") from e
 
-
-        self.uuid = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f") + "_" + self.name
+        self.id = datetime.now().replace(microsecond=0).isoformat()
         self.benchmark_results = {}
 
     @staticmethod
@@ -80,12 +79,15 @@ class Benchmark:
         """Send all metrics to influxDB."""
         raise NotImplementedError("Benchmark.save_results_to_influxdb is not defined. Overwrite in child class")
 
+    def get_result_filename(self) -> str:
+        return f"{self.id}_{self.name}.json"
+
     def get_influxdb_tags(self) -> dict:
         return {
             "plugin": "benchmarker",
             "benchmark_name": self.name,
-            "benchmark_uuid": self.uuid,
-            "benchmark_type": type(self),
+            "benchmark_id": self.id,
+            "benchmark_type": self.__class__.__name__,
         }
 
     def __str__(self):
