@@ -7,6 +7,7 @@ import logging
 import time
 from galaxy_benchmarker.bridge import influxdb, ansible
 from galaxy_benchmarker.benchmarks import base
+from dataclasses import dataclass
 
 if TYPE_CHECKING:
     from galaxy_benchmarker.benchmarker import Benchmarker
@@ -28,14 +29,11 @@ class PosixSetupTimeBenchmark(base.Benchmark):
         if not self.destinations:
             raise ValueError(f"At least one destination is required for benchmark {self.__class__.__name__}")
 
-        self._run_task = ansible.AnsibleTask({
-            "playbook": "connection_test.yml",
-            "destinations": config.get("destinations")
-        })
+        self._run_task = ansible.AnsibleTask({"playbook": "connection_test.yml"})
 
 
     def run(self):
-        """Runs the connection_test playbook on each destinations."""
+        """Run the connection_test playbook on each destination"""
 
         for dest in self.destinations:
             log.info("Start %s for %s", self.name, dest.host)
@@ -51,9 +49,7 @@ class PosixSetupTimeBenchmark(base.Benchmark):
             self.benchmark_results[dest.host] = results
 
     def save_results_to_influxdb(self, inflxdb: influxdb.InfluxDb):
-        """
-        Sends all the metrics of the benchmark_results to influxDB.
-        """
+        """Send the runtime to influxDB."""
         tags = self.get_influxdb_tags()
 
         for hostname, results in self.benchmark_results.items():
@@ -72,35 +68,62 @@ class PosixSetupTimeBenchmark(base.Benchmark):
         return super().get_influxdb_tags()
 
 
+@dataclass
+class PosixBenchmarkDestination(ansible.AnsibleDestination):
+    filesystem_type: str = ""
+    target_folder: str = ""
+
+    def __post_init__(self):
+        if not self.filesystem_type:
+            raise ValueError(f"Property 'filesystem_type' is missing for host '{self.host}'")
+
+        if not self.target_folder:
+            raise ValueError(f"Property 'target_folder' is missing for host '{self.host}'")
+
+
 
 @base.register_benchmark
 class PosixFioBenchmark(base.Benchmark):
-    """Compare the runtime between a cold and a warm start"""
+    """Compare different posix compatible mounts with the benchmarking tool 'fio'"""
 
     def __init__(self, name: str, config: dict, benchmarker: Benchmarker):
         super().__init__(name, config, benchmarker)
 
-        self.destinations: list[ansible.AnsibleDestination] = []
+        self.destinations: list[PosixBenchmarkDestination] = []
         for item in config.get("destinations", []):
-            self.destinations.append(ansible.AnsibleDestination(**item))
+            self.destinations.append(PosixBenchmarkDestination(**item))
 
         if not self.destinations:
             raise ValueError(f"At least one destination is required for benchmark {self.__class__.__name__}")
 
-        self._pre_task = ansible.AnsibleTask({
-            "playbook": "prepare_posix_fio_benchmark.yml",
-            "destinations": config.get("destinations")
-        })
+        # TODO: Fix
+        # self._pre_task = ansible.AnsibleTask({
+        #     "playbook": "posix_fio_benchmark_check.yml",
+        #     "destinations": config.get("destinations")
+        # })
+
+        self._run_task = ansible.AnsibleTask({"playbook": "posix_fio_benchmark_run.yml"})
 
 
     def run_pre_tasks(self):
-        self._pre_task.run()
+        # self._pre_task.run()
+        pass
 
     def run(self):
-        """
-        Runs the Workflow on each Destinations. First runs all Workflows "cold" (cleaning Pulsar up before each run),
-        after that the "warm"-runs begin.
-        """
+        """Run 'fio' on each destination"""
+
+        for dest in self.destinations:
+            log.info("Start %s for %s", self.name, dest.host)
+            results = []
+            for i in range(self.repetitions):
+                log.info("Run %d of %d", i+1, self.repetitions)
+                start_time = time.monotonic()
+
+                self._run_task.run_at(dest, {"fio_dir": dest.target_folder})
+
+                total_runtime = time.monotonic() - start_time
+                results.append(total_runtime)
+            self.benchmark_results[dest.host] = results
 
     def save_results_to_influxdb(self, inflxdb: influxdb.InfluxDb):
         """

@@ -1,0 +1,27 @@
+- hosts: all
+  tasks:
+    - name: Create test directory
+      file:
+        path: "{{ fio_dir }}/fio_in_progress"
+        state: directory
+
+    - name: Execute the fio test
+      ansible.builtin.command:  "fio --rw=read --name=IOPS-read --bs=1024k
+      --direct=1 --numjobs=4 --ioengine=libaio --iodepth=32 --refill_buffers
+      --group_reporting --runtime=60 --time_based  --size=5G --output-format=json
+      --filename=testfile.fio --output out_{{inventory_hostname}}.json"
+      args:
+        chdir: "{{ fio_dir }}/fio_in_progress"
+      become: yes
+      register: fio_status
+
+    - name: Collect result
+      ansible.builtin.fetch:
+        src: "{{ fio_dir }}/fio_in_progress/out_{{inventory_hostname}}.json"
+        dest: "{{playbook_dir}}/out_{{inventory_hostname}}.json"
+        flat: yes
+
+    - name: Cleanup
+      file:
+        path: "{{ fio_dir }}/fio_in_progress"
+        state: absent

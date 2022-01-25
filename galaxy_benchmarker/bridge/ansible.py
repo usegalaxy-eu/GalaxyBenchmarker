@@ -21,7 +21,8 @@ class AnsibleDestination:
     user: Optional[str] = ""
     private_key: Optional[str] = ""
 
-def run_playbook(playbook: Path, destination: AnsibleDestination, values: Dict = {}):
+
+def run_playbook(playbook: Path, destination: AnsibleDestination, extra_vars: Dict = {}):
     """Run ansible-playbook with the given parameters. Additional variables
     can be given in values as a dict.
     """
@@ -38,7 +39,7 @@ def run_playbook(playbook: Path, destination: AnsibleDestination, values: Dict =
     if destination.private_key:
         commands.extend(["--private-key",destination.private_key])
 
-    for key, value in values.items():
+    for key, value in extra_vars.items():
         commands.append("-e")
         commands.append(f"{key}={value}")
 
@@ -104,10 +105,10 @@ class AnsibleTask:
             raise ValueError("'destinations' is required, when task is executed through 'run()'")
 
         for dest in self.destinations:
-            self.run_at(dest)
+            self.run_at(dest, self.values)
 
-    def run_at(self, destination: AnsibleDestination) -> None:
-        run_playbook(self.playbook, destination, self.values)
+    def run_at(self, destination: AnsibleDestination, extra_vars: dict = {}) -> None:
+        run_playbook(self.playbook, destination, extra_vars)
 
 class AnsibleNoopTask(AnsibleTask):
     """Does nothing, acts as placeholder"""
