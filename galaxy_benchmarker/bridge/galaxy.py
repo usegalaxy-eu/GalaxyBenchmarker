@@ -1,13 +1,15 @@
-from bioblend.galaxy import GalaxyInstance
-from typing import Tuple, List
-from galaxy_benchmarker.models.workflow import BaseWorkflow, GalaxyWorkflow
-from galaxy_benchmarker.bridge import ansible, planemo
 import logging
-import string
 import random
 import re
+import string
 from dataclasses import dataclass
+from typing import List, Tuple
+
+from bioblend.galaxy import GalaxyInstance
 from serde import serde
+
+from galaxy_benchmarker.bridge import ansible, planemo
+from galaxy_benchmarker.models.workflow import BaseWorkflow, GalaxyWorkflow
 
 log = logging.getLogger(__name__)
 

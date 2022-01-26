@@ -1,7 +1,8 @@
 """Utility for parsing fio results"""
 
-from pathlib import Path
 import json
+from pathlib import Path
+
 
 def parse_result_file(directory: str, filename: str, jobname: str) -> dict:
     file = Path(directory) / filename

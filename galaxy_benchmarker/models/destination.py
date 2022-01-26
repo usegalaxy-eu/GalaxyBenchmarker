@@ -2,17 +2,25 @@
 Definition of different destination-types for workflows.
 """
 from __future__ import annotations
-from galaxy_benchmarker.bridge import ansible,planemo, condor
-from galaxy_benchmarker import metrics
+
 import logging
 import time
-from multiprocessing import Pool, TimeoutError
-from typing import Dict, List
-from galaxy_benchmarker.models.task import BaseTask, AnsiblePlaybookTask, BenchmarkerTask
-from galaxy_benchmarker.bridge.galaxy import Galaxy
-from jinja2 import Template
+
 # from workflow import GalaxyWorkflow, CondorWorkflow
 from datetime import datetime
+from multiprocessing import Pool, TimeoutError
+from typing import Dict, List
+
+from jinja2 import Template
+
+from galaxy_benchmarker import metrics
+from galaxy_benchmarker.bridge import ansible, condor, planemo
+from galaxy_benchmarker.bridge.galaxy import Galaxy
+from galaxy_benchmarker.models.task import (
+    AnsiblePlaybookTask,
+    BaseTask,
+    BenchmarkerTask,
+)
 
 log = logging.getLogger(__name__)
 

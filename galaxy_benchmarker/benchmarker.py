@@ -1,17 +1,18 @@
-from typing import Optional, Any
-from galaxy_benchmarker.bridge.galaxy import Galaxy, GalaxyConfig
-from galaxy_benchmarker.bridge.influxdb import InfluxDb, InfluxDbConfig
-from galaxy_benchmarker.bridge.openstack import OpenStackCompute, OpenStackComputeConfig
-from galaxy_benchmarker.bridge.ansible import AnsibleTask
-from galaxy_benchmarker.benchmarks.base import Benchmark
-import logging
 import json
+import logging
 from dataclasses import dataclass
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
+from typing import Any, Optional
 
 from serde import serde
 from serde.yaml import from_yaml
+
+from galaxy_benchmarker.benchmarks.base import Benchmark
+from galaxy_benchmarker.bridge.ansible import AnsibleTask
+from galaxy_benchmarker.bridge.galaxy import Galaxy, GalaxyConfig
+from galaxy_benchmarker.bridge.influxdb import InfluxDb, InfluxDbConfig
+from galaxy_benchmarker.bridge.openstack import OpenStackCompute, OpenStackComputeConfig
 
 log = logging.getLogger(__name__)
 

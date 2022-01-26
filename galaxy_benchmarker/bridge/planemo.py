@@ -2,17 +2,19 @@
 Bridge between Planemo and GalaxyBenchmarker
 """
 from __future__ import annotations
+
+import logging
 import random
 import time
-import logging
+from typing import TYPE_CHECKING, Dict
+
 # from destination import PulsarMQDestination
 from planemo import options
 from planemo.cli import PlanemoContext
 from planemo.engine import engine_context
 from planemo.galaxy.test import handle_reports_and_summary
-from planemo.runnable import for_paths
 from planemo.galaxy.workflows import install_shed_repos
-from typing import Dict, TYPE_CHECKING
+from planemo.runnable import for_paths
 
 if TYPE_CHECKING:
     from galaxy_benchmarker.bridge.galaxy import Galaxy

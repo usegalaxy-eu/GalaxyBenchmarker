@@ -2,13 +2,15 @@
 Definition of different benchmark-types.
 """
 from __future__ import annotations
-from typing import TYPE_CHECKING
+
 import logging
-import time
-from galaxy_benchmarker.bridge import influxdb, ansible
-from galaxy_benchmarker.benchmarks import base
-from dataclasses import dataclass
 import tempfile
+import time
+from dataclasses import dataclass
+from typing import TYPE_CHECKING
+
+from galaxy_benchmarker.benchmarks import base
+from galaxy_benchmarker.bridge import ansible, influxdb
 from galaxy_benchmarker.utils import fio
 
 if TYPE_CHECKING:

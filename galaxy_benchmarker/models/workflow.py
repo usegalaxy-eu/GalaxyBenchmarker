@@ -1,8 +1,8 @@
 """
 Definition of different workflow-types.
 """
-import os
 import logging
+import os
 from typing import Dict
 
 log = logging.getLogger(__name__)

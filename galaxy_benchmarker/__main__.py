@@ -1,9 +1,9 @@
 import argparse
-from galaxy_benchmarker.benchmarker import Benchmarker
 import logging
-import time
 import os
+import time
 
+from galaxy_benchmarker.benchmarker import Benchmarker
 
 # Formatter
 fmt_with_time = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')

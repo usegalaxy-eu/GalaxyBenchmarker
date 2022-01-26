@@ -1,8 +1,9 @@
-import novaclient.v2.servers
-import novaclient.client
-from typing import List
 import logging
 from dataclasses import dataclass
+from typing import List
+
+import novaclient.client
+import novaclient.v2.servers
 from serde import serde
 
 log = logging.getLogger(__name__)

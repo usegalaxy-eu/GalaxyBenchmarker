@@ -1,8 +1,10 @@
-from influxdb import InfluxDBClient
-from typing import Dict
 from dataclasses import dataclass
-from serde import serde
+from typing import Dict
+
+from influxdb import InfluxDBClient
 from requests.exceptions import ConnectionError
+from serde import serde
+
 
 @serde
 @dataclass

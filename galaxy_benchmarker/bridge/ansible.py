@@ -1,14 +1,14 @@
 from __future__ import annotations
-import subprocess
-from typing import Dict, Any, TYPE_CHECKING, Optional
-from pathlib import Path
-import logging
-from dataclasses import dataclass
+
 import io
-import tempfile
-
-
+import logging
 import os
+import subprocess
+import tempfile
+from dataclasses import dataclass
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, Dict, Optional
+
 if TYPE_CHECKING:
     from galaxy_benchmarker.benchmarker import Benchmarker
 

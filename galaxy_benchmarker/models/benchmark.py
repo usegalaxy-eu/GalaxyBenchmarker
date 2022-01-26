@@ -2,18 +2,33 @@
 Definition of different benchmark-types.
 """
 import logging
-import time
-import threading
 import random
+import threading
+import time
 from datetime import datetime
-from galaxy_benchmarker.models.destination import BaseDestination, GalaxyDestination, PulsarMQDestination, GalaxyCondorDestination, CondorDestination
-from galaxy_benchmarker.models.workflow import BaseWorkflow, GalaxyWorkflow, CondorWorkflow
-from galaxy_benchmarker.models.task import BaseTask, AnsiblePlaybookTask, BenchmarkerTask
-from typing import List, Dict, Union
-from galaxy_benchmarker.models.task import configure_task
-from galaxy_benchmarker.bridge import influxdb
+from typing import Dict, List, Union
+
 from bioblend import ConnectionError
 
+from galaxy_benchmarker.bridge import influxdb
+from galaxy_benchmarker.models.destination import (
+    BaseDestination,
+    CondorDestination,
+    GalaxyCondorDestination,
+    GalaxyDestination,
+    PulsarMQDestination,
+)
+from galaxy_benchmarker.models.task import (
+    AnsiblePlaybookTask,
+    BaseTask,
+    BenchmarkerTask,
+    configure_task,
+)
+from galaxy_benchmarker.models.workflow import (
+    BaseWorkflow,
+    CondorWorkflow,
+    GalaxyWorkflow,
+)
 
 log = logging.getLogger(__name__)
 

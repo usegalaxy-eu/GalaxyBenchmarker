@@ -1,7 +1,9 @@
 from __future__ import annotations
+
 import logging
-from typing import Type, Optional, TYPE_CHECKING
 from datetime import datetime
+from typing import TYPE_CHECKING, Optional, Type
+
 from galaxy_benchmarker.bridge.influxdb import InfluxDb
 
 if TYPE_CHECKING:

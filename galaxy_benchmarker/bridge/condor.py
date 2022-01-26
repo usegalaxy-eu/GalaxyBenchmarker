@@ -1,11 +1,12 @@
-import paramiko
-import re
-from typing import Dict
-from datetime import datetime
 import json
-from galaxy_benchmarker import metrics
-
 import logging
+import re
+from datetime import datetime
+from typing import Dict
+
+import paramiko
+
+from galaxy_benchmarker import metrics
 
 log = logging.getLogger(__name__)
 
