@@ -35,7 +35,7 @@ class PosixSetupTimeBenchmark(base.Benchmark):
                 f"At least one destination is required for benchmark {self.__class__.__name__}"
             )
 
-        self._run_task = ansible.AnsibleTask({"playbook": "connection_test.yml"})
+        self._run_task = ansible.AnsibleTask(playbook_name="connection_test.yml")
 
     def run(self):
         """Run the connection_test playbook on each destination"""
@@ -96,19 +96,17 @@ class PosixFioBenchmark(base.Benchmark):
                 f"At least one destination is required for benchmark {self.__class__.__name__}"
             )
 
-        # TODO: Fix
-        # self._pre_task = ansible.AnsibleTask({
-        #     "playbook": "posix_fio_benchmark_check.yml",
-        #     "destinations": config.get("destinations")
-        # })
+        self._pre_task = ansible.AnsibleTask(
+            playbook_name="posix_fio_benchmark_check.yml",
+            destinations=self.destinations,
+        )
 
         self._run_task = ansible.AnsibleTask(
-            {"playbook": "posix_fio_benchmark_run.yml"}
+            playbook_name="posix_fio_benchmark_run.yml"
         )
 
     def run_pre_tasks(self):
-        # self._pre_task.run()
-        pass
+        self._pre_task.run()
 
     def run(self):
         """Run 'fio' on each destination"""

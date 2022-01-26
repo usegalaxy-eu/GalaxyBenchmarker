@@ -46,7 +46,7 @@ class Benchmarker:
         self.tasks: dict[str, AnsibleTask] = {}
         task_configs = self.tasks or {}
         for name, t_config in task_configs:
-            self.tasks[name] = AnsibleTask(t_config, name)
+            self.tasks[name] = AnsibleTask.from_config(t_config, name, self)
 
         self.benchmarks: list[Benchmark] = []
         for name, b_config in config.benchmarks.items():

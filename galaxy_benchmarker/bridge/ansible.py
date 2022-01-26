@@ -53,10 +53,21 @@ def run_playbook(
 
 
 class AnsibleTask:
-    def __init__(self, config: dict, name: Optional[str] = None) -> None:
-        playbook_name = config.get("playbook", "")
-        playbook_folder = config.get("folder", "playbooks/")
-
+    def __init__(
+        self,
+        playbook_name: str,
+        playbook_folder: str = "playbooks/",
+        name: Optional[str] = None,
+        destinations: list[AnsibleDestination] = [],
+        extra_vars: dict = {},
+    ) -> None:
+        """
+        playbook_name: Name of the playbook which will be executed
+        playbook_folder: path to the playbook folder
+        name: Displayname used for logging and stuff
+        destinations: Default destinations used when calling run()
+        extra_vars: Default extra_vars used when calling run()
+        """
         if name:
             self.name = name
         else:
@@ -71,11 +82,8 @@ class AnsibleTask:
                 f"Playbook for task {self.name} is not a vaild file. Path: '{self.playbook}'"
             )
 
-        self.destinations = []
-        for destination in config.get("destinations", []):
-            self.destinations.append(AnsibleDestination(**destination))
-
-        self.values = config.get("values", {})
+        self.destinations = destinations
+        self.extra_vars = extra_vars
 
     @staticmethod
     def from_config(
@@ -97,7 +105,18 @@ class AnsibleTask:
                         f"Unknown task reference '{task_config}' for '{name}'"
                     )
             case dict():
-                potential_task = AnsibleTask(task_config, name)
+                destinations = [
+                    AnsibleDestination(**dest)
+                    for dest in task_config.get("destinations", [])
+                ]
+
+                potential_task = AnsibleTask(
+                    playbook_name=task_config.get("playbook", ""),
+                    playbook_folder=task_config.get("folder", "playbooks/"),
+                    name=name,
+                    destinations=destinations,
+                    extra_vars=task_config.get("extra_vars", {}),
+                )
             case _:
                 raise ValueError(f"Unknown value for '{name}': {task_config}")
 
@@ -110,7 +129,7 @@ class AnsibleTask:
             )
 
         for dest in self.destinations:
-            self.run_at(dest, self.values)
+            self.run_at(dest, self.extra_vars)
 
     def run_at(self, destination: AnsibleDestination, extra_vars: dict = {}) -> None:
         run_playbook(self.playbook, destination, extra_vars)
