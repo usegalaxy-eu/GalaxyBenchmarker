@@ -1,5 +1,9 @@
 #!/bin/bash
 
+echo "#############################"
+echo "########   New run   ########"
+echo "#############################"
+
 if [ -d "/root/.ssh-host" ]; then
     # Host ssh-config is mounted -> fix permissions
     echo "Fixing permissions for ssh config"

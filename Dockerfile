@@ -1,15 +1,19 @@
 FROM python:3.10
 
-RUN cd / && git clone https://github.com/usegalaxy-eu/workflow-testing.git
+ENV PIP_NO_CACHE_DIR=1 \
+  PIP_DISABLE_PIP_VERSION_CHECK=1
+
+RUN pip install poetry
 
 WORKDIR /src
+COPY poetry.lock pyproject.toml /src/
 
-COPY pyproject.toml ./
-COPY galaxy_benchmarker ./galaxy_benchmarker
+RUN poetry config virtualenvs.create false \
+  && poetry install --no-dev --no-interaction --no-ansi
 
-RUN python3 -m pip install --upgrade pip \
-  && python3 -m pip install --no-cache-dir .
+COPY . /src/
+
+RUN git clone https://github.com/usegalaxy-eu/workflow-testing.git /workflow-testing
 
 COPY scripts/entrypoint.sh /entrypoint.sh
-
 CMD ["/entrypoint.sh"]
