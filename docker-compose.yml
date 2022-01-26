@@ -2,10 +2,18 @@ version: "3"
 services:
   benchmarker:
     build: .
+    environment:
+      - SSH_AUTH_SOCK=/ssh-agent
     volumes:
       - .:/src
+      - type: bind
+        source: ${SSH_AUTH_SOCK}
+        target: /ssh-agent
+      - type: bind
+        source: ${HOME}/.ssh
+        target: /root/.ssh-host
+        read_only: true
     working_dir: /src
-    entrypoint: python3 -m galaxy_benchmarker
     depends_on: 
       - influxdb
   influxdb:
