@@ -1,4 +1,3 @@
-
 #     def run(self):
 #         if self.name == "delete_old_histories":
 #             for destination in self.destinations:

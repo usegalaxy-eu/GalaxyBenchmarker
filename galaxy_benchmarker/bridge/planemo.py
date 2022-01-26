@@ -51,7 +51,9 @@ def _cli(ctx, paths, glx, user_key, **kwds) -> Dict:
     kwds["shed_install"] = False
     kwds["galaxy_url"] = glx.url
     kwds["galaxy_admin_key"] = glx.user_key
-    kwds["history_name"] = "galaxy_benchmarker-" + str(time.time_ns()) + str(random.randrange(0, 99999))
+    kwds["history_name"] = (
+        "galaxy_benchmarker-" + str(time.time_ns()) + str(random.randrange(0, 99999))
+    )
 
     if user_key is not None:
         kwds["galaxy_user_key"] = user_key
@@ -61,7 +63,9 @@ def _cli(ctx, paths, glx, user_key, **kwds) -> Dict:
     try:
         with engine_context(ctx, **kwds) as engine:
             test_data = engine.test(runnables)
-            exit_code = handle_reports_and_summary(ctx, test_data.structured_data, kwds=kwds)
+            exit_code = handle_reports_and_summary(
+                ctx, test_data.structured_data, kwds=kwds
+            )
             status = "success" if exit_code == 0 else "error"
     except Exception as e:
         log.error("There was an error: {e}".format(e=e))

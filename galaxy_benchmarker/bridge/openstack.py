@@ -30,7 +30,8 @@ class OpenStackCompute:
             project_id=config.project_id,
             auth_url=config.auth_url,
             user_domain_name=config.user_domain_name,
-            region_name=config.region_name)
+            region_name=config.region_name,
+        )
 
     def get_servers(self, name_contains="") -> List[novaclient.v2.servers.Server]:
         """
@@ -52,7 +53,7 @@ class OpenStackCompute:
         """
         reboot_type = "HARD" if hard else "SOFT"
         for server in servers:
-            if server.status == 'ACTIVE':
+            if server.status == "ACTIVE":
                 log.info("Rebooting server {name}".format(name=server.name))
                 server.reboot(reboot_type)
 
@@ -61,7 +62,7 @@ class OpenStackCompute:
         Rebuilds the given servers with the current settings (images, cloud-init, etc).
         """
         for server in servers:
-            if server.status == 'ACTIVE':
+            if server.status == "ACTIVE":
                 log.info("Rebuilding server {name}".format(name=server.name))
                 image = server.image["id"]
                 server.rebuild(image)

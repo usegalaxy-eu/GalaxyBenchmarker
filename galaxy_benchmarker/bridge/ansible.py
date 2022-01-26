@@ -22,22 +22,19 @@ class AnsibleDestination:
     private_key: Optional[str] = ""
 
 
-def run_playbook(playbook: Path, destination: AnsibleDestination, extra_vars: Dict = {}):
+def run_playbook(
+    playbook: Path, destination: AnsibleDestination, extra_vars: Dict = {}
+):
     """Run ansible-playbook with the given parameters. Additional variables
     can be given in values as a dict.
     """
-    commands = [
-        "ansible-playbook",
-        str(playbook),
-        "-i",
-        f"{destination.host},"
-    ]
+    commands = ["ansible-playbook", str(playbook), "-i", f"{destination.host},"]
 
     if destination.user:
         commands.extend(["-u", destination.user])
 
     if destination.private_key:
-        commands.extend(["--private-key",destination.private_key])
+        commands.extend(["--private-key", destination.private_key])
 
     for key, value in extra_vars.items():
         commands.append("-e")
@@ -67,10 +64,12 @@ class AnsibleTask:
 
         if not playbook_name:
             raise ValueError(f"'playbook' property is missing for task {self.name}")
-        
+
         self.playbook = Path(playbook_folder) / playbook_name
         if not self.playbook.is_file():
-            raise ValueError(f"Playbook for task {self.name} is not a vaild file. Path: '{self.playbook}'")
+            raise ValueError(
+                f"Playbook for task {self.name} is not a vaild file. Path: '{self.playbook}'"
+            )
 
         self.destinations = []
         for destination in config.get("destinations", []):
@@ -79,7 +78,9 @@ class AnsibleTask:
         self.values = config.get("values", {})
 
     @staticmethod
-    def from_config(task_config: Any, name: str, benchmarker: Benchmarker) -> AnsibleTask:
+    def from_config(
+        task_config: Any, name: str, benchmarker: Benchmarker
+    ) -> AnsibleTask:
         """Create a task from task_config. Config can be:
         - None for default Noop-Task
         - an object defining the task
@@ -92,7 +93,9 @@ class AnsibleTask:
             case str():
                 potential_task = benchmarker.tasks.get(task_config, None)
                 if not potential_task:
-                    raise ValueError(f"Unknown task reference '{task_config}' for '{name}'")
+                    raise ValueError(
+                        f"Unknown task reference '{task_config}' for '{name}'"
+                    )
             case dict():
                 potential_task = AnsibleTask(task_config, name)
             case _:
@@ -102,7 +105,9 @@ class AnsibleTask:
 
     def run(self):
         if not self.destinations:
-            raise ValueError("'destinations' is required, when task is executed through 'run()'")
+            raise ValueError(
+                "'destinations' is required, when task is executed through 'run()'"
+            )
 
         for dest in self.destinations:
             self.run_at(dest, self.values)
@@ -110,8 +115,10 @@ class AnsibleTask:
     def run_at(self, destination: AnsibleDestination, extra_vars: dict = {}) -> None:
         run_playbook(self.playbook, destination, extra_vars)
 
+
 class AnsibleNoopTask(AnsibleTask):
     """Does nothing, acts as placeholder"""
+
     def __init__(self, *args, **kwargs):
         self.name = "AnsibleNoopTask"
 

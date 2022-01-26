@@ -13,6 +13,7 @@ from galaxy_benchmarker.models.workflow import BaseWorkflow, GalaxyWorkflow
 
 log = logging.getLogger(__name__)
 
+
 @serde
 @dataclass
 class GalaxyConfig:
@@ -25,6 +26,7 @@ class GalaxyConfig:
     galaxy_config_dir: str = ""
     galaxy_user: str = ""
     configure_job_destinations: bool = False
+
 
 class Galaxy:
     def __init__(self, config: GalaxyConfig):
@@ -56,10 +58,14 @@ class Galaxy:
         its user_id and api_key as a tuple.
         """
         if len(self.instance.users.get_users(f_name=username)) == 0:
-            password = ''.join([random.choice(string.ascii_letters + string.digits) for _ in range(32)])
-            self.instance.users.create_local_user(username,
-                                                  "{username}@galaxy.uni.andreas-sk.de".format(username=username),
-                                                  password)
+            password = "".join(
+                [random.choice(string.ascii_letters + string.digits) for _ in range(32)]
+            )
+            self.instance.users.create_local_user(
+                username,
+                "{username}@galaxy.uni.andreas-sk.de".format(username=username),
+                password,
+            )
 
         user_id = self.instance.users.get_users(f_name=username)[0]["id"]
         user_key = self.instance.users.get_user_apikey(user_id)
@@ -83,7 +89,11 @@ class Galaxy:
         log.info("Installing all necessary workflow-tools on Galaxy.")
         for workflow in workflows:
             if type(workflow) is GalaxyWorkflow:
-                log.info("Installing tools for workflow '{workflow}'".format(workflow=workflow.name))
+                log.info(
+                    "Installing tools for workflow '{workflow}'".format(
+                        workflow=workflow.name
+                    )
+                )
                 planemo.install_workflow([workflow.path], self.instance)
 
     def deploy_job_conf(self):
@@ -91,20 +101,32 @@ class Galaxy:
         Deploys the job_conf.xml-file to the Galaxy-Server.
         """
         # Hostname parsed from the Galaxy-URL
-        host = re.findall("^[a-z][a-z0-9+\-.]*://([a-z0-9\-._~%!$&'()*+,;=]+@)?([a-z0-9\-._~%]+|\[[a-z0-9\-."
-                          + "_~%!$&'()*+,;=:]+\])", self.url)[0][1]
+        host = re.findall(
+            "^[a-z][a-z0-9+\-.]*://([a-z0-9\-._~%!$&'()*+,;=]+@)?([a-z0-9\-._~%]+|\[[a-z0-9\-."
+            + "_~%!$&'()*+,;=:]+\])",
+            self.url,
+        )[0][1]
 
-        if None in (self.ssh_user, self.ssh_key, self.galaxy_root_path, self.galaxy_config_dir, self.galaxy_user):
-            raise ValueError("ssh_user, ssh_key, galaxy_root_path, galaxy_config_dir, and galaxy_user need "
-                             "to be set in order to deploy the job_conf.xml-file!")
+        if None in (
+            self.ssh_user,
+            self.ssh_key,
+            self.galaxy_root_path,
+            self.galaxy_config_dir,
+            self.galaxy_user,
+        ):
+            raise ValueError(
+                "ssh_user, ssh_key, galaxy_root_path, galaxy_config_dir, and galaxy_user need "
+                "to be set in order to deploy the job_conf.xml-file!"
+            )
 
         values = {
             "galaxy_root_path": self.galaxy_root_path,
             "galaxy_config_dir": self.galaxy_config_dir,
-            "galaxy_user": self.galaxy_user
+            "galaxy_user": self.galaxy_user,
         }
-        ansible.run_playbook("prepare_galaxy.yml", host, self.ssh_user, self.ssh_key, values)
-
+        ansible.run_playbook(
+            "prepare_galaxy.yml", host, self.ssh_user, self.ssh_key, values
+        )
 
     def get_job_ids_from_history_name(self, history_name: str, user_key: str) -> List:
         """
@@ -116,11 +138,17 @@ class Galaxy:
 
         if len(histories) >= 1:
             history_id = histories[0]["id"]
-            dataset_ids = impersonated.histories.show_history(history_id)["state_ids"]["ok"]
+            dataset_ids = impersonated.histories.show_history(history_id)["state_ids"][
+                "ok"
+            ]
             job_ids = list()
 
             for dataset_id in dataset_ids:
-                job_ids.append(impersonated.histories.show_dataset(history_id, dataset_id)["creating_job"])
+                job_ids.append(
+                    impersonated.histories.show_dataset(history_id, dataset_id)[
+                        "creating_job"
+                    ]
+                )
 
             return job_ids
 

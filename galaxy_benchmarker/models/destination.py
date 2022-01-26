@@ -76,24 +76,37 @@ class GalaxyDestination(BaseDestination):
         """
         Runs the given AnsiblePlaybookTask on the destination.
         """
-        ansible.run_playbook(task.playbook, self.host, self.host_user, self.ssh_key,
-                                    {"tool_dependency_dir": self.tool_dependency_dir,
-                                     "jobs_directory_dir": self.jobs_directory_dir,
-                                     "persistence_dir": self.persistence_dir})
+        ansible.run_playbook(
+            task.playbook,
+            self.host,
+            self.host_user,
+            self.ssh_key,
+            {
+                "tool_dependency_dir": self.tool_dependency_dir,
+                "jobs_directory_dir": self.jobs_directory_dir,
+                "persistence_dir": self.persistence_dir,
+            },
+        )
 
     def get_jobs(self, history_name) -> Dict:
         """
         Get all jobs together with their details from a given history_name.
         """
-        job_ids = self.glx.get_job_ids_from_history_name(history_name, self.galaxy_user_key)
+        job_ids = self.glx.get_job_ids_from_history_name(
+            history_name, self.galaxy_user_key
+        )
 
         infos = dict()
         for job_id in job_ids:
-            infos[job_id] = self.galaxy.instance.jobs.show_job(job_id, full_details=True)
+            infos[job_id] = self.galaxy.instance.jobs.show_job(
+                job_id, full_details=True
+            )
 
             # Get JobMetrics and parse them for future usage in influxDB
             infos[job_id]["job_metrics"] = self.galaxy.instance.jobs.get_metrics(job_id)
-            infos[job_id]["parsed_job_metrics"] = self.parse_galaxy_job_metrics(infos[job_id]["job_metrics"])
+            infos[job_id]["parsed_job_metrics"] = self.parse_galaxy_job_metrics(
+                infos[job_id]["job_metrics"]
+            )
 
         return infos
 
@@ -102,7 +115,9 @@ class GalaxyDestination(BaseDestination):
         Runs the given workflow on PulsarMQDestination. Returns Dict of the status and
         history_name of the finished workflow.
         """
-        log.info("Running workflow '{wf_name}' using Planemo".format(wf_name=workflow.name))
+        log.info(
+            "Running workflow '{wf_name}' using Planemo".format(wf_name=workflow.name)
+        )
 
         start_time = time.monotonic()
 
@@ -111,12 +126,16 @@ class GalaxyDestination(BaseDestination):
         else:
             # Run inside a Process to enable timeout
             pool = Pool(processes=1)
-            pool_result = pool.apply_async(planemo.run_planemo, (self.galaxy, self, workflow.path))
+            pool_result = pool.apply_async(
+                planemo.run_planemo, (self.galaxy, self, workflow.path)
+            )
 
             try:
                 result = pool_result.get(timeout=workflow.timeout)
             except TimeoutError:
-                log.info("Timeout after {timeout} seconds".format(timeout=workflow.timeout))
+                log.info(
+                    "Timeout after {timeout} seconds".format(timeout=workflow.timeout)
+                )
                 result = {"status": "error"}
 
         result["total_workflow_runtime"] = time.monotonic() - start_time
@@ -132,7 +151,7 @@ class GalaxyDestination(BaseDestination):
             "staging_time": {
                 "name": "staging_time",
                 "type": "float",
-                "value": float(0)
+                "value": float(0),
             },
         }
 
@@ -144,35 +163,52 @@ class GalaxyDestination(BaseDestination):
                         "name": metric["name"],
                         "type": "float",
                         "plugin": metric["plugin"],
-                        "value": float(metric["raw_value"])
+                        "value": float(metric["raw_value"]),
                     }
                 if metric["name"] in metrics.galaxy_string_metrics:
                     parsed_metrics[metric["name"]] = {
                         "name": metric["name"],
                         "type": "string",
                         "plugin": metric["plugin"],
-                        "value": metric["raw_value"]
+                        "value": metric["raw_value"],
                     }
                 # For calculating the staging time (if the metrics exist)
                 if metric["plugin"] == "jobstatus" and metric["name"] == "queued":
-                    jobstatus_queued = datetime.strptime(metric["value"], "%Y-%m-%d %H:%M:%S.%f")
+                    jobstatus_queued = datetime.strptime(
+                        metric["value"], "%Y-%m-%d %H:%M:%S.%f"
+                    )
                 if metric["plugin"] == "jobstatus" and metric["name"] == "running":
-                    jobstatus_running = datetime.strptime(metric["value"], "%Y-%m-%d %H:%M:%S.%f")
+                    jobstatus_running = datetime.strptime(
+                        metric["value"], "%Y-%m-%d %H:%M:%S.%f"
+                    )
             except ValueError as e:
-                log.error("Error while trying to parse Galaxy job metrics '{name} = {value}': {error}. Ignoring.."
-                        .format(error=e, name=metric["name"], value=metric["raw_value"]))
+                log.error(
+                    "Error while trying to parse Galaxy job metrics '{name} = {value}': {error}. Ignoring..".format(
+                        error=e, name=metric["name"], value=metric["raw_value"]
+                    )
+                )
 
         # Calculate staging time
         if jobstatus_queued is not None and jobstatus_running is not None:
-            parsed_metrics["staging_time"]["value"] = float((jobstatus_running - jobstatus_queued).seconds +
-                                                            (jobstatus_running - jobstatus_queued).microseconds * 0.000001)
+            parsed_metrics["staging_time"]["value"] = float(
+                (jobstatus_running - jobstatus_queued).seconds
+                + (jobstatus_running - jobstatus_queued).microseconds * 0.000001
+            )
 
         return parsed_metrics
 
 
-
 class PulsarMQDestination(GalaxyDestination):
-    def __init__(self, name, glx: Galaxy, job_plugin_params: Dict, job_destination_params: Dict, amqp_url="", galaxy_user_name="", galaxy_user_key=""):
+    def __init__(
+        self,
+        name,
+        glx: Galaxy,
+        job_plugin_params: Dict,
+        job_destination_params: Dict,
+        amqp_url="",
+        galaxy_user_name="",
+        galaxy_user_key="",
+    ):
         self.amqp_url = amqp_url
         self.job_plugin_params = job_plugin_params
         self.job_destination_params = job_destination_params
@@ -180,14 +216,22 @@ class PulsarMQDestination(GalaxyDestination):
 
 
 class GalaxyCondorDestination(GalaxyDestination):
-    def __init__(self, name, glx: Galaxy, job_plugin_params: Dict, job_destination_params: Dict, galaxy_user_name="", galaxy_user_key=""):
+    def __init__(
+        self,
+        name,
+        glx: Galaxy,
+        job_plugin_params: Dict,
+        job_destination_params: Dict,
+        galaxy_user_name="",
+        galaxy_user_key="",
+    ):
         self.job_plugin_params = job_plugin_params
         self.job_destination_params = job_destination_params
         super().__init__(name, glx, galaxy_user_name, galaxy_user_key)
 
 
 class CondorDestination(BaseDestination):
-    status_refresh_time = 0.5 # TODO: Figure out, if that timing is to fast
+    status_refresh_time = 0.5  # TODO: Figure out, if that timing is to fast
 
     def __init__(self, name, host, host_user, ssh_key, jobs_directory_dir):
         super().__init__(name)
@@ -200,15 +244,25 @@ class CondorDestination(BaseDestination):
         """
         Deploys the given workflow to the Condor-Server with Ansible.
         """
-        log.info("Deploying {workflow} to {destination}".format(workflow=workflow.name, destination=self.name))
+        log.info(
+            "Deploying {workflow} to {destination}".format(
+                workflow=workflow.name, destination=self.name
+            )
+        )
         # Use ansible-playbook to upload *.job-file to Condor-Manager
         values = {
             "jobs_directory_dir": self.jobs_directory_dir,
             "workflow_name": workflow.name,
             "workflow_directory_path": workflow.path,
-            "condor_user": self.host_user
+            "condor_user": self.host_user,
         }
-        ansible.run_playbook("deploy_condor_workflow.yml", self.host, self.host_user, self.ssh_key, values)
+        ansible.run_playbook(
+            "deploy_condor_workflow.yml",
+            self.host,
+            self.host_user,
+            self.ssh_key,
+            values,
+        )
 
     def run_workflow(self, workflow: CondorWorkflow) -> Dict:
         """
@@ -216,10 +270,13 @@ class CondorDestination(BaseDestination):
         """
         ssh_client = condor.get_paramiko_client(self.host, self.host_user, self.ssh_key)
 
-        remote_workflow_dir = "{jobs_dir}/{wf_name}".format(jobs_dir=self.jobs_directory_dir,
-                                                            wf_name=workflow.name)
+        remote_workflow_dir = "{jobs_dir}/{wf_name}".format(
+            jobs_dir=self.jobs_directory_dir, wf_name=workflow.name
+        )
 
-        log.info("Submitting workflow '{wf}' to '{dest}'".format(wf=workflow, dest=self))
+        log.info(
+            "Submitting workflow '{wf}' to '{dest}'".format(wf=workflow, dest=self)
+        )
         start_time = time.monotonic()
         job_ids = condor.submit_job(ssh_client, remote_workflow_dir, workflow.job_file)
         submit_time = time.monotonic() - start_time
@@ -232,8 +289,11 @@ class CondorDestination(BaseDestination):
                 job_status = condor.get_job_status(ssh_client, job_ids["id"])
             except ValueError as error:
                 status = "error"
-                log.error("There was an error with run of {workflow}: {error}".format(workflow=self.name,
-                                                                                      error=error))
+                log.error(
+                    "There was an error with run of {workflow}: {error}".format(
+                        workflow=self.name, error=error
+                    )
+                )
                 break
             status = job_status["status"]
             time.sleep(self.status_refresh_time)
@@ -241,7 +301,9 @@ class CondorDestination(BaseDestination):
         total_workflow_runtime = time.monotonic() - start_time
 
         log.info("Fetching condor_history")
-        jobs = condor.get_condor_history(ssh_client, float(job_ids["id"]), float(job_ids["id"]))
+        jobs = condor.get_condor_history(
+            ssh_client, float(job_ids["id"]), float(job_ids["id"])
+        )
 
         result = {
             "id": job_ids["id"],
@@ -249,7 +311,7 @@ class CondorDestination(BaseDestination):
             "status": "success" if status == "done" else "error",
             "total_workflow_runtime": total_workflow_runtime,
             "submit_time": submit_time,
-            "jobs": jobs
+            "jobs": jobs,
         }
 
         ssh_client.close()
@@ -263,25 +325,53 @@ def configure_destination(dest_config, glx):
     """
     # Check, if all set properly
     if "name" not in dest_config:
-        raise ValueError("No Destination-Name set! Config: '{config}'".format(config=dest_config))
+        raise ValueError(
+            "No Destination-Name set! Config: '{config}'".format(config=dest_config)
+        )
     if "type" not in dest_config:
-        raise ValueError("No Destination-Type set for '{dest}'".format(dest=dest_config["name"]))
+        raise ValueError(
+            "No Destination-Type set for '{dest}'".format(dest=dest_config["name"])
+        )
     if dest_config["type"] not in ["Galaxy", "PulsarMQ", "Condor", "GalaxyCondor"]:
-        raise ValueError("Destination-Type '{type}' not valid".format(type=dest_config["type"]))
+        raise ValueError(
+            "Destination-Type '{type}' not valid".format(type=dest_config["type"])
+        )
 
-    job_plugin_params = dict() if "job_plugin_params" not in dest_config else dest_config["job_plugin_params"]
-    job_destination_params = dict() if "job_destination_params" not in dest_config else dest_config["job_destination_params"]
+    job_plugin_params = (
+        dict()
+        if "job_plugin_params" not in dest_config
+        else dest_config["job_plugin_params"]
+    )
+    job_destination_params = (
+        dict()
+        if "job_destination_params" not in dest_config
+        else dest_config["job_destination_params"]
+    )
 
-    galaxy_user_name = None if "galaxy_user_name" not in dest_config else dest_config["galaxy_user_name"]
-    galaxy_user_key = None if "galaxy_user_key" not in dest_config else dest_config["galaxy_user_key"]
+    galaxy_user_name = (
+        None
+        if "galaxy_user_name" not in dest_config
+        else dest_config["galaxy_user_name"]
+    )
+    galaxy_user_key = (
+        None if "galaxy_user_key" not in dest_config else dest_config["galaxy_user_key"]
+    )
 
     if dest_config["type"] == "Galaxy":
-        destination = GalaxyDestination(dest_config["name"], glx, galaxy_user_name, galaxy_user_key)
+        destination = GalaxyDestination(
+            dest_config["name"], glx, galaxy_user_name, galaxy_user_key
+        )
 
     if dest_config["type"] == "PulsarMQ":
-        destination = PulsarMQDestination(dest_config["name"], glx, job_plugin_params, job_destination_params,
-                                          dest_config["amqp_url"],
-                                          galaxy_user_name, galaxy_user_key)
+        destination = PulsarMQDestination(
+            dest_config["name"],
+            glx,
+            job_plugin_params,
+            job_destination_params,
+            dest_config["amqp_url"],
+            galaxy_user_name,
+            galaxy_user_key,
+        )
         if "host" in dest_config:
             destination.host = dest_config["host"]
             destination.host_user = dest_config["host_user"]
@@ -289,15 +379,25 @@ def configure_destination(dest_config, glx):
             destination.tool_dependency_dir = dest_config["tool_dependency_dir"]
 
     if dest_config["type"] == "Condor":
-        destination = CondorDestination(dest_config["name"], dest_config["host"], dest_config["host_user"],
-                                        dest_config["ssh_key"], dest_config["jobs_directory_dir"])
+        destination = CondorDestination(
+            dest_config["name"],
+            dest_config["host"],
+            dest_config["host_user"],
+            dest_config["ssh_key"],
+            dest_config["jobs_directory_dir"],
+        )
         if "status_refresh_time" in dest_config:
             destination.status_refresh_time = dest_config["status_refresh_time"]
 
     if dest_config["type"] == "GalaxyCondor":
-        destination = GalaxyCondorDestination(dest_config["name"], glx, job_plugin_params, job_destination_params,
-                                              galaxy_user_name,
-                                              galaxy_user_key)
+        destination = GalaxyCondorDestination(
+            dest_config["name"],
+            glx,
+            job_plugin_params,
+            job_destination_params,
+            galaxy_user_name,
+            galaxy_user_key,
+        )
 
     return destination
 
@@ -307,7 +407,7 @@ def create_galaxy_job_conf(glx: Galaxy, destinations: Dict[str, BaseDestination]
     Creates the job_conf.xml-file for Galaxy using the given Dict (key: dest_name, value dest) and saves it to
     galaxy_files/job_conf.xml.tmp.
     """
-    with open('galaxy_files/job_conf.xml') as file_:
+    with open("galaxy_files/job_conf.xml") as file_:
         template = Template(file_.read())
 
     pulsar_destinations = list()
@@ -320,15 +420,19 @@ def create_galaxy_job_conf(glx: Galaxy, destinations: Dict[str, BaseDestination]
             pulsar_destinations.append(dest)
         if type(dest) is GalaxyCondorDestination:
             galaxy_condor_destinations.append(dest)
-        if issubclass(type(dest), PulsarMQDestination) or issubclass(type(dest), GalaxyCondorDestination):
+        if issubclass(type(dest), PulsarMQDestination) or issubclass(
+            type(dest), GalaxyCondorDestination
+        ):
             job_plugin_params[dest.name] = dest.job_plugin_params
             job_destination_params[dest.name] = dest.job_destination_params
 
-    job_conf = template.render(galaxy=glx,
-                               pulsar_destinations=pulsar_destinations,
-                               galaxy_condor_destinations=galaxy_condor_destinations,
-                               job_plugin_params=job_plugin_params,
-                               job_destination_params=job_destination_params)
+    job_conf = template.render(
+        galaxy=glx,
+        pulsar_destinations=pulsar_destinations,
+        galaxy_condor_destinations=galaxy_condor_destinations,
+        job_plugin_params=job_plugin_params,
+        job_destination_params=job_destination_params,
+    )
 
     with open("galaxy_files/job_conf.xml.tmp", "w") as fh:
         fh.write(job_conf)

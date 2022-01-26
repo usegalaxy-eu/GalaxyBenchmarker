@@ -6,8 +6,10 @@ import time
 from galaxy_benchmarker.benchmarker import Benchmarker
 
 # Formatter
-fmt_with_time = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-fmt_no_time = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+fmt_with_time = logging.Formatter(
+    "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
+fmt_no_time = logging.Formatter("%(name)s - %(levelname)s - %(message)s")
 
 # Create logger
 log = logging.getLogger("galaxy_benchmarker")
@@ -20,9 +22,9 @@ stream_handler.setFormatter(fmt_no_time)
 log.addHandler(stream_handler)
 
 # Create file handler
-log_filename = r'logs/{filename}.log'.format(filename=time.time())
+log_filename = r"logs/{filename}.log".format(filename=time.time())
 os.makedirs(os.path.dirname(log_filename), exist_ok=True)
-file_handler = logging.FileHandler(log_filename, mode='w')
+file_handler = logging.FileHandler(log_filename, mode="w")
 file_handler.setLevel(logging.DEBUG)
 file_handler.setFormatter(fmt_with_time)
 log.addHandler(file_handler)
@@ -30,7 +32,9 @@ log.addHandler(file_handler)
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config", type=str, default="benchmark_config.yml", help="Path to config file")
+    parser.add_argument(
+        "--config", type=str, default="benchmark_config.yml", help="Path to config file"
+    )
     args = parser.parse_args()
 
     log.debug("Loading Configuration from file {filename}".format(filename=args.config))
@@ -42,5 +46,5 @@ def main():
     benchmarker.run()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

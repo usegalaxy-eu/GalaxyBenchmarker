@@ -39,7 +39,9 @@ class Benchmarker:
         self.config = config
         self.glx = Galaxy(config.galaxy) if config.galaxy else None
         self.influxdb = InfluxDb(config.influxdb) if config.influxdb else None
-        self.openstack = OpenStackCompute(config.openstack) if config.openstack else None
+        self.openstack = (
+            OpenStackCompute(config.openstack) if config.openstack else None
+        )
 
         self.tasks: dict[str, AnsibleTask] = {}
         task_configs = self.tasks or {}
@@ -61,7 +63,9 @@ class Benchmarker:
             if self.influxdb:
                 self.influxdb.test_connection()
             else:
-                raise ValueError("'influxdb' is required when 'results_save_to_influxdb'=True")
+                raise ValueError(
+                    "'influxdb' is required when 'results_save_to_influxdb'=True"
+                )
 
         # self.benchmarks = benchmarks.parse_from_dic(config)
         # self.workflows = dict()
@@ -106,8 +110,10 @@ class Benchmarker:
             try:
                 benchmark.run()
             except KeyboardInterrupt:
-                log.warning("Received KeyboardInterrupt. Stopping current benchmark %s", benchmark)
-
+                log.warning(
+                    "Received KeyboardInterrupt. Stopping current benchmark %s",
+                    benchmark,
+                )
 
             if self.config.results_print:
                 print(f"#### Results for benchmark {benchmark}")

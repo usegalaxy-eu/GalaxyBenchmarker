@@ -11,7 +11,8 @@ if TYPE_CHECKING:
 
 log = logging.getLogger(__name__)
 
-_registered_benchmarks: dict[str,Type["Benchmark"]] = {}
+_registered_benchmarks: dict[str, Type["Benchmark"]] = {}
+
 
 def register_benchmark(cls: Type):
     """Register a benchmark for factory method"""
@@ -26,6 +27,7 @@ def register_benchmark(cls: Type):
     _registered_benchmarks[name] = cls
 
     return cls
+
 
 class Benchmark:
     """
@@ -66,7 +68,6 @@ class Benchmark:
         benchmark_class = _registered_benchmarks[benchmark_type]
         return benchmark_class(name, config, benchmarker)
 
-
     def run_pre_tasks(self):
         """Run setup tasks"""
 
@@ -75,11 +76,15 @@ class Benchmark:
 
     def run(self):
         """Run benchmark"""
-        raise NotImplementedError("Benchmark.run is not defined. Overwrite in child class")
+        raise NotImplementedError(
+            "Benchmark.run is not defined. Overwrite in child class"
+        )
 
     def save_results_to_influxdb(self, inflxdb: InfluxDb):
         """Send all metrics to influxDB."""
-        raise NotImplementedError("Benchmark.save_results_to_influxdb is not defined. Overwrite in child class")
+        raise NotImplementedError(
+            "Benchmark.save_results_to_influxdb is not defined. Overwrite in child class"
+        )
 
     def get_result_filename(self) -> str:
         return f"{self.id}_{self.name}.json"

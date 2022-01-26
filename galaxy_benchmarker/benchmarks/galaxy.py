@@ -24,17 +24,14 @@ class ColdWarmBenchmark(base.Benchmark):
         super().__init__(name, config, benchmarker)
 
         self.cold_pre_task = ansible.AnsibleTask.from_config(
-            config.get("cold_pre_task", None),
-            "cold_pre_task",
-            benchmarker)
+            config.get("cold_pre_task", None), "cold_pre_task", benchmarker
+        )
 
         self.warm_pre_task = ansible.AnsibleTask.from_config(
-            config.get("warm_pre_task", None),
-            "warm_pre_task",
-            benchmarker)
+            config.get("warm_pre_task", None), "warm_pre_task", benchmarker
+        )
 
-        self.destinations: list[ansible.AnsibleDestination] = [] # TODO
-
+        self.destinations: list[ansible.AnsibleDestination] = []  # TODO
 
     def run(self):
         """
@@ -47,23 +44,39 @@ class ColdWarmBenchmark(base.Benchmark):
                 for destination in self.destinations:
                     self.benchmark_results[run_type][destination.name] = dict()
                     for workflow in self.workflows:
-                        self.benchmark_results[run_type][destination.name][workflow.name] = list()
-                        results = self.benchmark_results[run_type][destination.name][workflow.name]
+                        self.benchmark_results[run_type][destination.name][
+                            workflow.name
+                        ] = list()
+                        results = self.benchmark_results[run_type][destination.name][
+                            workflow.name
+                        ]
 
-                        log.info("Up next: {type} run for workflow {workflow} for destination: {dest}.".format(type=run_type, workflow=workflow.name, dest=destination.name))
+                        log.info(
+                            "Up next: {type} run for workflow {workflow} for destination: {dest}.".format(
+                                type=run_type,
+                                workflow=workflow.name,
+                                dest=destination.name,
+                            )
+                        )
 
                         # Cold runs
                         for i in range(self.repetitions):
-                            log.debug(f"({i+1}/{self.repetitions}): Running cold pre-task")
+                            log.debug(
+                                f"({i+1}/{self.repetitions}): Running cold pre-task"
+                            )
                             self.cold_pre_task.run_at(destination)
 
                             log.debug(f"({i+1}/{self.repetitions}): Running workflow")
-                            result = self._run_workflow(destination, workflow, max_retires=0)
+                            result = self._run_workflow(
+                                destination, workflow, max_retires=0
+                            )
                             results.append(result)
 
                         # Warm runs
                         for i in range(self.repetitions):
-                            log.debug(f"({i+1}/{self.repetitions}): Running warm pre-task")
+                            log.debug(
+                                f"({i+1}/{self.repetitions}): Running warm pre-task"
+                            )
                             self.warm_pre_task.run_at(destination)
 
                             log.debug(f"({i+1}/{self.repetitions}): Running workflow")
@@ -92,14 +105,21 @@ class ColdWarmBenchmark(base.Benchmark):
                                 "benchmark_type": type(self),
                                 "destination_name": dest_name,
                                 "workflow_name": workflow_name,
-                                "history_name": run["history_name"] if "history_name" in run else None,
+                                "history_name": run["history_name"]
+                                if "history_name" in run
+                                else None,
                                 "run_type": run_type,
                             }
 
                             inflxdb.save_workflow_metrics(tags, run["workflow_metrics"])
 
                         # Save job-metrics if workflow succeeded
-                        if runs is None or run["status"] == "error" or "jobs" not in run or run["jobs"] is None:
+                        if (
+                            runs is None
+                            or run["status"] == "error"
+                            or "jobs" not in run
+                            or run["jobs"] is None
+                        ):
                             continue
 
                         for job in run["jobs"].values():
@@ -109,13 +129,15 @@ class ColdWarmBenchmark(base.Benchmark):
                                 "benchmark_type": type(self),
                                 "destination_name": dest_name,
                                 "workflow_name": workflow_name,
-                                "history_name": run["history_name"] if "history_name" in run else None,
+                                "history_name": run["history_name"]
+                                if "history_name" in run
+                                else None,
                                 "run_type": run_type,
                             }
                             inflxdb.save_job_metrics(tags, job)
 
     def _run_benchmark(self, destination, workflow, max_retries=4):
-        for current in range(max_retries+1):
+        for current in range(max_retries + 1):
             result = destination.run_workflow(workflow)
 
             if result["status"] == "error":
@@ -130,20 +152,25 @@ class ColdWarmBenchmark(base.Benchmark):
                     "name": "workflow_status",
                     "type": "string",
                     "plugin": "benchmarker",
-                    "value": result["status"]
+                    "value": result["status"],
                 },
                 "total_runtime": {
                     "name": "total_workflow_runtime",
                     "type": "float",
                     "plugin": "benchmarker",
-                    "value": result["total_workflow_runtime"]
-                }
+                    "value": result["total_workflow_runtime"],
+                },
             }
 
             if "history_name" in result:
                 result["jobs"] = destination.get_jobs(result["history_name"])
 
-            log.info("Finished running '%s' with status '%s' in %d seconds.", workflow.name, result["status"], result["total_workflow_runtime"])
+            log.info(
+                "Finished running '%s' with status '%s' in %d seconds.",
+                workflow.name,
+                result["status"],
+                result["total_workflow_runtime"],
+            )
 
             return result
         # In case of to many failures, return an empty result

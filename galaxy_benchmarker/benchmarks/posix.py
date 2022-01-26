@@ -31,10 +31,11 @@ class PosixSetupTimeBenchmark(base.Benchmark):
             self.destinations.append(ansible.AnsibleDestination(**item))
 
         if not self.destinations:
-            raise ValueError(f"At least one destination is required for benchmark {self.__class__.__name__}")
+            raise ValueError(
+                f"At least one destination is required for benchmark {self.__class__.__name__}"
+            )
 
         self._run_task = ansible.AnsibleTask({"playbook": "connection_test.yml"})
-
 
     def run(self):
         """Run the connection_test playbook on each destination"""
@@ -43,15 +44,13 @@ class PosixSetupTimeBenchmark(base.Benchmark):
             log.info("Start %s for %s", self.name, dest.host)
             results = []
             for i in range(self.repetitions):
-                log.info("Run %d of %d", i+1, self.repetitions)
+                log.info("Run %d of %d", i + 1, self.repetitions)
                 start_time = time.monotonic()
 
                 self._run_task.run_at(dest)
 
                 total_runtime = time.monotonic() - start_time
-                results.append({
-                    "runtime_in_s": total_runtime
-                })
+                results.append({"runtime_in_s": total_runtime})
             self.benchmark_results[dest.host] = results
 
     def save_results_to_influxdb(self, inflxdb: influxdb.InfluxDb):
@@ -59,16 +58,9 @@ class PosixSetupTimeBenchmark(base.Benchmark):
         tags = self.get_influxdb_tags()
 
         for hostname, results in self.benchmark_results.items():
-            scoped_tags = {
-                **tags,
-                "host": hostname
-            }
+            scoped_tags = {**tags, "host": hostname}
 
-            inflxdb.save_measurement(
-                scoped_tags,
-                self.name,
-                results
-            )
+            inflxdb.save_measurement(scoped_tags, self.name, results)
 
 
 @dataclass
@@ -78,11 +70,14 @@ class PosixBenchmarkDestination(ansible.AnsibleDestination):
 
     def __post_init__(self):
         if not self.filesystem_type:
-            raise ValueError(f"Property 'filesystem_type' is missing for host '{self.host}'")
+            raise ValueError(
+                f"Property 'filesystem_type' is missing for host '{self.host}'"
+            )
 
         if not self.target_folder:
-            raise ValueError(f"Property 'target_folder' is missing for host '{self.host}'")
-
+            raise ValueError(
+                f"Property 'target_folder' is missing for host '{self.host}'"
+            )
 
 
 @base.register_benchmark
@@ -97,7 +92,9 @@ class PosixFioBenchmark(base.Benchmark):
             self.destinations.append(PosixBenchmarkDestination(**item))
 
         if not self.destinations:
-            raise ValueError(f"At least one destination is required for benchmark {self.__class__.__name__}")
+            raise ValueError(
+                f"At least one destination is required for benchmark {self.__class__.__name__}"
+            )
 
         # TODO: Fix
         # self._pre_task = ansible.AnsibleTask({
@@ -105,8 +102,9 @@ class PosixFioBenchmark(base.Benchmark):
         #     "destinations": config.get("destinations")
         # })
 
-        self._run_task = ansible.AnsibleTask({"playbook": "posix_fio_benchmark_run.yml"})
-
+        self._run_task = ansible.AnsibleTask(
+            {"playbook": "posix_fio_benchmark_run.yml"}
+        )
 
     def run_pre_tasks(self):
         # self._pre_task.run()
@@ -120,16 +118,19 @@ class PosixFioBenchmark(base.Benchmark):
                 log.info("Start %s for %s", self.name, dest.host)
                 results = []
                 for i in range(self.repetitions):
-                    log.info("Run %d of %d", i+1, self.repetitions)
+                    log.info("Run %d of %d", i + 1, self.repetitions)
                     start_time = time.monotonic()
 
                     result_file = f"{self.name}_{dest.host}_{i}.json"
 
-                    self._run_task.run_at(dest, {
-                        "fio_dir": dest.target_folder,
-                        "fio_result_file": result_file,
-                        "controller_dir": temp_dir
-                    })
+                    self._run_task.run_at(
+                        dest,
+                        {
+                            "fio_dir": dest.target_folder,
+                            "fio_result_file": result_file,
+                            "controller_dir": temp_dir,
+                        },
+                    )
 
                     total_runtime = time.monotonic() - start_time
 
@@ -143,13 +144,6 @@ class PosixFioBenchmark(base.Benchmark):
         tags = self.get_influxdb_tags()
 
         for hostname, results in self.benchmark_results.items():
-            scoped_tags = {
-                **tags,
-                "host": hostname
-            }
+            scoped_tags = {**tags, "host": hostname}
 
-            inflxdb.save_measurement(
-                scoped_tags,
-                self.name,
-                results
-            )
+            inflxdb.save_measurement(scoped_tags, self.name, results)
