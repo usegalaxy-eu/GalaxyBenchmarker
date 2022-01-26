@@ -5,7 +5,6 @@ from __future__ import annotations
 import random
 import time
 import logging
-import urllib3
 # from destination import PulsarMQDestination
 from planemo import options
 from planemo.cli import PlanemoContext

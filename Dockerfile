@@ -1,12 +1,15 @@
 FROM python:3.10
 
-COPY requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
-RUN pip uninstall bioblend -y
-RUN git clone https://github.com/galaxyproject/bioblend.git && cd bioblend && python setup.py install
-
 RUN cd / && git clone https://github.com/usegalaxy-eu/workflow-testing.git
 
-COPY scripts/entrypoint.sh entrypoint.sh
+WORKDIR /src
+
+COPY pyproject.toml ./
+COPY galaxy_benchmarker ./galaxy_benchmarker
+
+RUN python3 -m pip install --upgrade pip \
+  && python3 -m pip install --no-cache-dir .
+
+COPY scripts/entrypoint.sh /entrypoint.sh
 
 CMD ["/entrypoint.sh"]

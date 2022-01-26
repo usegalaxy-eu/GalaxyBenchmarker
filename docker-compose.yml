@@ -5,7 +5,9 @@ services:
     environment:
       - SSH_AUTH_SOCK=/ssh-agent
     volumes:
-      - .:/src
+      - type: bind
+        source: .
+        target: /src
       - type: bind
         source: ${SSH_AUTH_SOCK}
         target: /ssh-agent
