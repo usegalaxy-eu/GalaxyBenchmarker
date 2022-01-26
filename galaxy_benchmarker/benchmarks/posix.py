@@ -8,6 +8,8 @@ import time
 from galaxy_benchmarker.bridge import influxdb, ansible
 from galaxy_benchmarker.benchmarks import base
 from dataclasses import dataclass
+import tempfile
+from galaxy_benchmarker.utils import fio
 
 if TYPE_CHECKING:
     from galaxy_benchmarker.benchmarker import Benchmarker
@@ -45,7 +47,9 @@ class PosixSetupTimeBenchmark(base.Benchmark):
                 self._run_task.run_at(dest)
 
                 total_runtime = time.monotonic() - start_time
-                results.append(total_runtime)
+                results.append({
+                    "runtime_in_s": total_runtime
+                })
             self.benchmark_results[dest.host] = results
 
     def save_results_to_influxdb(self, inflxdb: influxdb.InfluxDb):
@@ -60,12 +64,9 @@ class PosixSetupTimeBenchmark(base.Benchmark):
 
             inflxdb.save_measurement(
                 scoped_tags,
-                f"{self.name}_total_runtime",
-                {"time_in_s": results})
-
-
-    def get_influxdb_tags(self) -> dict:
-        return super().get_influxdb_tags()
+                self.name,
+                results
+            )
 
 
 @dataclass
@@ -112,20 +113,41 @@ class PosixFioBenchmark(base.Benchmark):
     def run(self):
         """Run 'fio' on each destination"""
 
-        for dest in self.destinations:
-            log.info("Start %s for %s", self.name, dest.host)
-            results = []
-            for i in range(self.repetitions):
-                log.info("Run %d of %d", i+1, self.repetitions)
-                start_time = time.monotonic()
+        with tempfile.TemporaryDirectory() as temp_dir:
+            for dest in self.destinations:
+                log.info("Start %s for %s", self.name, dest.host)
+                results = []
+                for i in range(self.repetitions):
+                    log.info("Run %d of %d", i+1, self.repetitions)
+                    start_time = time.monotonic()
 
-                self._run_task.run_at(dest, {"fio_dir": dest.target_folder})
+                    result_file = f"{self.name}_{dest.host}_{i}.json"
 
-                total_runtime = time.monotonic() - start_time
-                results.append(total_runtime)
-            self.benchmark_results[dest.host] = results
+                    self._run_task.run_at(dest, {
+                        "fio_dir": dest.target_folder,
+                        "fio_result_file": result_file,
+                        "controller_dir": temp_dir
+                    })
+
+                    total_runtime = time.monotonic() - start_time
+
+                    result = fio.parse_result_file(temp_dir, result_file, "IOPS-read")
+                    result["runtime_in_s"] = total_runtime
+                    results.append(result)
+                self.benchmark_results[dest.host] = results
 
     def save_results_to_influxdb(self, inflxdb: influxdb.InfluxDb):
-        """
-        Sends all the metrics of the benchmark_results to influxDB.
-        """
+        """Send the runtime to influxDB."""
+        tags = self.get_influxdb_tags()
+
+        for hostname, results in self.benchmark_results.items():
+            scoped_tags = {
+                **tags,
+                "host": hostname
+            }
+
+            inflxdb.save_measurement(
+                scoped_tags,
+                self.name,
+                results
+            )

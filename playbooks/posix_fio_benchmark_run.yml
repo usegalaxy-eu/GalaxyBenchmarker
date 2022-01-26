@@ -9,7 +9,7 @@
       ansible.builtin.command:  "fio --rw=read --name=IOPS-read --bs=1024k
       --direct=1 --numjobs=4 --ioengine=libaio --iodepth=32 --refill_buffers
       --group_reporting --runtime=60 --time_based  --size=5G --output-format=json
-      --filename=testfile.fio --output out_{{inventory_hostname}}.json"
+      --filename=testfile.fio --output {{ fio_result_file }}"
       args:
         chdir: "{{ fio_dir }}/fio_in_progress"
       become: yes
@@ -17,8 +17,8 @@
 
     - name: Collect result
       ansible.builtin.fetch:
-        src: "{{ fio_dir }}/fio_in_progress/out_{{inventory_hostname}}.json"
-        dest: "{{playbook_dir}}/out_{{inventory_hostname}}.json"
+        src: "{{ fio_dir }}/fio_in_progress/{{ fio_result_file }}"
+        dest: "{{ controller_dir }}/{{ fio_result_file }}"
         flat: yes
 
     - name: Cleanup
