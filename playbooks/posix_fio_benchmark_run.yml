@@ -6,10 +6,11 @@
         state: directory
 
     - name: Execute the fio test
-      ansible.builtin.command:  "fio --rw=read --name=IOPS-read --bs=1024k
-      --direct=1 --numjobs=4 --ioengine=libaio --iodepth=32 --refill_buffers
-      --group_reporting --runtime=60 --time_based  --size=5G --output-format=json
-      --filename=testfile.fio --output {{ fio_result_file }}"
+      ansible.builtin.command:  "fio --rw={{ fio_mode }} --name={{ fio_jobname }}
+      --bs={{ fio_blocksize }} --direct=1 --numjobs={{ fio_numjobs }}
+      --ioengine=libaio --iodepth={{ fio_iodepth }} --refill_buffers
+      --group_reporting --runtime=60 --time_based --size=5G
+      --output-format=json --filename=testfile.fio --output {{ fio_result_file }}"
       args:
         chdir: "{{ fio_dir }}/fio_in_progress"
       become: yes

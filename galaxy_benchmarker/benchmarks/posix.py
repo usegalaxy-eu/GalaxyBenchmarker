@@ -80,9 +80,15 @@ class PosixBenchmarkDestination(ansible.AnsibleDestination):
             )
 
 
-@base.register_benchmark
 class PosixFioBenchmark(base.Benchmark):
     """Compare different posix compatible mounts with the benchmarking tool 'fio'"""
+
+    # Available FIO parameters
+    fio_mode = ""
+    fio_jobname = ""
+    fio_blocksize = ""
+    fio_numjobs = 0
+    fio_iodepth = 0
 
     def __init__(self, name: str, config: dict, benchmarker: Benchmarker):
         super().__init__(name, config, benchmarker)
@@ -127,12 +133,19 @@ class PosixFioBenchmark(base.Benchmark):
                             "fio_dir": dest.target_folder,
                             "fio_result_file": result_file,
                             "controller_dir": temp_dir,
+                            "fio_mode": self.fio_mode,
+                            "fio_jobname": self.fio_jobname,
+                            "fio_blocksize": self.fio_blocksize,
+                            "fio_numjobs": self.fio_numjobs,
+                            "fio_iodepth": self.fio_iodepth,
                         },
                     )
 
                     total_runtime = time.monotonic() - start_time
 
-                    result = fio.parse_result_file(temp_dir, result_file, "IOPS-read")
+                    result = fio.parse_result_file(
+                        temp_dir, result_file, self.fio_jobname
+                    )
                     result["runtime_in_s"] = total_runtime
                     results.append(result)
                 self.benchmark_results[dest.host] = results
@@ -145,3 +158,87 @@ class PosixFioBenchmark(base.Benchmark):
             scoped_tags = {**tags, "host": hostname}
 
             inflxdb.save_measurement(scoped_tags, self.name, results)
+
+
+@base.register_benchmark
+class PosixFioThroughputReadBenchmark(PosixFioBenchmark):
+    """Compare different posix compatible mounts.
+
+    Test read throughput / sequential reads
+    """
+
+    fio_mode = "read"
+    fio_jobname = "ThroughputRead"
+    fio_blocksize = "1024k"
+    fio_numjobs = 4
+    fio_iodepth = 32
+
+
+@base.register_benchmark
+class PosixFioThroughputWriteBenchmark(PosixFioBenchmark):
+    """Compare different posix compatible mounts.
+
+    Test write throughput / sequential writes
+    """
+
+    fio_mode = "write"
+    fio_jobname = "ThroughputWrite"
+    fio_blocksize = "1024k"
+    fio_numjobs = 4
+    fio_iodepth = 32
+
+
+@base.register_benchmark
+class PosixFioIopsReadBenchmark(PosixFioBenchmark):
+    """Compare different posix compatible mounts.
+
+    Test read IOPS / random reads
+    """
+
+    fio_mode = "randread"
+    fio_jobname = "IopsRead"
+    fio_blocksize = "4k"
+    fio_numjobs = 4
+    fio_iodepth = 32
+
+
+@base.register_benchmark
+class PosixFioIopsWriteBenchmark(PosixFioBenchmark):
+    """Compare different posix compatible mounts.
+
+    Test write IOPS / random writes
+    """
+
+    fio_mode = "randwrite"
+    fio_jobname = "IopsWrite"
+    fio_blocksize = "4k"
+    fio_numjobs = 4
+    fio_iodepth = 32
+
+
+@base.register_benchmark
+class PosixFioLatencyReadBenchmark(PosixFioBenchmark):
+    """Compare different posix compatible mounts.
+
+    Test read latency
+    """
+
+    fio_mode = "randread"
+    fio_jobname = "LatencyRead"
+    fio_blocksize = "4k"
+    fio_numjobs = 1
+    fio_iodepth = 1
+
+
+@base.register_benchmark
+class PosixFioLatencyWriteBenchmark(PosixFioBenchmark):
+    """Compare different posix compatible mounts.
+
+    Test write latency
+    """
+
+    fio_mode = "randwrite"
+    fio_jobname = "LatencyWrite"
+    fio_blocksize = "4k"
+    fio_numjobs = 1
+    fio_iodepth = 1

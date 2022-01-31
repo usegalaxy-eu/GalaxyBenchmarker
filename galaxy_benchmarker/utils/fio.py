@@ -17,8 +17,14 @@ def parse_result_file(directory: str, filename: str, jobname: str) -> dict:
     if len(jobs) != 1:
         raise ValueError(f"Job '{jobname}' is missing in result {file}")
 
-    read = result_json["jobs"][0]["read"]
-    result = {**_parse_job_result(read, "read")}
+    result = {}
+    mode = result_json["global options"]["rw"]
+    if mode in ["read", "randread"]:
+        read = result_json["jobs"][0]["read"]
+        result.update(_parse_job_result(read, "read"))
+    if mode in ["write", "randwrite"]:
+        write = result_json["jobs"][0]["write"]
+        result.update(_parse_job_result(write, "write"))
 
     return result
 
