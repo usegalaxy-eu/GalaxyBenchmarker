@@ -1,0 +1,9 @@
+- hosts: all
+  become: true
+  tasks:
+   - include: tasks/install_docker.yml
+
+- hosts: all
+  become: true
+  tasks:
+   - include: tasks/install_irods.yml

@@ -1,0 +1,25 @@
+---
+- name: Copy container setup onto host (sychronize preserves file permissions)
+  ansible.posix.synchronize:
+    src: ../files/irods/
+    dest: /irods
+    recursive: yes
+
+- name: Install docker-compose
+  pip:
+    name:
+        - docker-compose
+
+- name: Build and start container
+  community.docker.docker_compose:
+    project_src: /irods
+    state: present
+    build: yes
+  register: output
+
+- name: "Check result"
+  ansible.builtin.assert:
+    that:
+      - "output.services.irods.irods_irods_1.state.running"
+      - "output.services.db.irods_db_1.state.running"
+

@@ -330,3 +330,10 @@ destinations:
       amqp_acknowledge: true
       amqp_ack_republish_time: 10
 ```
+
+
+# TODO
+
+Ansible requirements:
+- ansible-galaxy collection install ansible.docker
+- ansible-galaxy collection install ansible.posix

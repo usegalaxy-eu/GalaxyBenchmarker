@@ -1,0 +1,11 @@
+---
+- name: Stop container
+  community.docker.docker_compose:
+    project_src: /irods
+    state: absent
+    build: yes
+
+- name: Remove files from server
+  file:
+    state: absent
+    path: /irods
