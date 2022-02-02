@@ -280,3 +280,69 @@ class PosixFioLatencyWriteBenchmark(PosixFioBenchmark):
     fio_blocksize = "4k"
     fio_numjobs = 1
     fio_iodepth = 1
+
+
+@base.register_benchmark
+class PosixFioIopsOverTime(PosixFioBenchmark):
+    """Compare different posix compatible mounts.
+
+    Test write latency
+    """
+
+    fio_mode = "randread"
+    fio_jobname = "ReadIopsOverTime"
+    fio_blocksize = "4k"
+    fio_numjobs = 4
+    fio_iodepth = 32
+    fio_filesize = "512Mi"
+
+    def _run_at(
+        self, result_file: Path, dest: PosixBenchmarkDestination, fioConfig: FioConfig
+    ) -> dict:
+        """Perform multiple runs for a single destination"""
+
+        dest_results = {}
+
+        runtimes = [10, 30, 1 * 60, 2 * 60, 5 * 60, 1 * 600, 2 * 600]
+
+        for runtime_in_s in runtimes:
+            log.info("Run with runtime set to %d", runtime_in_s)
+
+            current_config = dataclasses.replace(fioConfig, runtime_in_s=runtime_in_s)
+            current_result_file = result_file.with_suffix(
+                f".{runtime_in_s}{result_file.suffix}"
+            )
+
+            result = super()._run_at(current_result_file, dest, current_config)
+
+            dest_results[runtime_in_s] = result
+
+        return dest_results
+
+    def save_results_to_influxdb(self, inflxdb: influxdb.InfluxDb):
+        """Send the runtime to influxDB."""
+        tags = self.get_influxdb_tags()
+
+        for hostname, dest_results in self.benchmark_results.items():
+            # Reorder results
+
+            # We have:
+            # benchmark_results = dict[dest -> list[dest_results]
+            # dest_results = dict[runtime -> results]
+
+            # We need:
+            # list[results] for each runtime
+            results_by_runtime = defaultdict(list)
+            for dest_result in dest_results:
+                for runtime, run_results in dest_result.items():
+                    results_by_runtime[runtime].append(run_results)
+
+            # Send results
+            dest_tags = {**tags, "host": hostname}
+            for runtime, results in results_by_runtime.items():
+                scoped_tags = {
+                    **dest_tags,
+                    "fio_runtime_in_s": runtime,
+                }
+
+                inflxdb.save_measurement(scoped_tags, self.name, results)
