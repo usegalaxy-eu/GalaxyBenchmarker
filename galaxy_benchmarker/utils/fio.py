@@ -4,8 +4,7 @@ import json
 from pathlib import Path
 
 
-def parse_result_file(directory: str, filename: str, jobname: str) -> dict:
-    file = Path(directory) / filename
+def parse_result_file(file: Path, jobname: str) -> dict:
     if not file.is_file():
         raise ValueError(f"{file} is not a fio result file.")
 

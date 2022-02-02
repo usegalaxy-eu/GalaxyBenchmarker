@@ -3,10 +3,12 @@ Definition of different benchmark-types.
 """
 from __future__ import annotations
 
+import dataclasses
 import logging
 import tempfile
 import time
-from dataclasses import dataclass
+from collections import defaultdict
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from galaxy_benchmarker.benchmarks import base
@@ -21,7 +23,10 @@ log = logging.getLogger(__name__)
 
 @base.register_benchmark
 class PosixSetupTimeBenchmark(base.Benchmark):
-    """Compare the setuptime/ansible connection time between different destinations"""
+    """Compare the setuptime/ansible connection time between different destinations.
+
+    Useful for basic setup tests and to check if everything is configured correctly
+    """
 
     def __init__(self, name: str, config: dict, benchmarker: Benchmarker):
         super().__init__(name, config, benchmarker)
@@ -63,7 +68,7 @@ class PosixSetupTimeBenchmark(base.Benchmark):
             inflxdb.save_measurement(scoped_tags, self.name, results)
 
 
-@dataclass
+@dataclasses.dataclass
 class PosixBenchmarkDestination(ansible.AnsibleDestination):
     filesystem_type: str = ""
     target_folder: str = ""
@@ -80,6 +85,20 @@ class PosixBenchmarkDestination(ansible.AnsibleDestination):
             )
 
 
+@dataclasses.dataclass
+class FioConfig:
+    mode: str
+    jobname: str
+    blocksize: str
+    numjobs: int
+    iodepth: int
+    runtime_in_s: int
+    filesize: str
+
+    def items(self):
+        return dataclasses.asdict(self).items()
+
+
 class PosixFioBenchmark(base.Benchmark):
     """Compare different posix compatible mounts with the benchmarking tool 'fio'"""
 
@@ -89,9 +108,21 @@ class PosixFioBenchmark(base.Benchmark):
     fio_blocksize = ""
     fio_numjobs = 0
     fio_iodepth = 0
+    fio_runtime_in_s = 60
+    fio_filesize = "5G"
 
     def __init__(self, name: str, config: dict, benchmarker: Benchmarker):
         super().__init__(name, config, benchmarker)
+
+        self.fio_config = FioConfig(
+            mode=self.fio_mode,
+            jobname=self.fio_jobname,
+            blocksize=self.fio_blocksize,
+            numjobs=self.fio_numjobs,
+            iodepth=self.fio_iodepth,
+            runtime_in_s=self.fio_runtime_in_s,
+            filesize=self.fio_filesize,
+        )
 
         self.destinations: list[PosixBenchmarkDestination] = []
         for item in config.get("destinations", []):
@@ -120,35 +151,38 @@ class PosixFioBenchmark(base.Benchmark):
         with tempfile.TemporaryDirectory() as temp_dir:
             for dest in self.destinations:
                 log.info("Start %s for %s", self.name, dest.host)
-                results = []
+                self.benchmark_results[dest.host] = []
                 for i in range(self.repetitions):
                     log.info("Run %d of %d", i + 1, self.repetitions)
-                    start_time = time.monotonic()
+                    result_file = Path(temp_dir) / f"{self.name}_{dest.host}_{i}.json"
 
-                    result_file = f"{self.name}_{dest.host}_{i}.json"
+                    result = self._run_at(result_file, dest, self.fio_config)
+                    self.benchmark_results[dest.host].append(result)
 
-                    self._run_task.run_at(
-                        dest,
-                        {
-                            "fio_dir": dest.target_folder,
-                            "fio_result_file": result_file,
-                            "controller_dir": temp_dir,
-                            "fio_mode": self.fio_mode,
-                            "fio_jobname": self.fio_jobname,
-                            "fio_blocksize": self.fio_blocksize,
-                            "fio_numjobs": self.fio_numjobs,
-                            "fio_iodepth": self.fio_iodepth,
-                        },
-                    )
+    def _run_at(
+        self, result_file: Path, dest: PosixBenchmarkDestination, fio_config: FioConfig
+    ) -> dict:
+        """Perform a single run"""
 
-                    total_runtime = time.monotonic() - start_time
+        start_time = time.monotonic()
 
-                    result = fio.parse_result_file(
-                        temp_dir, result_file, self.fio_jobname
-                    )
-                    result["runtime_in_s"] = total_runtime
-                    results.append(result)
-                self.benchmark_results[dest.host] = results
+        self._run_task.run_at(
+            dest,
+            {
+                "fio_dir": dest.target_folder,
+                "fio_result_file": result_file.name,
+                "controller_dir": result_file.parent,
+                **{f"fio_{key}": value for key, value in fio_config.items()},
+            },
+        )
+
+        total_runtime = time.monotonic() - start_time
+
+        result = fio.parse_result_file(result_file, fio_config.jobname)
+        result["runtime_in_s"] = total_runtime
+        log.info("Run took %d s", total_runtime)
+
+        return result
 
     def save_results_to_influxdb(self, inflxdb: influxdb.InfluxDb):
         """Send the runtime to influxDB."""
@@ -158,6 +192,10 @@ class PosixFioBenchmark(base.Benchmark):
             scoped_tags = {**tags, "host": hostname}
 
             inflxdb.save_measurement(scoped_tags, self.name, results)
+
+    def get_influxdb_tags(self) -> dict:
+        tags = super().get_influxdb_tags()
+        return {**tags, **{f"fio_{key}": value for key, value in self.fio_config.items()}}
 
 
 @base.register_benchmark
