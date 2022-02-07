@@ -227,6 +227,20 @@ class PosixFioThroughputWriteBenchmark(PosixFioBenchmark):
 
 
 @base.register_benchmark
+class PosixFioThroughputReadWriteBenchmark(PosixFioBenchmark):
+    """Compare different posix compatible mounts.
+
+    Test read-write throughput / sequential read-writes
+    """
+
+    fio_mode = "rw"
+    fio_jobname = "ThroughputReadWrite"
+    fio_blocksize = "1024k"
+    fio_numjobs = 4
+    fio_iodepth = 32
+
+
+@base.register_benchmark
 class PosixFioIopsReadBenchmark(PosixFioBenchmark):
     """Compare different posix compatible mounts.
 
@@ -255,6 +269,20 @@ class PosixFioIopsWriteBenchmark(PosixFioBenchmark):
 
 
 @base.register_benchmark
+class PosixFioIopsReadWriteBenchmark(PosixFioBenchmark):
+    """Compare different posix compatible mounts.
+
+    Test read-write IOPS / random read-writes
+    """
+
+    fio_mode = "randrw"
+    fio_jobname = "IopsReadWrite"
+    fio_blocksize = "4k"
+    fio_numjobs = 4
+    fio_iodepth = 32
+
+
+@base.register_benchmark
 class PosixFioLatencyReadBenchmark(PosixFioBenchmark):
     """Compare different posix compatible mounts.
 
@@ -277,6 +305,20 @@ class PosixFioLatencyWriteBenchmark(PosixFioBenchmark):
 
     fio_mode = "randwrite"
     fio_jobname = "LatencyWrite"
+    fio_blocksize = "4k"
+    fio_numjobs = 1
+    fio_iodepth = 1
+
+
+@base.register_benchmark
+class PosixFioLatencyReadWriteBenchmark(PosixFioBenchmark):
+    """Compare different posix compatible mounts.
+
+    Test read-write latency
+    """
+
+    fio_mode = "randrw"
+    fio_jobname = "LatencyReadWrite"
     fio_blocksize = "4k"
     fio_numjobs = 1
     fio_iodepth = 1

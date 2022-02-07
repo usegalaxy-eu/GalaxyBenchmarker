@@ -18,10 +18,10 @@ def parse_result_file(file: Path, jobname: str) -> dict:
 
     result = {}
     mode = result_json["global options"]["rw"]
-    if mode in ["read", "randread"]:
+    if mode in ["read", "randread", "rw", "randrw"]:
         read = result_json["jobs"][0]["read"]
         result.update(_parse_job_result(read, "read"))
-    if mode in ["write", "randwrite"]:
+    if mode in ["write", "randwrite", "rw", "randrw"]:
         write = result_json["jobs"][0]["write"]
         result.update(_parse_job_result(write, "write"))
 
