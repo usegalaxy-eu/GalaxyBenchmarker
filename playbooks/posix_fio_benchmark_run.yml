@@ -5,13 +5,28 @@
         path: "{{ fio_dir }}/fio_in_progress"
         state: directory
 
+    - name: Copy scripts (sychronize preserves file permissions)
+      ansible.posix.synchronize:
+        src: scripts
+        dest: "{{ fio_dir }}/fio_in_progress"
+        recursive: yes
+
+    - name: Start job sync server
+      shell: ./scripts/barrier.py localhost 42042 {{ fio_numjobs }} >> barrier.out.txt
+      args:
+        chdir: "{{ fio_dir }}/fio_in_progress"
+      async: 180
+      poll: 0
+
     - name: Execute the fio test
-      ansible.builtin.command:  "fio --rw={{ fio_mode }} --name={{ fio_jobname }}
-      --bs={{ fio_blocksize }} --direct=1 --numjobs={{ fio_numjobs }}
-      --ioengine=libaio --iodepth={{ fio_iodepth }} --refill_buffers
-      --group_reporting --runtime={{ fio_runtime_in_s }} --time_based
-      --size={{ fio_filesize }} --output-format=json --filename=testfile.fio
-      --output {{ fio_result_file }}"
+      ansible.builtin.command: |
+        fio --rw={{ fio_mode }} --name={{ fio_jobname }}
+        --bs={{ fio_blocksize }} --direct=1 --numjobs={{ fio_numjobs }}
+        --ioengine=libaio --iodepth={{ fio_iodepth }} --refill_buffers
+        --group_reporting --runtime={{ fio_runtime_in_s }} --time_based
+        --size={{ fio_filesize }} --output-format=json --filename=testfile.fio
+        --output {{ fio_result_file }}
+        --exec_prerun="./scripts/barrier.py localhost 42042"
       args:
         chdir: "{{ fio_dir }}/fio_in_progress"
       become: yes
