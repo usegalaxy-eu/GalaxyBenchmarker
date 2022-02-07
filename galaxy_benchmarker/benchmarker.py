@@ -1,9 +1,7 @@
-import json
 import logging
 from dataclasses import dataclass
-from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Optional
 
 from serde import serde
 from serde.yaml import from_yaml
@@ -120,10 +118,8 @@ class Benchmarker:
                 print(benchmark.benchmark_results)
 
             if self.config.results_save_to_file:
-                filename = benchmark.get_result_filename()
-                file = self.results / filename
+                file = benchmark.save_results_to_file(self.results)
                 log.info("%s Saving results to file: '%s'.", current, file)
-                self._save_results_to_file(benchmark.benchmark_results, file)
 
             if self.config.results_save_to_influxdb:
                 log.info("%s Sending results to influxDB.", current)
@@ -144,8 +140,3 @@ class Benchmarker:
 
         benchmarker_config = from_yaml(BenchmarkerConfig, config_path.read_text())
         return Benchmarker(benchmarker_config)
-
-    def _save_results_to_file(self, results: Any, file: Path):
-        """Save results as json to file"""
-        json_results = json.dumps(results, indent=2)
-        file.write_text(json_results)

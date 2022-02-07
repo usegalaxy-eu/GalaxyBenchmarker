@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import json
 import logging
 from datetime import datetime
+from pathlib import Path
 from typing import TYPE_CHECKING, Optional, Type
 
 from galaxy_benchmarker.bridge.influxdb import InfluxDb
@@ -79,6 +81,15 @@ class Benchmark:
         raise NotImplementedError(
             "Benchmark.run is not defined. Overwrite in child class"
         )
+
+    def save_results_to_file(self, directory: Path) -> str:
+        """Write all metrics to a file."""
+        file = directory / self.get_result_filename()
+        results = {"tags": self.get_influxdb_tags(), "results": self.benchmark_results}
+        json_results = json.dumps(results, indent=2)
+        file.write_text(json_results)
+
+        return str(file)
 
     def save_results_to_influxdb(self, inflxdb: InfluxDb):
         """Send all metrics to influxDB."""

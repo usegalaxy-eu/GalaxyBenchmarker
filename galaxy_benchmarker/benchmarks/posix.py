@@ -195,7 +195,10 @@ class PosixFioBenchmark(base.Benchmark):
 
     def get_influxdb_tags(self) -> dict:
         tags = super().get_influxdb_tags()
-        return {**tags, **{f"fio_{key}": value for key, value in self.fio_config.items()}}
+        return {
+            **tags,
+            **{f"fio_{key}": value for key, value in self.fio_config.items()},
+        }
 
 
 @base.register_benchmark
