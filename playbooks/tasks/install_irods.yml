@@ -17,6 +17,13 @@
     build: yes
   register: output
 
+# - name: Debug startup logs
+#   command: docker logs irods_irods_1
+#   register: logoutput
+
+# - name: debug
+#   debug: var=logoutput
+
 - name: "Check result"
   ansible.builtin.assert:
     that:
