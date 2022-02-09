@@ -391,3 +391,76 @@ class PosixFioIopsOverTime(PosixFioBenchmark):
                 }
 
                 inflxdb.save_measurement(scoped_tags, self.name, results)
+
+
+@base.register_benchmark
+class PosixFioThroughputOverFilesize(PosixFioBenchmark):
+    """Compare the throughput for different file sizes."""
+
+    fio_mode = "write"
+    fio_jobname = "WriteThroughputOverFilesize"
+    fio_numjobs = 4
+    fio_blocksize = "1024k"
+    fio_iodepth = 32
+    fio_runtime_in_s = 10
+
+    def _run_at(
+        self, result_file: Path, dest: PosixBenchmarkDestination, fioConfig: FioConfig
+    ) -> dict:
+        """Perform multiple runs for a single destination"""
+
+        dest_results = {}
+
+        filesizes = [
+            "100Mi",
+            "200Mi",
+            "500Mi",
+            "1Gi",
+            "2Gi",
+            "5Gi",
+            "10Gi",
+            "20Gi",
+            "50Gi",
+        ]
+
+        for filesize in filesizes:
+            log.info("Run with filesize set to %s", filesize)
+
+            current_config = dataclasses.replace(fioConfig, filesize=filesize)
+            current_result_file = result_file.with_suffix(
+                f".{filesize}{result_file.suffix}"
+            )
+
+            result = super()._run_at(current_result_file, dest, current_config)
+
+            dest_results[filesize] = result
+
+        return dest_results
+
+    def save_results_to_influxdb(self, inflxdb: influxdb.InfluxDb):
+        """Send the runtime to influxDB."""
+        tags = self.get_influxdb_tags()
+
+        for hostname, dest_results in self.benchmark_results.items():
+            # Reorder results
+
+            # We have:
+            # benchmark_results = dict[dest -> list[dest_results]
+            # dest_results = dict[filesize -> results]
+
+            # We need:
+            # list[results] for each filesize
+            results_by_filesize = defaultdict(list)
+            for dest_result in dest_results:
+                for filesize, run_results in dest_result.items():
+                    results_by_filesize[filesize].append(run_results)
+
+            # Send results
+            dest_tags = {**tags, "host": hostname}
+            for filesize, results in results_by_filesize.items():
+                scoped_tags = {
+                    **dest_tags,
+                    "fio_filesize": filesize,
+                }
+
+                inflxdb.save_measurement(scoped_tags, self.name, results)
