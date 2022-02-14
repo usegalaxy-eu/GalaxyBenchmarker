@@ -109,7 +109,7 @@
     "irods_client_server_policy": "CS_NEG_REFUSE",
     "irods_cwd": "/zone_1/home/rods",
     "irods_default_hash_scheme": "SHA256",
-    "irods_default_resource": "demoResc",
+    "irods_default_resource": "rootResc",
     "irods_encryption_algorithm": "AES-256-CBC",
     "irods_encryption_key_size": 32,
     "irods_encryption_num_hash_rounds": 16,

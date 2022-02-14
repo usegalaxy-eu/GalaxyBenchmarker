@@ -7,5 +7,10 @@
 
 - name: Remove files from server
   file:
-    state: absent
     path: /irods
+    state: absent
+
+- name: Remove irods volume
+  file:
+    path: "{{ irods_volume }}/irods"
+    state: absent

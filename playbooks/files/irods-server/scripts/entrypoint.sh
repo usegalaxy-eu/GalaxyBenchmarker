@@ -6,7 +6,7 @@ if [ -f "/.irods_installed" ]; then
 else
     echo Installing iRODS...
 
-    python /var/lib/irods/scripts/setup_irods.py --json_configuration_file /scripts/server_config.json
+    python /var/lib/irods/scripts/setup_irods.py --json_configuration_file /scripts/setup_config.json
 
     if [ $? -eq 0 ]; then
         echo Installation done!

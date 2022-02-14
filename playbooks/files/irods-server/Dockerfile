@@ -19,4 +19,6 @@ RUN \
 
 COPY scripts/ /scripts
 
+RUN adduser --disabled-password --gecos "" --uid 1000 irods
+
 ENTRYPOINT ["/scripts/entrypoint.sh"]

@@ -1,7 +1,7 @@
 ---
 - name: Copy container setup onto host (sychronize preserves file permissions)
   ansible.posix.synchronize:
-    src: ../files/irods/
+    src: ../files/irods-server/
     dest: /irods
     recursive: yes
 
@@ -10,11 +10,21 @@
     name:
         - docker-compose
 
+- name: Create irods volume
+  file:
+    path: "{{ irods_volume }}/irods"
+    state: directory
+    owner: "1000"
+    group: "1000"
+    mode: '0755'
+
 - name: Build and start container
   community.docker.docker_compose:
     project_src: /irods
     state: present
     build: yes
+  environment:
+    IRODS_VOLUME: "{{ irods_volume }}"
   register: output
 
 # - name: Debug startup logs
@@ -24,9 +34,59 @@
 # - name: debug
 #   debug: var=logoutput
 
-- name: "Check result"
+- name: "Check 'Build and start container'"
   ansible.builtin.assert:
     that:
       - "output.services.irods.irods_irods_1.state.running"
       - "output.services.db.irods_db_1.state.running"
+
+- name: Wait for port 1247 to become open on the host
+  wait_for:
+    port: 1247
+    delay: 5
+
+- name: Configure rods user for i-Commands
+  community.docker.docker_container_exec:
+    container: irods_irods_1
+    argv:
+      - /bin/bash
+      - "-c"
+      - iinit adminpass
+  retries: 3
+  delay: 3
+  register: result
+  until: result.rc == 0
+
+- name: Add rootResc resource
+  community.docker.docker_container_exec:
+    container: irods_irods_1
+    argv:
+      - /bin/bash
+      - "-c"
+      - iadmin mkresc rootResc passthru
+  register: result
+
+- name: Add mountedVolumeResc resource
+  community.docker.docker_container_exec:
+    container: irods_irods_1
+    argv:
+      - /bin/bash
+      - "-c"
+      - iadmin mkresc mountedVolumeResc unixfilesystem irods.local:/mnt/mountedVolumeResc
+  register: result
+
+- name: Connect rootResc with mountedVolumeResc
+  community.docker.docker_container_exec:
+    container: irods_irods_1
+    argv:
+      - /bin/bash
+      - "-c"
+      - iadmin addchildtoresc rootResc mountedVolumeResc
+  register: result
+
+- name: Set rootResc as default resource
+  ansible.builtin.lineinfile:
+    path: /irods/volumes/config_server/core.re
+    regexp: '^acSetRescSchemeForCreate'
+    line: acSetRescSchemeForCreate {msiSetDefaultResc("rootResc","null"); }
 
