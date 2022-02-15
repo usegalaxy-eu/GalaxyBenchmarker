@@ -65,6 +65,21 @@ class Benchmark:
                 pre_task = AnsibleTask.from_config(t_config, f"{name}_pre_task_{i}")
                 self._pre_tasks.append(pre_task)
 
+        # Parse post tasks
+        self._post_tasks: list[AnsibleTask] = []
+        if "post_task" in config:
+            if "post_tasks" in config:
+                raise ValueError(f"'post_task' and 'post_tasks' given for '{name}'")
+
+            post_task = AnsibleTask.from_config(
+                config["post_task"], f"{name}_post_task"
+            )
+            self._post_tasks.append(post_task)
+        elif "post_tasks" in config:
+            for i, t_config in enumerate(config.get("post_tasks")):
+                post_task = AnsibleTask.from_config(t_config, f"{name}_post_task_{i}")
+                self._post_tasks.append(post_task)
+
     @staticmethod
     def create(name: str, config: dict, benchmarker: Benchmarker):
         """Factory method for benchmarks
@@ -91,6 +106,8 @@ class Benchmark:
 
     def run_post_tasks(self):
         """Run clean up task"""
+        for task in self._post_tasks:
+            task.run()
 
     def run(self):
         """Run benchmark"""
