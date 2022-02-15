@@ -1,4 +1,37 @@
 - hosts: all
+  become: true
   tasks:
-    - name: "TODO: Implement"
-      debug: "msg=\"TODO: Implement\""
+    - name: Copy container setup onto host (sychronize preserves file permissions)
+      synchronize:
+        src: ./files/irods-fuse-client/
+        dest: /irods
+        recursive: yes
+
+    - name: Create irods volume
+      file:
+        path: "{{ irods_host_volume }}/irods-fuse"
+        state: directory
+        owner: "1000"
+        group: "1000"
+        mode: '0755'
+
+    - name: Build and start container
+      community.docker.docker_compose:
+        project_src: /irods
+        state: present
+        build: yes
+      environment:
+        IRODS_HOST_VOLUME: "{{ irods_host_volume }}"
+      register: output
+
+    # - name: Debug startup logs
+    #   command: docker logs irods_irods-fuse_1
+    #   register: logoutput
+
+    # - name: debug
+    #   debug: var=output
+
+    - name: "Check 'Build and start container'"
+      ansible.builtin.assert:
+        that:
+          - "output.services['irods-fuse']['irods_irods-fuse_1'].state.running"

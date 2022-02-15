@@ -1,0 +1,9 @@
+version: "3"
+services:
+  irods-fuse:
+    build: .
+    privileged: true
+    user: "1000:1000"
+    volumes:
+      # Volume under test
+      - "${IRODS_HOST_VOLUME}/irods-fuse:/mnt/volume_under_test:rshared"

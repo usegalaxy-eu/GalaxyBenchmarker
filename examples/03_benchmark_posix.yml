@@ -59,7 +59,7 @@ benchmarks:
         destination: irods_server
         extra_args:
           irods_host_volume: /mnt/netapp
-      - playbook: cleanup_irods.yml
+      - playbook: cleanup_irods_fuse_client.yml
         destination: irods_client
         extra_args:
           irods_host_volume: /mnt/volume_under_test

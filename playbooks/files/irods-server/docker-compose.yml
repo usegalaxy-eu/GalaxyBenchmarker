@@ -19,7 +19,7 @@ services:
       # Irods server config
       - ./volumes/config_server/:/etc/irods/
       # Volume under test
-      - ${IRODS_VOLUME}/irods:/mnt/mountedVolumeResc
+      - ${IRODS_HOST_VOLUME}/irods:/mnt/mountedVolumeResc
   db:
     image: postgres:11-alpine
     # volumes:

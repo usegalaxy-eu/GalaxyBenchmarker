@@ -9,8 +9,3 @@
   file:
     path: /irods
     state: absent
-
-- name: Remove irods volume
-  file:
-    path: "{{ irods_volume }}/irods"
-    state: absent

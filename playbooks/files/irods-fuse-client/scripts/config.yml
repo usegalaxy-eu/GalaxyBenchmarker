@@ -1,0 +1,11 @@
+host: 132.230.223.226
+port: 1247
+proxy_user: rods
+client_user: rods
+zone: zone_1
+password: adminpass
+
+path_mappings:
+  - irods_path: /zone_1/home/rods
+    mapping_path: /
+    resource_type: dir

@@ -1,4 +1,8 @@
 - hosts: all
+  become: true
   tasks:
-    - name: "TODO: Implement"
-      debug: "msg=\"TODO: Implement\""
+    - include: tasks/uninstall_irods.yml
+    - name: Remove irods volume
+      file:
+        path: "{{ irods_host_volume }}/irods"
+        state: absent

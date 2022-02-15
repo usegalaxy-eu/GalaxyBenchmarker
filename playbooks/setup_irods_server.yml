@@ -1,4 +1,4 @@
 - hosts: all
+  become: true
   tasks:
-    - name: "TODO: Implement"
-      debug: "msg=\"TODO: Implement\""
+   - include: tasks/install_irods.yml

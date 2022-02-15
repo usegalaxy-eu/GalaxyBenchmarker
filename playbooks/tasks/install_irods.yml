@@ -5,14 +5,9 @@
     dest: /irods
     recursive: yes
 
-- name: Install docker-compose
-  pip:
-    name:
-        - docker-compose
-
 - name: Create irods volume
   file:
-    path: "{{ irods_volume }}/irods"
+    path: "{{ irods_host_volume }}/irods"
     state: directory
     owner: "1000"
     group: "1000"
@@ -24,7 +19,7 @@
     state: present
     build: yes
   environment:
-    IRODS_VOLUME: "{{ irods_volume }}"
+    IRODS_HOST_VOLUME: "{{ irods_host_volume }}"
   register: output
 
 # - name: Debug startup logs
@@ -64,7 +59,6 @@
       - /bin/bash
       - "-c"
       - iadmin mkresc rootResc passthru
-  register: result
 
 - name: Add mountedVolumeResc resource
   community.docker.docker_container_exec:
@@ -73,7 +67,6 @@
       - /bin/bash
       - "-c"
       - iadmin mkresc mountedVolumeResc unixfilesystem irods.local:/mnt/mountedVolumeResc
-  register: result
 
 - name: Connect rootResc with mountedVolumeResc
   community.docker.docker_container_exec:
@@ -82,11 +75,9 @@
       - /bin/bash
       - "-c"
       - iadmin addchildtoresc rootResc mountedVolumeResc
-  register: result
 
 - name: Set rootResc as default resource
   ansible.builtin.lineinfile:
     path: /irods/volumes/config_server/core.re
     regexp: '^acSetRescSchemeForCreate'
     line: acSetRescSchemeForCreate {msiSetDefaultResc("rootResc","null"); }
-
