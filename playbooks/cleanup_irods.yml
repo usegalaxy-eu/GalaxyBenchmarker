@@ -1,4 +1,0 @@
-- hosts: all
-  become: true
-  tasks:
-   - include: tasks/uninstall_irods.yml

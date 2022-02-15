@@ -1,7 +1,10 @@
 - hosts: all
   become: true
   tasks:
-    - include: tasks/uninstall_irods.yml
+    - import: tasks/remove_container.yml
+      vars:
+        path: "/irods"
+
     - name: Unmount fuse mount
       ansible.posix.mount:
         path: "{{ irods_host_volume }}/irods-fuse"

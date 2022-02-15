@@ -1,7 +1,9 @@
 - hosts: all
   become: true
   tasks:
-    - include: tasks/uninstall_irods.yml
+    - import_tasks: tasks/remove_container.yml
+      vars:
+        path: "/irods"
     - name: Remove irods volume
       file:
         path: "{{ irods_host_volume }}/irods"

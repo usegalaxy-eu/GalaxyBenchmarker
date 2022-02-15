@@ -37,11 +37,11 @@ benchmarks:
           irods_host_volume: /mnt/volume_under_test
           irods_server_host: "132.230.223.226"
     post_tasks:
-      - playbook: cleanup_irods.yml
+      - playbook: cleanup_irods_server.yml
         destination: irods_server
         extra_args:
           irods_host_volume: /mnt/netapp
-      - playbook: cleanup_irods.yml
+      - playbook: cleanup_irods_server.yml
         destination: irods_client
         extra_args:
           irods_host_volume: /mnt/volume_under_test
@@ -56,7 +56,7 @@ benchmarks:
     - playbook: setup_irods_davrods_client.yml
       destination: irods_client
     post_tasks:
-      - playbook: cleanup_irods.yml
+      - playbook: cleanup_irods_server.yml
         destination: irods_server
         extra_args:
           irods_host_volume: /mnt/netapp
