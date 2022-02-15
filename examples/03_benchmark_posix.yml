@@ -1,0 +1,65 @@
+config:
+  log_ansible_output: true
+
+destinations:
+  irods_server:
+    host: master_vm_1
+  irods_client:
+    host: master_vm_2
+
+benchmarks:
+  benchmark_isilon:
+    type: PosixFullBenchmark
+    repetitions: 1
+    destination: irods_server
+    target_folder: /mnt/isilon
+
+  benchmark_netapp:
+    type: PosixFullBenchmark
+    repetitions: 1
+    destination: irods_server
+    target_folder: /mnt/netapp
+
+  benchmark_irods_fuse_on_isilon:
+    type: PosixFullBenchmark
+    repetitions: 1
+    destination: irods_client
+    target_folder: /mnt/volume_under_test
+
+    pre_tasks:
+      - playbook: setup_irods_server.yml
+        destination: irods_server
+        extra_args:
+          irods_host_volume: /mnt/netapp
+      - playbook: setup_irods_fuse_client.yml
+        destination: irods_client
+        extra_args:
+          irods_host_volume: /mnt/volume_under_test
+    post_tasks:
+      - playbook: cleanup_irods.yml
+        destination: irods_server
+        extra_args:
+          irods_host_volume: /mnt/netapp
+      - playbook: cleanup_irods.yml
+        destination: irods_client
+        extra_args:
+          irods_host_volume: /mnt/volume_under_test
+
+  benchmark_irods_davrods_on_isilon:
+    type: PosixFullBenchmark
+    repetitions: 1
+    destination: irods_client
+    pre_tasks:
+    - playbook: setup_irods_server_with_davrods.yml
+      destination: irods_server
+    - playbook: setup_irods_davrods_client.yml
+      destination: irods_client
+    post_tasks:
+      - playbook: cleanup_irods.yml
+        destination: irods_server
+        extra_args:
+          irods_host_volume: /mnt/netapp
+      - playbook: cleanup_irods.yml
+        destination: irods_client
+        extra_args:
+          irods_host_volume: /mnt/volume_under_test
