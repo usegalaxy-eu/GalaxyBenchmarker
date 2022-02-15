@@ -1,11 +1,16 @@
 ---
-- name: Stop container
+- name: "Check if {{path}} exists"
+  stat:
+    path: "{{path}}"
+  register: stat_result
+
+- name: "Stop container for project in {{path}}"
+  when: stat_result.stat.exists
   community.docker.docker_compose:
     project_src: "{{path}}"
     state: absent
-    build: yes
 
-- name: Remove files from server
+- name: "Remove {{path}} from server"
   file:
     path: "{{path}}"
     state: absent

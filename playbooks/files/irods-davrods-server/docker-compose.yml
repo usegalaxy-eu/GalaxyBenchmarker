@@ -1,0 +1,13 @@
+version: "3"
+services:
+  davrods:
+    build: .
+    networks:
+      - irods_default
+    ports:
+      - 80:80
+
+
+networks:
+  irods_default:
+    external: true
