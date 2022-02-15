@@ -4,8 +4,9 @@ import json
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Optional, Type
+from typing import TYPE_CHECKING, Type
 
+from galaxy_benchmarker.bridge.ansible import AnsibleTask
 from galaxy_benchmarker.bridge.influxdb import InfluxDb
 
 if TYPE_CHECKING:
@@ -41,15 +42,28 @@ class Benchmark:
 
         repetitions = config.get("repetitions", None)
         if not repetitions:
-            raise ValueError(f"'repetitions' property is missing for {config}")
+            raise ValueError(f"'repetitions' property is missing for '{name}'")
 
         try:
             self.repetitions = int(repetitions)
         except ValueError as e:
-            raise ValueError(f"'repetitions' has to be a number for {config}") from e
+            raise ValueError(f"'repetitions' has to be a number for '{name}'") from e
 
         self.id = datetime.now().replace(microsecond=0).isoformat()
         self.benchmark_results = {}
+
+        # Parse pre tasks
+        self._pre_tasks: list[AnsibleTask] = []
+        if "pre_task" in config:
+            if "pre_tasks" in config:
+                raise ValueError(f"'pre_task' and 'pre_tasks' given for '{name}'")
+
+            pre_task = AnsibleTask.from_config(config["pre_task"], f"{name}_pre_task")
+            self._pre_tasks.append(pre_task)
+        elif "pre_tasks" in config:
+            for i, t_config in enumerate(config.get("pre_tasks")):
+                pre_task = AnsibleTask.from_config(t_config, f"{name}_pre_task_{i}")
+                self._pre_tasks.append(pre_task)
 
     @staticmethod
     def create(name: str, config: dict, benchmarker: Benchmarker):
@@ -72,6 +86,8 @@ class Benchmark:
 
     def run_pre_tasks(self):
         """Run setup tasks"""
+        for task in self._pre_tasks:
+            task.run()
 
     def run_post_tasks(self):
         """Run clean up task"""

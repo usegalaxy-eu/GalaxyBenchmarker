@@ -5,10 +5,9 @@ from pathlib import Path
 from typing import Optional
 
 from serde import serde
-from serde.yaml import from_yaml
 
 from galaxy_benchmarker.benchmarks.base import Benchmark
-from galaxy_benchmarker.bridge.ansible import AnsibleTask
+from galaxy_benchmarker.bridge import ansible
 from galaxy_benchmarker.bridge.galaxy import Galaxy, GalaxyConfig
 from galaxy_benchmarker.bridge.influxdb import InfluxDb, InfluxDbConfig
 from galaxy_benchmarker.bridge.openstack import OpenStackCompute, OpenStackComputeConfig
@@ -19,22 +18,20 @@ log = logging.getLogger(__name__)
 @serde
 @dataclass
 class BenchmarkerConfig:
-    openstack: Optional[OpenStackComputeConfig]
-    galaxy: Optional[GalaxyConfig]
-    influxdb: Optional[InfluxDbConfig]
-    tasks: Optional[dict[str, dict]]
-
-    benchmarks: dict[str, dict]
-    shared: Optional[list[dict]]
+    openstack: Optional[OpenStackComputeConfig] = None
+    galaxy: Optional[GalaxyConfig] = None
+    influxdb: Optional[InfluxDbConfig] = None
 
     results_path: str = "results/"
     results_save_to_file: bool = True
     results_save_to_influxdb: bool = False
     results_print: bool = True
 
+    log_ansible_output: bool = False
+
 
 class Benchmarker:
-    def __init__(self, config: BenchmarkerConfig):
+    def __init__(self, config: BenchmarkerConfig, benchmarks: dict[str, dict]):
         self.config = config
         self.glx = Galaxy(config.galaxy) if config.galaxy else None
         self.influxdb = InfluxDb(config.influxdb) if config.influxdb else None
@@ -43,13 +40,8 @@ class Benchmarker:
         )
         self.current_benchmark: Optional[Benchmark] = None
 
-        self.tasks: dict[str, AnsibleTask] = {}
-        task_configs = self.tasks or {}
-        for name, t_config in task_configs:
-            self.tasks[name] = AnsibleTask.from_config(t_config, name, self)
-
         self.benchmarks: list[Benchmark] = []
-        for name, b_config in config.benchmarks.items():
+        for name, b_config in benchmarks.items():
             self.benchmarks.append(Benchmark.create(name, b_config, self))
 
         self.results = Path(config.results_path)
@@ -66,6 +58,9 @@ class Benchmarker:
                 raise ValueError(
                     "'influxdb' is required when 'results_save_to_influxdb'=True"
                 )
+
+        if config.log_ansible_output:
+            ansible.LOG_ANSIBLE_OUTPUT = True
 
         # Safe results in case of interrupt
         def handle_signal(*args):
@@ -140,16 +135,3 @@ class Benchmarker:
         if self.config.results_save_to_influxdb:
             log.info("Sending results to influxDB.")
             self.current_benchmark.save_results_to_influxdb(self.influxdb)
-
-    @staticmethod
-    def from_config(path: str) -> "Benchmarker":
-        """Construct a benchmarker based on a config
-
-        path: Path to yaml
-        """
-        config_path = Path(path)
-        if not config_path.is_file():
-            raise ValueError(f"Path to config '{path}' is not a file")
-
-        benchmarker_config = from_yaml(BenchmarkerConfig, config_path.read_text())
-        return Benchmarker(benchmarker_config)

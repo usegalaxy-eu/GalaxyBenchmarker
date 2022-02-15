@@ -1,0 +1,16 @@
+tasks:
+  install_docker:
+    playbook: install_docker.yml
+
+
+benchmarks:
+  verify_setup_benchmark:
+    type: PosixSetupTimeBenchmark
+    repetitions: 1
+
+    pre_tasks:
+      - install_docker
+
+    destinations:
+      - host: master_vm_1
+      - host: master_vm_2

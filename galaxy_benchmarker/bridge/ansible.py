@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-import io
 import logging
-import os
 import subprocess
 import tempfile
 from dataclasses import dataclass
@@ -11,8 +9,13 @@ from typing import TYPE_CHECKING, Any, Dict, Optional
 
 if TYPE_CHECKING:
     from galaxy_benchmarker.benchmarker import Benchmarker
+    from galaxy_benchmarker.config import NamedConfigDicts
 
 log = logging.getLogger(__name__)
+
+LOG_ANSIBLE_OUTPUT = False
+
+_destinations: NamedConfigDicts = {}
 
 
 @dataclass
@@ -20,6 +23,31 @@ class AnsibleDestination:
     host: str
     user: Optional[str] = ""
     private_key: Optional[str] = ""
+
+    @staticmethod
+    def register(configs: NamedConfigDicts) -> None:
+        global _destinations
+        _destinations = configs
+
+    @staticmethod
+    def from_config(dest_config: Any, name: str) -> AnsibleDestination:
+        """Create a destination from dest_config. Config can be:
+        - an object defining the destination
+        - a string refering to a destination definition
+        """
+        d_name, d_config = name, dest_config
+        if isinstance(dest_config, str):
+            if dest_config not in _destinations:
+                raise ValueError(f"Unknown destination reference {dest_config}")
+            d_config = _destinations[dest_config]
+            d_name = dest_config
+
+        if not isinstance(d_config, dict):
+            raise ValueError(
+                f"Expected dict as destination config for {d_name}. Received {type(d_config)}"
+            )
+
+        return AnsibleDestination(**d_config)
 
 
 def run_playbook(
@@ -41,15 +69,26 @@ def run_playbook(
         commands.append(f"{key}={value}")
 
     log.debug("Run ansible: %s", commands)
-    with tempfile.TemporaryFile() as output:
-        try:
-            subprocess.check_call(commands, stdout=output)
-        except subprocess.CalledProcessError:
-            # In case of an exception print the whole output of ansible
+    with tempfile.TemporaryFile() as tmp:
+        process = subprocess.Popen(
+            commands, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        )
+        while process.poll() is None:
+            output = process.stdout.readline()
+            tmp.write(output)
+            if LOG_ANSIBLE_OUTPUT:
+                log.info(output.decode("utf-8"))
+
+        if process.returncode != 0:
             output.seek(0)
             for line in output.readlines():
                 log.error(line.decode("utf-8"))
-            raise
+            raise RuntimeError(
+                f"Ansible exited with non-zero exit code: {process.returncode}"
+            )
+
+
+_tasks: NamedConfigDicts = {}
 
 
 class AnsibleTask:
@@ -86,41 +125,39 @@ class AnsibleTask:
         self.extra_vars = extra_vars
 
     @staticmethod
-    def from_config(
-        task_config: Any, name: str, benchmarker: Benchmarker
-    ) -> AnsibleTask:
+    def register(configs: NamedConfigDicts) -> None:
+        global _tasks
+        _tasks = configs
+
+    @staticmethod
+    def from_config(task_config: Any, name: str) -> AnsibleTask:
         """Create a task from task_config. Config can be:
-        - None for default Noop-Task
         - an object defining the task
         - a string refering to a task definition
         """
-        match task_config:
-            case None:
-                potential_task = AnsibleNoopTask()
-                log.warning("No task defined for '%s'", name)
-            case str():
-                potential_task = benchmarker.tasks.get(task_config, None)
-                if not potential_task:
-                    raise ValueError(
-                        f"Unknown task reference '{task_config}' for '{name}'"
-                    )
-            case dict():
-                destinations = [
-                    AnsibleDestination(**dest)
-                    for dest in task_config.get("destinations", [])
-                ]
+        t_name, t_config = name, task_config
+        if isinstance(task_config, str):
+            if task_config not in _tasks:
+                raise ValueError(f"Unknown task reference {task_config}")
+            t_config = _tasks[task_config]
+            t_name = task_config
 
-                potential_task = AnsibleTask(
-                    playbook_name=task_config.get("playbook", ""),
-                    playbook_folder=task_config.get("folder", "playbooks/"),
-                    name=name,
-                    destinations=destinations,
-                    extra_vars=task_config.get("extra_vars", {}),
-                )
-            case _:
-                raise ValueError(f"Unknown value for '{name}': {task_config}")
+        if not isinstance(t_config, dict):
+            raise ValueError(
+                f"Expected dict as task config for {t_name}. Received {type(t_config)}"
+            )
 
-        return potential_task
+        destinations = [
+            AnsibleDestination(**dest) for dest in t_config.get("destinations", [])
+        ]
+
+        return AnsibleTask(
+            playbook_name=t_config.get("playbook", ""),
+            playbook_folder=t_config.get("folder", "playbooks/"),
+            name=t_name,
+            destinations=destinations,
+            extra_vars=t_config.get("extra_vars", {}),
+        )
 
     def run(self):
         if not self.destinations:

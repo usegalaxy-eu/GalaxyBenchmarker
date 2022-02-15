@@ -42,6 +42,11 @@ class PosixSetupTimeBenchmark(base.Benchmark):
 
         self._run_task = ansible.AnsibleTask(playbook_name="connection_test.yml")
 
+    def run_pre_tasks(self):
+        for dest in self.destinations:
+            for task in self._pre_tasks:
+                task.run_at(dest)
+
     def run(self):
         """Run the connection_test playbook on each destination"""
 

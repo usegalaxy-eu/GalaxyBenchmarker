@@ -14,6 +14,12 @@ stop_sudo:
 	echo "Gracefull shutdown. Benchmarker has 30 seconds to save results"
 	sudo docker-compose stop -t 30 benchmarker
 
+build:
+	docker-compose build
+
+build_sudo:
+	sudo docker-compose build
+
 lint: lint_isort lint_black
 
 lint_isort:
