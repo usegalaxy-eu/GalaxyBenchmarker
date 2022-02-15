@@ -469,3 +469,22 @@ class PosixFioThroughputOverFilesize(PosixFioBenchmark):
                 }
 
                 inflxdb.save_measurement(scoped_tags, self.name, results)
+
+
+@base.register_benchmark
+class PosixFullBenchmark(base.Benchmark):
+    def __init__(self, name: str, config: dict, benchmarker: Benchmarker):
+        super().__init__(name, config, benchmarker)
+
+        self.destinations: list[PosixBenchmarkDestination] = []
+        for item in config.get("destinations", []):
+            self.destinations.append(PosixBenchmarkDestination(**item))
+
+        if not self.destinations:
+            raise ValueError(
+                f"At least one destination is required for benchmark {self.__class__.__name__}"
+            )
+
+    def run(self):
+        """TODO"""
+        log.warning("TODO: Implement run of PosixFullBenchmark")

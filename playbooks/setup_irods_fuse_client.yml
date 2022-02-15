@@ -1,0 +1,4 @@
+- hosts: all
+  tasks:
+    - name: "TODO: Implement"
+      debug: "msg=\"TODO: Implement\""
