@@ -5,7 +5,7 @@ import logging
 import subprocess
 import tempfile
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, Optional
+from typing import TYPE_CHECKING, Any, Dict, Optional, Sequence
 
 if TYPE_CHECKING:
     from galaxy_benchmarker.benchmarker import Benchmarker
@@ -71,19 +71,20 @@ def run_playbook(
         commands.append(f"{key}={value}")
 
     log.debug("Run ansible: %s", commands)
-    with tempfile.TemporaryFile() as tmp:
+    with tempfile.TemporaryFile() as cached_output:
         process = subprocess.Popen(
             commands, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
         while process.poll() is None:
+            assert process.stdout, "Stdout of ansible subprocess is None"
             output = process.stdout.readline()
-            tmp.write(output)
+            cached_output.write(output)
             if LOG_ANSIBLE_OUTPUT:
                 log.info(output.decode("utf-8"))
 
         if process.returncode != 0:
-            output.seek(0)
-            for line in output.readlines():
+            cached_output.seek(0)
+            for line in cached_output.readlines():
                 log.error(line.decode("utf-8"))
             raise RuntimeError(
                 f"Ansible exited with non-zero exit code: {process.returncode}"
@@ -99,7 +100,7 @@ class AnsibleTask:
         playbook_name: str,
         playbook_folder: str = "playbooks/",
         name: Optional[str] = None,
-        destinations: list[AnsibleDestination] = [],
+        destinations: Sequence[AnsibleDestination] = [],
         extra_vars: dict = {},
     ) -> None:
         """
@@ -160,7 +161,7 @@ class AnsibleTask:
             )
             destinations.append(dest)
         elif "destinations" in t_config:
-            for i, dest_config in enumerate(t_config.get("destinations")):
+            for i, dest_config in enumerate(t_config.get("destinations", [])):
                 dest = AnsibleDestination.from_config(
                     dest_config, f"{name}_destination_{i}"
                 )
@@ -189,16 +190,3 @@ class AnsibleTask:
 
     def run_at(self, destination: AnsibleDestination, extra_vars: dict = {}) -> None:
         run_playbook(self.playbook, destination, extra_vars)
-
-
-class AnsibleNoopTask(AnsibleTask):
-    """Does nothing, acts as placeholder"""
-
-    def __init__(self, *args, **kwargs):
-        self.name = "AnsibleNoopTask"
-
-    def run(self):
-        pass
-
-    def run_at(self, destination: AnsibleDestination) -> None:
-        pass

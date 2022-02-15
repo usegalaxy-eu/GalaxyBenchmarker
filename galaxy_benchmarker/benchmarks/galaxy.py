@@ -24,11 +24,11 @@ class ColdWarmBenchmark(base.Benchmark):
         super().__init__(name, config, benchmarker)
 
         self.cold_pre_task = ansible.AnsibleTask.from_config(
-            config.get("cold_pre_task", None), "cold_pre_task", benchmarker
+            config.get("cold_pre_task", None), "cold_pre_task"
         )
 
         self.warm_pre_task = ansible.AnsibleTask.from_config(
-            config.get("warm_pre_task", None), "warm_pre_task", benchmarker
+            config.get("warm_pre_task", None), "warm_pre_task"
         )
 
         self.destinations: list[ansible.AnsibleDestination] = []  # TODO

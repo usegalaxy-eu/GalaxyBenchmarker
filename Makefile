@@ -27,3 +27,6 @@ lint_isort:
 
 lint_black:
 	poetry run black --target-version py310 galaxy_benchmarker
+
+lint_mypy:
+	poetry run mypy galaxy_benchmarker

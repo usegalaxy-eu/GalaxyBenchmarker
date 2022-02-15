@@ -4,7 +4,7 @@ import json
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Type
+from typing import TYPE_CHECKING, Type, Any
 
 from galaxy_benchmarker.bridge.ansible import AnsibleTask
 from galaxy_benchmarker.bridge.influxdb import InfluxDb
@@ -50,7 +50,7 @@ class Benchmark:
             raise ValueError(f"'repetitions' has to be a number for '{name}'") from e
 
         self.id = datetime.now().replace(microsecond=0).isoformat()
-        self.benchmark_results = {}
+        self.benchmark_results: dict[str, Any] = {}
 
         # Parse pre tasks
         self._pre_tasks: list[AnsibleTask] = []
@@ -61,7 +61,7 @@ class Benchmark:
             pre_task = AnsibleTask.from_config(config["pre_task"], f"{name}_pre_task")
             self._pre_tasks.append(pre_task)
         elif "pre_tasks" in config:
-            for i, t_config in enumerate(config.get("pre_tasks")):
+            for i, t_config in enumerate(config.get("pre_tasks", [])):
                 pre_task = AnsibleTask.from_config(t_config, f"{name}_pre_task_{i}")
                 self._pre_tasks.append(pre_task)
 
@@ -76,7 +76,7 @@ class Benchmark:
             )
             self._post_tasks.append(post_task)
         elif "post_tasks" in config:
-            for i, t_config in enumerate(config.get("post_tasks")):
+            for i, t_config in enumerate(config.get("post_tasks", [])):
                 post_task = AnsibleTask.from_config(t_config, f"{name}_post_task_{i}")
                 self._post_tasks.append(post_task)
 
