@@ -1,9 +1,9 @@
 from __future__ import annotations
 
+import dataclasses
 import logging
 import subprocess
 import tempfile
-from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, Optional
 
@@ -18,7 +18,7 @@ LOG_ANSIBLE_OUTPUT = False
 _destinations: NamedConfigDicts = {}
 
 
-@dataclass
+@dataclasses.dataclass
 class AnsibleDestination:
     host: str
     user: Optional[str] = ""
@@ -29,8 +29,8 @@ class AnsibleDestination:
         global _destinations
         _destinations = configs
 
-    @staticmethod
-    def from_config(dest_config: Any, name: str) -> AnsibleDestination:
+    @classmethod
+    def from_config(cls, dest_config: Any, name: str) -> AnsibleDestination:
         """Create a destination from dest_config. Config can be:
         - an object defining the destination
         - a string refering to a destination definition
@@ -47,7 +47,9 @@ class AnsibleDestination:
                 f"Expected dict as destination config for {d_name}. Received {type(d_config)}"
             )
 
-        return AnsibleDestination(**d_config)
+        # Filter out extra arguments
+        names = set([f.name for f in dataclasses.fields(cls)])
+        return cls(**{k: v for k, v in d_config.items() if k in names})
 
 
 def run_playbook(
@@ -147,9 +149,26 @@ class AnsibleTask:
                 f"Expected dict as task config for {t_name}. Received {type(t_config)}"
             )
 
-        destinations = [
-            AnsibleDestination(**dest) for dest in t_config.get("destinations", [])
-        ]
+        # Parse destinations
+        destinations: list[AnsibleDestination] = []
+        if "destination" in t_config:
+            if "destinations" in t_config:
+                raise ValueError(f"'destination' and 'destinations' given for '{name}'")
+
+            dest = AnsibleDestination.from_config(
+                t_config["destination"], f"{name}_destination"
+            )
+            destinations.append(dest)
+        elif "destinations" in t_config:
+            for i, dest_config in enumerate(t_config.get("destinations")):
+                dest = AnsibleDestination.from_config(
+                    dest_config, f"{name}_destination_{i}"
+                )
+                destinations.append(dest)
+        else:
+            raise ValueError(
+                f"'destination' or 'destinations' is required for '{name}'"
+            )
 
         return AnsibleTask(
             playbook_name=t_config.get("playbook", ""),

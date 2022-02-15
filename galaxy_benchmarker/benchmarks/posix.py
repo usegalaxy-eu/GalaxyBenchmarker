@@ -9,7 +9,7 @@ import tempfile
 import time
 from collections import defaultdict
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from galaxy_benchmarker.benchmarks import base
 from galaxy_benchmarker.bridge import ansible, influxdb
@@ -75,15 +75,9 @@ class PosixSetupTimeBenchmark(base.Benchmark):
 
 @dataclasses.dataclass
 class PosixBenchmarkDestination(ansible.AnsibleDestination):
-    filesystem_type: str = ""
     target_folder: str = ""
 
     def __post_init__(self):
-        if not self.filesystem_type:
-            raise ValueError(
-                f"Property 'filesystem_type' is missing for host '{self.host}'"
-            )
-
         if not self.target_folder:
             raise ValueError(
                 f"Property 'target_folder' is missing for host '{self.host}'"
@@ -476,14 +470,14 @@ class PosixFullBenchmark(base.Benchmark):
     def __init__(self, name: str, config: dict, benchmarker: Benchmarker):
         super().__init__(name, config, benchmarker)
 
-        self.destinations: list[PosixBenchmarkDestination] = []
-        for item in config.get("destinations", []):
-            self.destinations.append(PosixBenchmarkDestination(**item))
-
-        if not self.destinations:
+        if not "destination" in config:
             raise ValueError(
-                f"At least one destination is required for benchmark {self.__class__.__name__}"
+                f"Property 'destination' is required for benchmark '{name}'"
             )
+
+        self.destination = PosixBenchmarkDestination.from_config(
+            config["destination"], f"{name}_destination"
+        )
 
     def run(self):
         """TODO"""
