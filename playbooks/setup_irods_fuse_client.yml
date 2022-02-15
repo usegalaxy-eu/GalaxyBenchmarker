@@ -7,6 +7,12 @@
         dest: /irods
         recursive: yes
 
+    - name: Set irods host ip for client
+      lineinfile:
+        path: /irods/scripts/config.yml
+        regexp: '^host: '
+        line: "host: {{ irods_server_host }}"
+
     - name: Create irods volume
       file:
         path: "{{ irods_host_volume }}/irods-fuse"

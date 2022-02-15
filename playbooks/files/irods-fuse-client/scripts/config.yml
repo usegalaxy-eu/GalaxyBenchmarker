@@ -1,4 +1,4 @@
-host: 132.230.223.226
+host: # Set by playbook
 port: 1247
 proxy_user: rods
 client_user: rods
