@@ -1,0 +1,9 @@
+version: "3"
+services:
+  irods-webdav:
+    build: .
+    privileged: true
+    # user: "1000:1000"
+    volumes:
+      # Volume under test
+      - "${IRODS_HOST_VOLUME}/irods-webdav:/mnt/volume_under_test:rshared"

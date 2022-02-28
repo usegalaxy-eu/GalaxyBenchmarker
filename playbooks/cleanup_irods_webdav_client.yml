@@ -5,11 +5,11 @@
       vars:
         path: "/irods"
 
-    - name: Unmount fuse mount
+    - name: Unmount webdav mount
       ansible.posix.mount:
-        path: "{{ irods_host_volume }}/irods-fuse"
+        path: "{{ irods_host_volume }}/irods-webdav"
         state: unmounted
     - name: Remove irods volume
       file:
-        path: "{{ irods_host_volume }}/irods-fuse"
+        path: "{{ irods_host_volume }}/irods-webdav"
         state: absent

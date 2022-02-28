@@ -24,13 +24,13 @@ benchmarks:
     type: PosixFullBenchmark
     repetitions: 1
     destination: irods_client
-    target_folder: /mnt/volume_under_test
+    target_folder: /mnt/volume_under_test/irods-fuse
 
     pre_tasks:
       - playbook: setup_irods_server.yml
         destination: irods_server
         extra_args:
-          irods_host_volume: /mnt/netapp
+          irods_host_volume: /mnt/isilon
       - playbook: setup_irods_fuse_client.yml
         destination: irods_client
         extra_args:
@@ -40,8 +40,8 @@ benchmarks:
       - playbook: cleanup_irods_server.yml
         destination: irods_server
         extra_args:
-          irods_host_volume: /mnt/netapp
-      - playbook: cleanup_irods_server.yml
+          irods_host_volume: /mnt/isilon
+      - playbook: cleanup_irods_fuse_client.yml
         destination: irods_client
         extra_args:
           irods_host_volume: /mnt/volume_under_test
@@ -50,17 +50,21 @@ benchmarks:
     type: PosixFullBenchmark
     repetitions: 1
     destination: irods_client
+    target_folder: /mnt/volume_under_test/irods-webdav
+
     pre_tasks:
     - playbook: setup_irods_server_with_davrods.yml
       destination: irods_server
-    - playbook: setup_irods_davrods_client.yml
+      extra_args:
+        irods_host_volume: /mnt/isilon
+    - playbook: setup_irods_webdav_client.yml
       destination: irods_client
     post_tasks:
       - playbook: cleanup_irods_server.yml
         destination: irods_server
         extra_args:
-          irods_host_volume: /mnt/netapp
-      - playbook: cleanup_irods_fuse_client.yml
+          irods_host_volume: /mnt/isilon
+      - playbook: cleanup_irods_webdav_client.yml
         destination: irods_client
         extra_args:
           irods_host_volume: /mnt/volume_under_test

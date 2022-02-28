@@ -1,0 +1,43 @@
+- hosts: all
+  become: true
+  tasks:
+    - name: Copy container setup onto host (sychronize preserves file permissions)
+      synchronize:
+        src: ./files/irods-webdav-client/
+        dest: /irods
+        recursive: yes
+
+    # - name: Set irods host ip for client
+    #   lineinfile:
+    #     path: /irods/scripts/config.yml
+    #     regexp: '^host: '
+    #     line: "host: {{ irods_server_host }}"
+
+    - name: Create irods volume
+      file:
+        path: "{{ irods_host_volume }}/irods-webdav"
+        state: directory
+        owner: "1000"
+        group: "1000"
+        mode: '0755'
+
+    - name: Build and start container
+      community.docker.docker_compose:
+        project_src: /irods
+        state: present
+        build: yes
+      environment:
+        IRODS_HOST_VOLUME: "{{ irods_host_volume }}"
+      register: output
+
+    # - name: Debug startup logs
+    #   command: docker logs irods_irods-fuse_1
+    #   register: logoutput
+
+    # - name: debug
+    #   debug: var=output
+
+    - name: "Check 'Build and start container'"
+      ansible.builtin.assert:
+        that:
+          - "output.services['irods-webdav']['irods_irods-webdav_1'].state.running"
