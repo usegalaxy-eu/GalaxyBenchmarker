@@ -16,8 +16,6 @@ RUN apt-get update \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/* /tmp/*
 
-COPY ./volumes/davrods-vhost.conf /etc/apache2/sites-available/davrods-vhost.conf
-
 RUN a2enmod dav \
   && a2enmod davrods \
   && a2ensite davrods-vhost
@@ -25,10 +23,3 @@ RUN a2enmod dav \
 EXPOSE 80
 ENTRYPOINT ["apache2ctl"]
 CMD ["-DFOREGROUND"]
-
-
-# COPY scripts/ /scripts
-
-# RUN adduser --disabled-password --gecos "" --uid 1000 irods
-
-# ENTRYPOINT ["/scripts/entrypoint.sh"]

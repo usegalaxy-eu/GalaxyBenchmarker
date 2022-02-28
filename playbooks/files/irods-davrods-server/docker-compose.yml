@@ -6,7 +6,9 @@ services:
       - irods_default
     ports:
       - 80:80
-
+    volumes:
+      - ./volumes/davrods-vhost.conf:/etc/apache2/sites-available/davrods-vhost.conf
+      - ./volumes/irods_environment.json:/etc/apache2/irods/irods_environment.json
 
 networks:
   irods_default:

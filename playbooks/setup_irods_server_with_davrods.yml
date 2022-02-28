@@ -9,6 +9,12 @@
         dest: /davrods
         recursive: yes
 
+    - name: Set host ip as server alias
+      lineinfile:
+        path: /davrods/volumes/davrods-vhost.conf
+        regexp: 'ServerAlias SET_TO_HOST_IP'
+        line: "    ServerAlias {{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
+
     - name: Build and start container
       community.docker.docker_compose:
         project_src: /davrods
