@@ -7,11 +7,12 @@
         dest: /irods
         recursive: yes
 
-    # - name: Set irods host ip for client
-    #   lineinfile:
-    #     path: /irods/scripts/config.yml
-    #     regexp: '^host: '
-    #     line: "host: {{ irods_server_host }}"
+    - name: Set irods host ip for client
+      lineinfile:
+        path: /irods/volumes/fstab
+        regexp: '^http://IP_SET_BY_ANSIBLE (.+)$'
+        line: "http://{{ irods_server_host }} \\1"
+        backrefs: yes
 
     - name: Create irods volume
       file:

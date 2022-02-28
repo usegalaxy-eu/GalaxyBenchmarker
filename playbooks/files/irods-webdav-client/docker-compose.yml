@@ -3,7 +3,8 @@ services:
   irods-webdav:
     build: .
     privileged: true
-    # user: "1000:1000"
     volumes:
+      # Configure mount for non-root users
+      - ./volumes/fstab:/etc/fstab
       # Volume under test
       - "${IRODS_HOST_VOLUME}/irods-webdav:/mnt/volume_under_test:rshared"
