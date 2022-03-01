@@ -9,7 +9,6 @@ from bioblend.galaxy import GalaxyInstance
 from serde import serde
 
 from galaxy_benchmarker.bridge import ansible, planemo
-from galaxy_benchmarker.models.workflow import BaseWorkflow, GalaxyWorkflow
 
 log = logging.getLogger(__name__)
 
@@ -85,16 +84,16 @@ class Galaxy:
         for history in histories:
             impersonated.histories.delete_history(history["id"], purge)
 
-    def install_tools_for_workflows(self, workflows: List[BaseWorkflow]):
-        log.info("Installing all necessary workflow-tools on Galaxy.")
-        for workflow in workflows:
-            if type(workflow) is GalaxyWorkflow:
-                log.info(
-                    "Installing tools for workflow '{workflow}'".format(
-                        workflow=workflow.name
-                    )
-                )
-                planemo.install_workflow([workflow.path], self.instance)
+    # def install_tools_for_workflows(self, workflows: List[BaseWorkflow]):
+    #     log.info("Installing all necessary workflow-tools on Galaxy.")
+    #     for workflow in workflows:
+    #         if type(workflow) is GalaxyWorkflow:
+    #             log.info(
+    #                 "Installing tools for workflow '{workflow}'".format(
+    #                     workflow=workflow.name
+    #                 )
+    #             )
+    #             planemo.install_workflow([workflow.path], self.instance)
 
     def deploy_job_conf(self):
         """

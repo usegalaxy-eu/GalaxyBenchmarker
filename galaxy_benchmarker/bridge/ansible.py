@@ -166,10 +166,6 @@ class AnsibleTask:
                     dest_config, f"{name}_destination_{i}"
                 )
                 destinations.append(dest)
-        else:
-            raise ValueError(
-                f"'destination' or 'destinations' is required for '{name}'"
-            )
 
         return AnsibleTask(
             playbook_name=t_config.get("playbook", ""),
@@ -189,4 +185,5 @@ class AnsibleTask:
             self.run_at(dest, self.extra_vars)
 
     def run_at(self, destination: AnsibleDestination, extra_vars: dict = {}) -> None:
-        run_playbook(self.playbook, destination, extra_vars)
+        all_vars = {**self.extra_vars, **extra_vars}
+        run_playbook(self.playbook, destination, all_vars)
