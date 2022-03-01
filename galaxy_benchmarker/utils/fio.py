@@ -17,7 +17,11 @@ def parse_result_file(file: Path, jobname: str) -> dict:
         raise ValueError(f"Job '{jobname}' is missing in result {file}")
 
     result = {}
-    mode = result_json["global options"]["rw"]
+    mode = result_json["global options"].get("rw", None)
+    if mode is None:
+        # Fallback
+        mode = jobs[0]["job options"]["rw"]
+
     if mode in ["read", "randread", "rw", "randrw"]:
         read = result_json["jobs"][0]["read"]
         result.update(_parse_job_result(read, "read"))

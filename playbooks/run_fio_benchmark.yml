@@ -1,0 +1,72 @@
+- hosts: all
+  tasks:
+    - name: Create test directory
+      file:
+        path: "{{ fio_dir }}/fio_in_progress"
+        state: directory
+
+    - name: Copy Dockerfile
+      ansible.posix.synchronize:
+        src: tool-fio/
+        dest: "{{ fio_dir }}/fio_build"
+        recursive: yes
+
+    - name: Build latest fio image
+      become: yes
+      community.docker.docker_image:
+        build:
+          path: "{{ fio_dir }}/fio_build"
+        name: galaxybenchmarker/tool-fio
+        tag: latest
+        force_source: yes
+        force_tag: yes
+        source: build
+
+    # - name: Start job sync server
+    #   shell: ./scripts/barrier.py localhost 42042 {{ fio_numjobs }} >> barrier.out.txt
+    #   args:
+    #     chdir: "{{ fio_dir }}/fio_in_progress"
+    #   async: 180
+    #   poll: 0
+
+    - name: Run fio container
+      become: yes
+      community.docker.docker_container:
+        name: fio
+        image: galaxybenchmarker/tool-fio
+        detach: false
+        volumes:
+          - "{{ fio_dir }}/fio_in_progress:/mnt/volume_under_test:rw"
+        working_dir: /mnt/volume_under_test
+        command: [
+          "--bs={{ fio_blocksize }}",
+          "--direct=1",
+          "--filename=testfile.fio",
+          "--group_reporting",
+          "--iodepth={{ fio_iodepth }}",
+          "--ioengine=libaio",
+          "--name={{ fio_jobname }}",
+          "--numjobs={{ fio_numjobs }}",
+          "--output", "{{ fio_result_file }}",
+          "--output-format=json",
+          "--refill_buffers",
+          "--runtime={{ fio_runtime_in_s }}",
+          "--rw={{ fio_mode }}",
+          "--size={{ fio_filesize }}",
+          "--time_based",
+          # '--exec_prerun="./scripts/barrier.py localhost 42042"',
+        ]
+
+    - name: Collect result
+      ansible.builtin.fetch:
+        src: "{{ fio_dir }}/fio_in_progress/{{ fio_result_file }}"
+        dest: "{{ controller_dir }}/{{ fio_result_file }}"
+        flat: yes
+
+    - name: Cleanup
+      file:
+        path: "{{ fio_dir }}/{{ item }}"
+        state: absent
+      loop:
+        - fio_in_progress
+        - fio_build

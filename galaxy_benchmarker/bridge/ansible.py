@@ -23,6 +23,7 @@ class AnsibleDestination:
     host: str
     user: Optional[str] = ""
     private_key: Optional[str] = ""
+    extra_vars: Optional[dict[str, str]] = dataclasses.field(default_factory=dict)
 
     @staticmethod
     def register(configs: NamedConfigDicts) -> None:
@@ -66,7 +67,7 @@ def run_playbook(
     if destination.private_key:
         commands.extend(["--private-key", destination.private_key])
 
-    for key, value in extra_vars.items():
+    for key, value in {**extra_vars, **destination.extra_vars}.items():
         commands.append("-e")
         commands.append(f"{key}={value}")
 
