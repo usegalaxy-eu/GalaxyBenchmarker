@@ -1,0 +1,7 @@
+all:
+  # For more details see https://docs.ansible.com/ansible/latest/user_guide/intro_inventory.html
+  hosts:
+    irods_server:
+      ansible_host: #TODO
+    irods_client:
+      ansible_host: #TODO
