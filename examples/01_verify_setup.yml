@@ -1,7 +1,7 @@
 benchmarks:
   verify_setup_benchmark:
     type: PosixSetupTimeBenchmark
-    repetitions: 3
+    repetitions: 1
 
     pre_tasks:
       - playbook: install_docker.yml

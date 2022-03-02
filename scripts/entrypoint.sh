@@ -17,6 +17,6 @@ fi
 trap 'echo entrypoint.sh: signal received, stoping child processes; kill -SIGINT $(jobs -p); wait;' SIGINT SIGTERM
 
 # Run benchmarker
-python3 -m galaxy_benchmarker &
+python3 -m galaxy_benchmarker "$@" &
 
 wait
