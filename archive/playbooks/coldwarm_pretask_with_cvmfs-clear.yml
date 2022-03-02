@@ -1,4 +1,4 @@
-- hosts: all
+- hosts: "{{ host }}"
   tasks:
     - name: Stop Pulsar
       service:

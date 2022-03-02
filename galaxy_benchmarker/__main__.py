@@ -31,7 +31,6 @@ def main() -> None:
 
     cfg = from_yaml(config.GlobalConfig, cfg_path.read_text())
 
-    ansible.AnsibleDestination.register(cfg.destinations or {})
     ansible.AnsibleTask.register(cfg.tasks or {})
 
     log.info("Initializing Benchmarker.")

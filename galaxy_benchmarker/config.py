@@ -14,6 +14,5 @@ NamedConfigDicts = dict[str, dict[str, Any]]
 class GlobalConfig:
     config: Optional[BenchmarkerConfig]
 
-    destinations: Optional[NamedConfigDicts]
     tasks: Optional[NamedConfigDicts]
     benchmarks: NamedConfigDicts

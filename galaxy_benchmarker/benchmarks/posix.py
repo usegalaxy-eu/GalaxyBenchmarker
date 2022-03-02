@@ -9,7 +9,7 @@ import tempfile
 import time
 from collections import defaultdict
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from galaxy_benchmarker.benchmarks import base
 from galaxy_benchmarker.bridge import ansible, influxdb
@@ -31,37 +31,33 @@ class PosixSetupTimeBenchmark(base.Benchmark):
     def __init__(self, name: str, config: dict, benchmarker: Benchmarker):
         super().__init__(name, config, benchmarker)
 
-        self.destinations: list[ansible.AnsibleDestination] = []
-        for item in config.get("destinations", []):
-            self.destinations.append(ansible.AnsibleDestination(**item))
-
-        if not self.destinations:
+        if "hosts" not in config:
             raise ValueError(
-                f"At least one destination is required for benchmark {self.__class__.__name__}"
+                f"'hosts' property (type: list[str]) is missing for '{name}'"
             )
 
-        self._run_task = ansible.AnsibleTask(playbook_name="connection_test.yml")
+        self.hosts: list[str] = config["hosts"]
 
-    def run_pre_tasks(self):
-        for dest in self.destinations:
-            for task in self._pre_tasks:
-                task.run_at(dest)
+        if not all(isinstance(value, str) for value in self.hosts):
+            raise ValueError("'hosts' property has to be of type list[str]")
+
+        self._run_task = ansible.AnsibleTask(playbook="connection_test.yml")
 
     def run(self):
         """Run the connection_test playbook on each destination"""
 
-        for dest in self.destinations:
-            log.info("Start %s for %s", self.name, dest.host)
+        for host in self.hosts:
+            log.info("Start %s for %s", self.name, host)
             results = []
             for i in range(self.repetitions):
                 log.info("Run %d of %d", i + 1, self.repetitions)
                 start_time = time.monotonic()
 
-                self._run_task.run_at(dest)
+                self._run_task.run_at(host)
 
                 total_runtime = time.monotonic() - start_time
                 results.append({"runtime_in_s": total_runtime})
-            self.benchmark_results[dest.host] = results
+            self.benchmark_results[host] = results
 
     def save_results_to_influxdb(self, inflxdb: influxdb.InfluxDb):
         """Send the runtime to influxDB."""
@@ -74,7 +70,7 @@ class PosixSetupTimeBenchmark(base.Benchmark):
 
 
 @dataclasses.dataclass
-class PosixBenchmarkDestination(ansible.AnsibleDestination):
+class PosixBenchmarkDestination:
     target_folder: str = ""
 
     def __post_init__(self):
@@ -133,13 +129,11 @@ class PosixFioBenchmark(base.Benchmark):
             )
 
         self._pre_task = ansible.AnsibleTask(
-            playbook_name="posix_fio_benchmark_check.yml",
+            playbook="posix_fio_benchmark_check.yml",
             destinations=self.destinations,
         )
 
-        self._run_task = ansible.AnsibleTask(
-            playbook_name="posix_fio_benchmark_run.yml"
-        )
+        self._run_task = ansible.AnsibleTask(playbook="posix_fio_benchmark_run.yml")
 
     def run_pre_tasks(self):
         self._pre_task.run()
@@ -472,7 +466,7 @@ class PosixFioThroughputOverFilesizeAlt(PosixFioThroughputOverFilesize):
     def __init__(self, name: str, config: dict, benchmarker: Benchmarker):
         super().__init__(name, config, benchmarker)
 
-        self._run_task = ansible.AnsibleTask(playbook_name="run_fio_benchmark.yml")
+        self._run_task = ansible.AnsibleTask(playbook="run_fio_benchmark.yml")
 
     def run_pre_tasks(self):
         pass

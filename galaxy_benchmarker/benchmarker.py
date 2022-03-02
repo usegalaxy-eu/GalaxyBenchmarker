@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import logging
 import signal
 from dataclasses import dataclass
 from pathlib import Path
 from types import FrameType
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from serde import serde
 
@@ -12,7 +14,9 @@ from galaxy_benchmarker.bridge import ansible
 from galaxy_benchmarker.bridge.galaxy import Galaxy, GalaxyConfig
 from galaxy_benchmarker.bridge.influxdb import InfluxDb, InfluxDbConfig
 from galaxy_benchmarker.bridge.openstack import OpenStackCompute, OpenStackComputeConfig
-from galaxy_benchmarker.config import NamedConfigDicts
+
+if TYPE_CHECKING:
+    from galaxy_benchmarker.config import NamedConfigDicts
 
 log = logging.getLogger(__name__)
 
@@ -112,7 +116,12 @@ class Benchmarker:
             benchmark.run_pre_tasks()
 
             log.info("%s Start run for %s", current_run, benchmark.name)
-            benchmark.run()
+            try:
+                benchmark.run()
+            except Exception as e:
+                log.exception(
+                    "Benchmark run failed with exception. Continuing with next benchmark"
+                )
             self.save_results_of_current_benchmark()
 
             log.info("%s Post task for %s", current_run, benchmark.name)

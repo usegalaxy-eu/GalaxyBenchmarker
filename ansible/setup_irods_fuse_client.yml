@@ -1,4 +1,4 @@
-- hosts: all
+- hosts: "{{ host }}"
   become: true
   tasks:
     - name: Copy container setup onto host (sychronize preserves file permissions)

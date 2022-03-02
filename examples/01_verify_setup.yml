@@ -1,16 +1,12 @@
-tasks:
-  install_docker:
-    playbook: install_docker.yml
-
-
 benchmarks:
   verify_setup_benchmark:
     type: PosixSetupTimeBenchmark
-    repetitions: 1
+    repetitions: 3
 
     pre_tasks:
-      - install_docker
+      - playbook: install_docker.yml
+        host: "irods_client,irods_server"
 
-    destinations:
-      - host: master_vm_1
-      - host: master_vm_2
+    hosts:
+      - irods_client
+      - irods_server

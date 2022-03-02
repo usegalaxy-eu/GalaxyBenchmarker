@@ -1,4 +1,4 @@
-- hosts: all
+- hosts: "{{ host }}"
   become: true
   tasks:
    - include: tasks/install_irods.yml

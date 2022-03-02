@@ -11,29 +11,16 @@ config:
   galaxy: "optional obj, see GalaxyConfig"
   influxdb: "optinal obj, see InfluxDbConfig"
 
-# Preconfigure some destinations, can be referenced by name
-destinations:
-  dest1:
-    # Host can also reference a host in ~/.ssh/config
-    host: "required str"
-    user: "optional str"
-    private_key: "optional str"
-
 # Preconfigure some ansible tasks, can be referenced by name
 tasks:
   task1:
     playbook: "required str"
-    playbook_folder: "optional str, default: playbooks/"
+    playbook_folder: "optional str, default: ansible/"
     # Extra vars used in the playbook
     extra_vars:
       key1: value1
 
-    # Choose one of both, can be a string refering to a destination above or a
-    # object defining the destination
-    destination: "str OR obj"
-    # OR multiple destinations as list
-    destinations:
-      - "str OR object"
+    host: "optional str, can also be a ansible host pattern"
 
 benchmarks:
   benchmark1:
