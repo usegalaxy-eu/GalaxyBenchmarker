@@ -11,7 +11,7 @@ from galaxy_benchmarker.benchmarker import Benchmarker, BenchmarkerConfig
 from galaxy_benchmarker.bridge import ansible
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--cfg", type=str, default="benchmark_config.yml", help="Path to config file"
@@ -41,7 +41,7 @@ def main():
     benchmarker.run()
 
 
-def configure_logger(verbose: bool):
+def configure_logger(verbose: bool) -> logging.Logger:
     # Formatter
     fmt_with_time = logging.Formatter(
         "%(asctime)s - %(name)s - %(levelname)s - %(message)s"

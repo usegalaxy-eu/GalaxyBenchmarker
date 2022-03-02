@@ -1,12 +1,12 @@
 from dataclasses import dataclass
-from typing import Optional
+from typing import Any, Optional
 
 from serde import serde
 
 from galaxy_benchmarker.benchmarker import BenchmarkerConfig
 
 # Mapping { name -> configdict }
-NamedConfigDicts = dict[str, dict]
+NamedConfigDicts = dict[str, dict[str, Any]]
 
 
 @serde

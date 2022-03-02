@@ -465,7 +465,6 @@ class PosixFioThroughputOverFilesize(PosixFioBenchmark):
                 inflxdb.save_measurement(scoped_tags, self.name, results)
 
 
-
 @base.register_benchmark
 class PosixFioThroughputOverFilesizeAlt(PosixFioThroughputOverFilesize):
     """Use Containerized FIO for comparison"""
@@ -473,13 +472,10 @@ class PosixFioThroughputOverFilesizeAlt(PosixFioThroughputOverFilesize):
     def __init__(self, name: str, config: dict, benchmarker: Benchmarker):
         super().__init__(name, config, benchmarker)
 
-        self._run_task = ansible.AnsibleTask(
-            playbook_name="run_fio_benchmark.yml"
-        )
+        self._run_task = ansible.AnsibleTask(playbook_name="run_fio_benchmark.yml")
 
     def run_pre_tasks(self):
         pass
-
 
 
 @base.register_benchmark

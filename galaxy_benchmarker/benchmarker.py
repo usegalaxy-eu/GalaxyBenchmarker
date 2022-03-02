@@ -2,6 +2,7 @@ import logging
 import signal
 from dataclasses import dataclass
 from pathlib import Path
+from types import FrameType
 from typing import Optional
 
 from serde import serde
@@ -11,6 +12,7 @@ from galaxy_benchmarker.bridge import ansible
 from galaxy_benchmarker.bridge.galaxy import Galaxy, GalaxyConfig
 from galaxy_benchmarker.bridge.influxdb import InfluxDb, InfluxDbConfig
 from galaxy_benchmarker.bridge.openstack import OpenStackCompute, OpenStackComputeConfig
+from galaxy_benchmarker.config import NamedConfigDicts
 
 log = logging.getLogger(__name__)
 
@@ -31,7 +33,7 @@ class BenchmarkerConfig:
 
 
 class Benchmarker:
-    def __init__(self, config: BenchmarkerConfig, benchmarks: dict[str, dict]):
+    def __init__(self, config: BenchmarkerConfig, benchmarks: NamedConfigDicts):
         self.config = config
         self.glx = Galaxy(config.galaxy) if config.galaxy else None
         self.influxdb = InfluxDb(config.influxdb) if config.influxdb else None
@@ -63,7 +65,7 @@ class Benchmarker:
             ansible.LOG_ANSIBLE_OUTPUT = True
 
         # Safe results in case of interrupt
-        def handle_signal(*args):
+        def handle_signal(signum: int, frame: Optional[FrameType]) -> None:
             self.save_results_of_current_benchmark()
             exit(0)
 
@@ -91,7 +93,7 @@ class Benchmarker:
         # if glx_conf["shed_install"]:
         #     self.glx.install_tools_for_workflows(list(self.workflows.values()))
 
-    def run(self):
+    def run(self) -> None:
         """Run all benchmarks sequentially
 
         Steps:
@@ -116,7 +118,7 @@ class Benchmarker:
             log.info("%s Post task for %s", current_run, benchmark.name)
             benchmark.run_post_tasks()
 
-    def save_results_of_current_benchmark(self):
+    def save_results_of_current_benchmark(self) -> None:
         """Save the result of the current benchmark
 
         Extracted as function for SIGNAL-handling"""
@@ -133,5 +135,10 @@ class Benchmarker:
             log.info("Saving results to file: '%s'.", file)
 
         if self.config.results_save_to_influxdb:
-            log.info("Sending results to influxDB.")
-            self.current_benchmark.save_results_to_influxdb(self.influxdb)
+            if self.influxdb:
+                log.info("Sending results to influxDB.")
+                self.current_benchmark.save_results_to_influxdb(self.influxdb)
+            else:
+                log.warning(
+                    "`results_save_to_influxdb` flag given, but influxdb is missing"
+                )

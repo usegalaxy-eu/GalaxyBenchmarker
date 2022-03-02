@@ -2,9 +2,10 @@
 
 import json
 from pathlib import Path
+from typing import Any
 
 
-def parse_result_file(file: Path, jobname: str) -> dict:
+def parse_result_file(file: Path, jobname: str) -> dict[str, Any]:
     if not file.is_file():
         raise ValueError(f"{file} is not a fio result file.")
 
@@ -32,7 +33,7 @@ def parse_result_file(file: Path, jobname: str) -> dict:
     return result
 
 
-def _parse_job_result(result, prefix):
+def _parse_job_result(result: dict, prefix: str) -> dict[str, Any]:
     return {
         f"{prefix}_bw_min_in_mb": result["bw_min"] / 1024,
         f"{prefix}_bw_max_in_mb": result["bw_max"] / 1024,

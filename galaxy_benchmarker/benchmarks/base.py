@@ -4,7 +4,7 @@ import json
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Type, Any
+from typing import TYPE_CHECKING, Any, Type, TypeVar
 
 from galaxy_benchmarker.bridge.ansible import AnsibleTask
 from galaxy_benchmarker.bridge.influxdb import InfluxDb
@@ -14,10 +14,14 @@ if TYPE_CHECKING:
 
 log = logging.getLogger(__name__)
 
+
 _registered_benchmarks: dict[str, Type["Benchmark"]] = {}
 
 
-def register_benchmark(cls: Type):
+SubClass = TypeVar("SubClass", bound="Type[Benchmark]")
+
+
+def register_benchmark(cls: SubClass) -> SubClass:
     """Register a benchmark for factory method"""
 
     name = cls.__name__
@@ -99,17 +103,17 @@ class Benchmark:
         benchmark_class = _registered_benchmarks[benchmark_type]
         return benchmark_class(name, config, benchmarker)
 
-    def run_pre_tasks(self):
+    def run_pre_tasks(self) -> None:
         """Run setup tasks"""
         for task in self._pre_tasks:
             task.run()
 
-    def run_post_tasks(self):
+    def run_post_tasks(self) -> None:
         """Run clean up task"""
         for task in self._post_tasks:
             task.run()
 
-    def run(self):
+    def run(self) -> None:
         """Run benchmark"""
         raise NotImplementedError(
             "Benchmark.run is not defined. Overwrite in child class"
@@ -124,7 +128,7 @@ class Benchmark:
 
         return str(file)
 
-    def save_results_to_influxdb(self, inflxdb: InfluxDb):
+    def save_results_to_influxdb(self, inflxdb: InfluxDb) -> None:
         """Send all metrics to influxDB."""
         raise NotImplementedError(
             "Benchmark.save_results_to_influxdb is not defined. Overwrite in child class"
@@ -133,7 +137,7 @@ class Benchmark:
     def get_result_filename(self) -> str:
         return f"{self.id}_{self.name}.json"
 
-    def get_influxdb_tags(self) -> dict:
+    def get_influxdb_tags(self) -> dict[str, str]:
         return {
             "plugin": "benchmarker",
             "benchmark_name": self.name,

@@ -28,7 +28,7 @@ class InfluxDb:
             retries=20,
         )
 
-    def test_connection(self):
+    def test_connection(self) -> None:
         try:
             self.client.ping()
         except ConnectionError as exc:
