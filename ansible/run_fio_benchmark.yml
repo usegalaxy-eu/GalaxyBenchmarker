@@ -49,11 +49,11 @@
           "--numjobs={{ fio_numjobs }}",
           "--output", "{{ fio_result_file }}",
           "--output-format=json",
-          "--refill_buffers",
+          "{% if fio_refill_buffers|bool %}--refill_buffers{% endif %}",
           "--runtime={{ fio_runtime_in_s }}",
           "--rw={{ fio_mode }}",
           "--size={{ fio_filesize }}",
-          "--time_based",
+          "{% if fio_time_based|bool %}--time_based{% endif %}",
           # '--exec_prerun="./scripts/barrier.py localhost 42042"',
         ]
 

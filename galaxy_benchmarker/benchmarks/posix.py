@@ -98,6 +98,8 @@ class FioConfig:
     iodepth: int
     runtime_in_s: int
     filesize: str
+    refill_buffers: bool
+    time_based: bool
 
     def items(self):
         return dataclasses.asdict(self).items()
@@ -114,6 +116,8 @@ class PosixFioBenchmark(base.Benchmark):
     fio_iodepth = 0
     fio_runtime_in_s = 60
     fio_filesize = "5G"
+    fio_refill_buffers = True
+    fio_time_based = True
 
     def __init__(self, name: str, config: dict, benchmarker: Benchmarker):
         super().__init__(name, config, benchmarker)
@@ -126,6 +130,8 @@ class PosixFioBenchmark(base.Benchmark):
             iodepth=self.fio_iodepth,
             runtime_in_s=self.fio_runtime_in_s,
             filesize=self.fio_filesize,
+            refill_buffers=self.fio_refill_buffers,
+            time_based=self.fio_time_based,
         )
 
         self.destinations: list[PosixBenchmarkDestination] = []
@@ -471,8 +477,46 @@ class PosixFioThroughputOverFilesize(PosixFioBenchmark):
 
 
 @base.register_benchmark
+class PosixFioReadThroughputOverFilesize1(PosixFioThroughputOverFilesize):
+    """Compare the read-throughput for different file sizes."""
+
+    fio_mode = "read"
+    fio_jobname = "ReadThroughputOverFilesizeRefillTime"
+    fio_refill_buffer = True
+    fio_time_based = True
+
+@base.register_benchmark
+class PosixFioReadThroughputOverFilesize2(PosixFioThroughputOverFilesize):
+    """Compare the read-throughput for different file sizes."""
+
+    fio_mode = "read"
+    fio_jobname = "ReadThroughputOverFilesizeRefillButNoTime"
+    fio_refill_buffer = True
+    fio_time_based = False
+
+@base.register_benchmark
+class PosixFioReadThroughputOverFilesize3(PosixFioThroughputOverFilesize):
+    """Compare the read-throughput for different file sizes."""
+
+    fio_mode = "read"
+    fio_jobname = "ReadThroughputOverFilesizeNoRefillButTime"
+    fio_refill_buffer = False
+    fio_time_based = True
+
+@base.register_benchmark
+class PosixFioReadThroughputOverFilesize4(PosixFioThroughputOverFilesize):
+    """Compare the read-throughput for different file sizes."""
+
+    fio_mode = "read"
+    fio_jobname = "ReadThroughputOverFilesizeNoRefillNoTime"
+    fio_refill_buffer = False
+    fio_time_based = False
+
+@base.register_benchmark
 class PosixFioThroughputOverFilesizeAlt(PosixFioThroughputOverFilesize):
     """Use Containerized FIO for comparison"""
+
+    fio_time_based = False
 
     def __init__(self, name: str, config: dict, benchmarker: Benchmarker):
         super().__init__(name, config, benchmarker)
