@@ -1,4 +1,5 @@
 - hosts: "{{ host }}"
   become: true
   tasks:
-   - include: tasks/install_irods.yml
+    - include: tasks/install_irods.yml
+    - include: tasks/configure_irods_local_volume.yml

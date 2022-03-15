@@ -2,6 +2,7 @@
   become: true
   tasks:
     - include: tasks/install_irods.yml
+    - include: tasks/configure_irods_local_volume.yml
 
     - name: Copy container setup onto host (sychronize preserves file permissions)
       ansible.posix.synchronize:
