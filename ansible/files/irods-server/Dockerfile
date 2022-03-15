@@ -13,9 +13,10 @@ RUN \
   && apt-get install -y \
     irods-server \
     irods-database-plugin-postgres \
-  && \
-  apt-get clean && \
-  rm -rf /var/lib/apt/lists/* /tmp/*
+    irods-resource-plugin-s3 \
+    libcurl4-gnutls-dev \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/* /tmp/*
 
 COPY scripts/ /scripts
 
