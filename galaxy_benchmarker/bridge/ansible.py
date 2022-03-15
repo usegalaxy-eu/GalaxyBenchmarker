@@ -49,9 +49,10 @@ def run_playbook(playbook: Path, host: str, extra_vars: Dict = {}):
                 log.info(output.decode("utf-8"))
 
         if process.returncode != 0:
-            cached_output.seek(0)
-            for line in cached_output.readlines():
-                log.error(line.decode("utf-8"))
+            if not LOG_ANSIBLE_OUTPUT:
+                cached_output.seek(0)
+                for line in cached_output.readlines():
+                    log.error(line.decode("utf-8"))
             raise RuntimeError(
                 f"Ansible exited with non-zero exit code: {process.returncode}"
             )

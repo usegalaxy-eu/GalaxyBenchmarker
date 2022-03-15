@@ -1,5 +1,9 @@
 - hosts: "{{ host }}"
   tasks:
+    - name: Cleanup possible left over files
+      file:
+        path: "{{ fio_dir }}/fio_in_progress"
+        state: absent
     - name: Create test directory
       file:
         path: "{{ fio_dir }}/fio_in_progress"

@@ -71,13 +71,22 @@ class PosixSetupTimeBenchmark(base.Benchmark):
 
 @dataclasses.dataclass
 class PosixBenchmarkDestination:
+    host: str = ""
     target_folder: str = ""
 
     def __post_init__(self):
+        if not self.host:
+            raise ValueError(
+                f"Property 'host' is missing for BenchmarkDestination"
+            )
         if not self.target_folder:
             raise ValueError(
                 f"Property 'target_folder' is missing for host '{self.host}'"
             )
+
+    @property
+    def name(self):
+        return f"{self.host}_{self.target_folder}"
 
 
 @dataclasses.dataclass
@@ -128,9 +137,11 @@ class PosixFioBenchmark(base.Benchmark):
                 f"At least one destination is required for benchmark {self.__class__.__name__}"
             )
 
+
+        hosts = set(dest.host for dest in self.destinations)
         self._pre_task = ansible.AnsibleTask(
             playbook="posix_fio_benchmark_check.yml",
-            destinations=self.destinations,
+            host=",".join(hosts) + ",",
         )
 
         self._run_task = ansible.AnsibleTask(playbook="posix_fio_benchmark_run.yml")
@@ -143,14 +154,14 @@ class PosixFioBenchmark(base.Benchmark):
 
         with tempfile.TemporaryDirectory() as temp_dir:
             for dest in self.destinations:
-                log.info("Start %s for %s", self.name, dest.host)
-                self.benchmark_results[dest.host] = []
+                log.info("Start %s for %s", self.name, dest.name)
+                self.benchmark_results[dest.name] = []
                 for i in range(self.repetitions):
                     log.info("Run %d of %d", i + 1, self.repetitions)
-                    result_file = Path(temp_dir) / f"{self.name}_{dest.host}_{i}.json"
+                    result_file = Path(temp_dir) / f"{self.name}_{dest.name}_{i}.json"
 
                     result = self._run_at(result_file, dest, self.fio_config)
-                    self.benchmark_results[dest.host].append(result)
+                    self.benchmark_results[dest.name].append(result)
 
     def _run_at(
         self, result_file: Path, dest: PosixBenchmarkDestination, fio_config: FioConfig
@@ -160,7 +171,7 @@ class PosixFioBenchmark(base.Benchmark):
         start_time = time.monotonic()
 
         self._run_task.run_at(
-            dest,
+            dest.host,
             {
                 "fio_dir": dest.target_folder,
                 "fio_result_file": result_file.name,
@@ -395,7 +406,7 @@ class PosixFioThroughputOverFilesize(PosixFioBenchmark):
     fio_numjobs = 4
     fio_blocksize = "1024k"
     fio_iodepth = 32
-    fio_runtime_in_s = 10
+    fio_runtime_in_s = 5 * 60
 
     def _run_at(
         self, result_file: Path, dest: PosixBenchmarkDestination, fioConfig: FioConfig

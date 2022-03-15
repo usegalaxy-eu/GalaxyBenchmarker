@@ -46,10 +46,10 @@
         - python3-pip
         - python3-dev
         - libffi-dev
-        - openssl-dev
+        - librust-openssl-dev
         - gcc
         - libc-dev
-        - rust
+        - rustc
         - cargo
         - make
     - name: Install docker-compose
