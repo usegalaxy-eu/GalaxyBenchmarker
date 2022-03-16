@@ -86,7 +86,7 @@ class PosixBenchmarkDestination:
 
     @property
     def name(self):
-        return f"{self.host}_{self.target_folder}"
+        return f"{self.host}_{self.target_folder.replace('/','_')}"
 
 
 @dataclasses.dataclass
@@ -430,7 +430,6 @@ class PosixFioThroughputOverFilesize(PosixFioBenchmark):
             "5Gi",
             "10Gi",
             "20Gi",
-            "50Gi",
         ]
 
         for filesize in filesizes:

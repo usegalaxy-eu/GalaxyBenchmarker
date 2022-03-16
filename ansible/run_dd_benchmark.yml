@@ -1,0 +1,59 @@
+- hosts: "{{ host }}"
+  tasks:
+    - name: Create test directory
+      file:
+        path: "{{ dd_dir }}/dd_in_progress"
+        state: directory
+
+    - name: Copy Dockerfile
+      ansible.posix.synchronize:
+        src: tool-dd/
+        dest: "{{ dd_dir }}/dd_build"
+        recursive: yes
+
+    - name: Build latest dd image
+      become: yes
+      community.docker.docker_image:
+        build:
+          path: "{{ dd_dir }}/dd_build"
+        name: galaxybenchmarker/tool-dd
+        tag: latest
+        force_source: yes
+        force_tag: yes
+        source: build
+
+    - name: Run dd container
+      become: yes
+      community.docker.docker_container:
+        name: dd
+        image: galaxybenchmarker/tool-dd
+        detach: false
+        cleanup: true
+        volumes:
+          - "{{ dd_dir }}/dd_in_progress:/mnt/volume_under_test:rw"
+        working_dir: /mnt/volume_under_test
+        command: [
+          "bs={{ dd_blocksize }}",
+          "count={{ dd_blockcount }}",
+          "if=/dev/zero",
+          "of=/mnt/volume_under_test/dd-testfile.bin",
+          "conv=fsync"
+        ]
+      register: dd_results
+
+    # - name: debug
+    #   debug: var=dd_results
+
+    - name: Save results
+      local_action:
+        module: copy
+        content: "{{ dd_results.container.Output }}"
+        dest: "{{ controller_dir }}/{{ dd_result_file }}"
+
+    - name: Cleanup
+      file:
+        path: "{{ dd_dir }}/{{ item }}"
+        state: absent
+      loop:
+        - dd_in_progress
+        - dd_build
