@@ -110,7 +110,7 @@ class FioFixedParams(base.Benchmark):
 
         total_runtime = time.monotonic() - start_time
 
-        result = fio.parse_result_file(result_file, self.name)
+        result = parse_result_file(result_file, self.name)
         result["runtime_in_s"] = total_runtime
         log.info("Run took %d s", total_runtime)
 
