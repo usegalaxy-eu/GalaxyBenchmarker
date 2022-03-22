@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
+import time
 from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Type, TypeVar
@@ -149,3 +150,42 @@ class Benchmark:
         return self.name
 
     __repr__ = __str__
+
+
+@register_benchmark
+class SetupTimeBenchmark(Benchmark):
+    """Compare the setuptime/ansible connection time between different destinations.
+
+    Useful for basic setup tests and to check if everything is configured correctly
+    """
+
+    def __init__(self, name: str, config: dict, benchmarker: Benchmarker):
+        super().__init__(name, config, benchmarker)
+
+        if "hosts" not in config:
+            raise ValueError(
+                f"'hosts' property (type: list[str]) is missing for '{name}'"
+            )
+
+        self.hosts: list[str] = config["hosts"]
+
+        if not all(isinstance(value, str) for value in self.hosts):
+            raise ValueError("'hosts' property has to be of type list[str]")
+
+        self._run_task = AnsibleTask(playbook="connection_test.yml")
+
+    def run(self):
+        """Run the connection_test playbook on each destination"""
+
+        for host in self.hosts:
+            log.info("Start %s for %s", self.name, host)
+            results = []
+            for i in range(self.repetitions):
+                log.info("Run %d of %d", i + 1, self.repetitions)
+                start_time = time.monotonic()
+
+                self._run_task.run_at(host)
+
+                total_runtime = time.monotonic() - start_time
+                results.append({"runtime_in_s": total_runtime})
+            self.benchmark_results[host] = results
