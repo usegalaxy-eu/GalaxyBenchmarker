@@ -12,7 +12,6 @@ from serde import serde
 from galaxy_benchmarker.benchmarks.base import Benchmark
 from galaxy_benchmarker.bridge import ansible
 from galaxy_benchmarker.bridge.galaxy import Galaxy, GalaxyConfig
-from galaxy_benchmarker.bridge.influxdb import InfluxDb, InfluxDbConfig
 from galaxy_benchmarker.bridge.openstack import OpenStackCompute, OpenStackComputeConfig
 
 if TYPE_CHECKING:
@@ -26,11 +25,9 @@ log = logging.getLogger(__name__)
 class BenchmarkerConfig:
     openstack: Optional[OpenStackComputeConfig] = None
     galaxy: Optional[GalaxyConfig] = None
-    influxdb: Optional[InfluxDbConfig] = None
 
     results_path: str = "results/"
     results_save_to_file: bool = True
-    results_save_to_influxdb: bool = False
     results_print: bool = True
 
     log_ansible_output: bool = False
@@ -40,7 +37,6 @@ class Benchmarker:
     def __init__(self, config: BenchmarkerConfig, benchmarks: NamedConfigDicts):
         self.config = config
         self.glx = Galaxy(config.galaxy) if config.galaxy else None
-        self.influxdb = InfluxDb(config.influxdb) if config.influxdb else None
         self.openstack = (
             OpenStackCompute(config.openstack) if config.openstack else None
         )
@@ -56,14 +52,6 @@ class Benchmarker:
                 raise ValueError("'results_path' has to be a folder")
         else:
             self.results.mkdir(parents=True)
-
-        if config.results_save_to_influxdb:
-            if self.influxdb:
-                self.influxdb.test_connection()
-            else:
-                raise ValueError(
-                    "'influxdb' is required when 'results_save_to_influxdb'=True"
-                )
 
         if config.log_ansible_output:
             ansible.LOG_ANSIBLE_OUTPUT = True
@@ -105,7 +93,6 @@ class Benchmarker:
         - Run benchmark
         - Print results (optional)
         - Save results to file (optional)
-        - Save results to influxdb (optional)
         - Run post_tasks
         """
 
@@ -142,12 +129,3 @@ class Benchmarker:
         if self.config.results_save_to_file:
             file = self.current_benchmark.save_results_to_file(self.results)
             log.info("Saving results to file: '%s'.", file)
-
-        if self.config.results_save_to_influxdb:
-            if self.influxdb:
-                log.info("Sending results to influxDB.")
-                self.current_benchmark.save_results_to_influxdb(self.influxdb)
-            else:
-                log.warning(
-                    "`results_save_to_influxdb` flag given, but influxdb is missing"
-                )

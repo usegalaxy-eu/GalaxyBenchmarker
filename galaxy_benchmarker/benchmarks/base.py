@@ -8,7 +8,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Type, TypeVar
 
 from galaxy_benchmarker.bridge.ansible import AnsibleTask
-from galaxy_benchmarker.bridge.influxdb import InfluxDb
 
 if TYPE_CHECKING:
     from galaxy_benchmarker.benchmarker import Benchmarker
@@ -123,22 +122,16 @@ class Benchmark:
     def save_results_to_file(self, directory: Path) -> str:
         """Write all metrics to a file."""
         file = directory / self.get_result_filename()
-        results = {"tags": self.get_influxdb_tags(), "results": self.benchmark_results}
+        results = {"tags": self.get_tags(), "results": self.benchmark_results}
         json_results = json.dumps(results, indent=2)
         file.write_text(json_results)
 
         return str(file)
 
-    def save_results_to_influxdb(self, inflxdb: InfluxDb) -> None:
-        """Send all metrics to influxDB."""
-        raise NotImplementedError(
-            "Benchmark.save_results_to_influxdb is not defined. Overwrite in child class"
-        )
-
     def get_result_filename(self) -> str:
         return f"{self.id}_{self.name}.json"
 
-    def get_influxdb_tags(self) -> dict[str, str]:
+    def get_tags(self) -> dict[str, str]:
         return {
             "plugin": "benchmarker",
             "benchmark_name": self.name,

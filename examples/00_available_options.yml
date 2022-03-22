@@ -2,14 +2,12 @@ config:
 
   results_path: "optional str, default: results/"
   results_save_to_file: "optional bool, default: True"
-  results_save_to_influxdb: "optional bool, default: False"
   results_print: "optional bool, default True"
 
   log_ansible_output: "optional bool, default False"
 
   openstack: "optional obj, see OpenStackComputeConfig"
   galaxy: "optional obj, see GalaxyConfig"
-  influxdb: "optinal obj, see InfluxDbConfig"
 
 # Preconfigure some ansible tasks, can be referenced by name
 tasks:

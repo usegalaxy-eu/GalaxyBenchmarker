@@ -13,7 +13,6 @@ python = "3.10.*"
 # Connectors/Bridges
 ansible = "5.*"
 bioblend = { git = "https://github.com/galaxyproject/bioblend.git", branch = "main" }
-influxdb = "5.*"
 paramiko = "2.*"
 planemo = "0.74.*"
 python-openstackclient = "5.*"
