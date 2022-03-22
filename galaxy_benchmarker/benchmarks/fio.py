@@ -4,16 +4,16 @@ Definition of different benchmark-types.
 from __future__ import annotations
 
 import dataclasses
+import json
 import logging
 import tempfile
-import json
 import time
 from pathlib import Path
-from typing import TYPE_CHECKING, Optional, Any
+from typing import TYPE_CHECKING, Any, Optional
 
 from galaxy_benchmarker.benchmarks import base
-from galaxy_benchmarker.utils.posix import PosixBenchmarkDestination
 from galaxy_benchmarker.bridge import ansible
+from galaxy_benchmarker.utils.posix import PosixBenchmarkDestination
 
 if TYPE_CHECKING:
     from galaxy_benchmarker.benchmarker import Benchmarker
@@ -24,6 +24,7 @@ log = logging.getLogger(__name__)
 @dataclasses.dataclass
 class FioConfig:
     """Available parameters for fio"""
+
     mode: Optional[str] = None
     blocksize: Optional[str] = None
     numjobs: Optional[int] = None
@@ -34,11 +35,7 @@ class FioConfig:
     time_based: Optional[bool] = None
 
     def asdict(self):
-        return {
-            k: v for k, v in
-            dataclasses.asdict(self).items()
-            if v is not None
-        }
+        return {k: v for k, v in dataclasses.asdict(self).items() if v is not None}
 
     def validate(self):
         # TODO: Impelemnet validation logic
@@ -49,19 +46,16 @@ class FioFixedParams(base.Benchmark):
     """Run fio with fixed params on one or more destinations"""
 
     fio_config_default = FioConfig(
-        runtime_in_s = 60,
-        filesize = "5G",
-        refill_buffers = True,
-        time_based = True,
+        runtime_in_s=60,
+        filesize="5G",
+        refill_buffers=True,
+        time_based=True,
     )
 
     def __init__(self, name: str, config: dict, benchmarker: Benchmarker):
         super().__init__(name, config, benchmarker)
 
-        merged_dict =  {
-            **self.fio_config_default.asdict(),
-            **config.get("fio", {})
-        }
+        merged_dict = {**self.fio_config_default.asdict(), **config.get("fio", {})}
         self.merged_fio_config = FioConfig(**merged_dict)
         self.merged_fio_config.validate()
 
@@ -117,10 +111,7 @@ class FioFixedParams(base.Benchmark):
         return result
 
     def get_tags(self) -> dict[str, str]:
-        return {
-            **super().get_tags(),
-            "fio": self.merged_fio_config.asdict
-        }
+        return {**super().get_tags(), "fio": self.merged_fio_config.asdict}
 
 
 @base.register_benchmark
@@ -132,11 +123,15 @@ class FioOneDimParams(FioFixedParams):
 
         self.dim_key = config.get("dim_key", None)
         if not self.dim_key:
-            raise ValueError(f"Property 'dim_key' (str) is missing for {name}. Must be a vaild fio_config property name")
+            raise ValueError(
+                f"Property 'dim_key' (str) is missing for {name}. Must be a vaild fio_config property name"
+            )
 
         self.dim_values = config.get("dim_values", [])
         if not self.dim_values:
-            raise ValueError(f"Property 'dim_values' (list) is missing for {name}. Must be a list of values for 'dim_key'")
+            raise ValueError(
+                f"Property 'dim_values' (list) is missing for {name}. Must be a list of values for 'dim_key'"
+            )
 
         key = self.dim_key
         for value in self.dim_values:
@@ -169,7 +164,7 @@ class FioOneDimParams(FioFixedParams):
         return {
             **super().get_tags(),
             "dim_key": self.dim_key,
-            "dim_values": self.dim_values
+            "dim_values": self.dim_values,
         }
 
 
