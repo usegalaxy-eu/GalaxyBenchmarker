@@ -116,6 +116,12 @@ class FioFixedParams(base.Benchmark):
 
         return result
 
+    def get_tags(self) -> dict[str, str]:
+        return {
+            **super().get_tags(),
+            "fio": self.merged_fio_config.asdict
+        }
+
 
 @base.register_benchmark
 class FioOneDimParams(FioFixedParams):
@@ -158,6 +164,13 @@ class FioOneDimParams(FioFixedParams):
             dest_results[value] = result
 
         return dest_results
+
+    def get_tags(self) -> dict[str, str]:
+        return {
+            **super().get_tags(),
+            "dim_key": self.dim_key,
+            "dim_values": self.dim_values
+        }
 
 
 class FioNotContainerized(FioFixedParams):
