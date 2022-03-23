@@ -41,7 +41,7 @@ class FioConfig:
         # TODO: Impelemnet validation logic
         pass
 
-
+@base.register_benchmark
 class FioFixedParams(base.Benchmark):
     """Run fio with fixed params on one or more destinations"""
 
@@ -111,7 +111,7 @@ class FioFixedParams(base.Benchmark):
         return result
 
     def get_tags(self) -> dict[str, str]:
-        return {**super().get_tags(), "fio": self.merged_fio_config.asdict}
+        return {**super().get_tags(), "fio": self.merged_fio_config.asdict()}
 
 
 @base.register_benchmark

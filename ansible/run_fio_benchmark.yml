@@ -22,25 +22,16 @@
         force_tag: yes
         source: build
 
-    - name: Start job sync server
-      shell: python3 ./scripts/barrier.py 0.0.0.0 42042 {{ fio_numjobs }}
-      args:
-        chdir: "{{ fio_dir }}/fio_build"
-      async: 180
-      poll: 0
-      register: sync_server
-
     - name: Run fio container
       become: yes
       community.docker.docker_container:
         name: fio
         image: galaxybenchmarker/tool-fio
         detach: false
+        cleanup: true
         volumes:
           - "{{ fio_dir }}/fio_in_progress:/mnt/volume_under_test:rw"
         working_dir: /mnt/volume_under_test
-        etc_hosts:
-          host.docker.internal: host-gateway
         command: [
           "--bs={{ fio_blocksize }}",
           "--direct=1",
@@ -57,19 +48,11 @@
           "--rw={{ fio_mode }}",
           "--size={{ fio_filesize }}",
           "{% if fio_time_based|bool %}--time_based{% endif %}",
-           '--exec_prerun="/scripts/barrier.py host.docker.internal 42042"',
         ]
+      register: fio_results
 
-    # - name: Wait for asynchronous job to end
-    #   async_status:
-    #     jid: '{{ sync_server.ansible_job_id }}'
-    #   register: job_result
-    #   until: job_result.finished
-    #   retries: 100
-    #   delay: 10
-
-    # - name: debug
-    #   debug: var=job_result
+    - name: debug
+      debug: var=fio_results
 
     - name: Collect result
       ansible.builtin.fetch:

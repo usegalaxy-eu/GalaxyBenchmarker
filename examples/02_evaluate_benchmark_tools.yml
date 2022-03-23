@@ -6,7 +6,7 @@ config:
 
 DefaultValues: &fio_defaults
   type: FioFixedParams
-  repetitions: 1
+  repetitions: 5
   destinations:
     - host: irods_server
       target_folder: /mnt/netapp

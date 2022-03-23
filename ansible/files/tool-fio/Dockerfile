@@ -10,6 +10,4 @@ RUN \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/* /tmp/*
 
-COPY scripts/ /scripts
-
 ENTRYPOINT [ "fio" ]

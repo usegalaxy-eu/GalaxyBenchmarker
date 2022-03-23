@@ -9,19 +9,6 @@
         path: "{{ fio_dir }}/fio_in_progress"
         state: directory
 
-    - name: Copy scripts (sychronize preserves file permissions)
-      ansible.posix.synchronize:
-        src: scripts
-        dest: "{{ fio_dir }}/fio_in_progress"
-        recursive: yes
-
-    - name: Start job sync server
-      shell: ./scripts/barrier.py localhost 42042 {{ fio_numjobs }} >> barrier.out.txt
-      args:
-        chdir: "{{ fio_dir }}/fio_in_progress"
-      async: 180
-      poll: 0
-
     - name: Execute the fio test
       ansible.builtin.command: |
         fio
