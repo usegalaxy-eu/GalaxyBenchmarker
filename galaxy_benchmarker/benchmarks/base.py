@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Type, TypeVar
 
 from galaxy_benchmarker.bridge.ansible import AnsibleTask
+from galaxy_benchmarker.typing import BenchmarkResults
 
 if TYPE_CHECKING:
     from galaxy_benchmarker.benchmarker import Benchmarker
@@ -54,7 +55,7 @@ class Benchmark:
             raise ValueError(f"'repetitions' has to be a number for '{name}'") from e
 
         self.id = datetime.now().replace(microsecond=0).isoformat()
-        self.benchmark_results: dict[str, Any] = {}
+        self.benchmark_results: BenchmarkResults = {}
 
         # Parse pre tasks
         self._pre_tasks: list[AnsibleTask] = []

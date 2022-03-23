@@ -13,9 +13,7 @@ from galaxy_benchmarker.benchmarks.base import Benchmark
 from galaxy_benchmarker.bridge import ansible
 from galaxy_benchmarker.bridge.galaxy import Galaxy, GalaxyConfig
 from galaxy_benchmarker.bridge.openstack import OpenStackCompute, OpenStackComputeConfig
-
-if TYPE_CHECKING:
-    from galaxy_benchmarker.config import NamedConfigDicts
+from galaxy_benchmarker.typing import NamedConfigDicts
 
 log = logging.getLogger(__name__)
 
@@ -31,6 +29,15 @@ class BenchmarkerConfig:
     results_print: bool = True
 
     log_ansible_output: bool = False
+
+
+@serde
+@dataclass
+class GlobalConfig:
+    config: Optional[BenchmarkerConfig]
+
+    tasks: Optional[NamedConfigDicts]
+    benchmarks: NamedConfigDicts
 
 
 class Benchmarker:

@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING, Any, Optional
 
 from galaxy_benchmarker.benchmarks import base
 from galaxy_benchmarker.bridge import ansible
+from galaxy_benchmarker.typing import RunResult
 from galaxy_benchmarker.utils.posix import PosixBenchmarkDestination
 
 if TYPE_CHECKING:
@@ -38,8 +39,9 @@ class FioConfig:
         return {k: v for k, v in dataclasses.asdict(self).items() if v is not None}
 
     def validate(self):
-        # TODO: Impelemnet validation logic
+        # TODO: Implement validation logic
         pass
+
 
 @base.register_benchmark
 class FioFixedParams(base.Benchmark):
@@ -86,7 +88,7 @@ class FioFixedParams(base.Benchmark):
 
     def _run_at(
         self, result_file: Path, dest: PosixBenchmarkDestination, fio_config: FioConfig
-    ) -> dict:
+    ) -> RunResult:
         """Perform a single run"""
 
         start_time = time.monotonic()
@@ -121,6 +123,9 @@ class FioOneDimParams(FioFixedParams):
     def __init__(self, name: str, config: dict, benchmarker: Benchmarker):
         super().__init__(name, config, benchmarker)
 
+        if len(self.destinations) != 1:
+            raise ValueError(f"A single destination is required for {name}")
+
         self.dim_key = config.get("dim_key", None)
         if not self.dim_key:
             raise ValueError(
@@ -138,27 +143,27 @@ class FioOneDimParams(FioFixedParams):
             fio_config = dataclasses.replace(self.merged_fio_config, **{key: value})
             fio_config.validate()
 
-    def _run_at(
-        self, result_file: Path, dest: PosixBenchmarkDestination, fioConfig: FioConfig
-    ) -> dict:
-        """Perform multiple runs for a single destination"""
+    def run(self):
+        """Run 'fio', only a single destination supported"""
 
-        dest_results = {}
+        with tempfile.TemporaryDirectory() as temp_dir:
+            dest = self.destinations[0]
 
-        key = self.dim_key
-        for value in self.dim_values:
-            log.info("Run with %s set to %s", key, value)
+            key = self.dim_key
+            for value in self.dim_values:
+                log.info("Run with %s set to %s", key, value)
 
-            current_config = dataclasses.replace(fioConfig, **{key: value})
-            current_result_file = result_file.with_suffix(
-                f".{value}{result_file.suffix}"
-            )
+                current_config = dataclasses.replace(
+                    self.merged_fio_config, **{key: value}
+                )
+                result_file = Path(temp_dir) / f"{self.name}_{value}_{i}.json"
 
-            result = super()._run_at(current_result_file, dest, current_config)
+                self.benchmark_results[value] = {}
+                for i in range(self.repetitions):
+                    log.info("Run %d of %d", i + 1, self.repetitions)
 
-            dest_results[value] = result
-
-        return dest_results
+                    result = self._run_at(result_file, dest, current_config)
+                    self.benchmark_results[value].append(result)
 
     def get_tags(self) -> dict[str, str]:
         return {

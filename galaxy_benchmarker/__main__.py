@@ -6,8 +6,7 @@ from pathlib import Path
 
 from serde.yaml import from_yaml
 
-from galaxy_benchmarker import config
-from galaxy_benchmarker.benchmarker import Benchmarker, BenchmarkerConfig
+from galaxy_benchmarker.benchmarker import Benchmarker, BenchmarkerConfig, GlobalConfig
 from galaxy_benchmarker.bridge import ansible
 
 
@@ -29,7 +28,7 @@ def main() -> None:
 
     log.debug("Loading Configuration from file {filename}".format(filename=args.cfg))
 
-    cfg = from_yaml(config.GlobalConfig, cfg_path.read_text())
+    cfg = from_yaml(GlobalConfig, cfg_path.read_text())
 
     ansible.AnsibleTask.register(cfg.tasks or {})
 

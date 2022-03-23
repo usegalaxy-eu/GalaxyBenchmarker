@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, Optional
 
 if TYPE_CHECKING:
-    from galaxy_benchmarker.config import NamedConfigDicts
+    from galaxy_benchmarker.typing import NamedConfigDicts
 
 log = logging.getLogger(__name__)
 
