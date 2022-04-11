@@ -5,7 +5,7 @@ import signal
 from dataclasses import dataclass
 from pathlib import Path
 from types import FrameType
-from typing import TYPE_CHECKING, Optional
+from typing import Optional
 
 from serde import serde
 
@@ -65,6 +65,7 @@ class Benchmarker:
 
         # Safe results in case of interrupt
         def handle_signal(signum: int, frame: Optional[FrameType]) -> None:
+            ansible.stop_playbook(signum)
             self.save_results_of_current_benchmark()
             exit(0)
 

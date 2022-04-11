@@ -44,7 +44,7 @@
           "--output", "{{ fio_result_file }}",
           "--output-format=json",
           "{% if fio_refill_buffers|bool %}--refill_buffers{% endif %}",
-          "--runtime={{ fio_runtime_in_s }}",
+          "{% if fio_time_based|bool %}--runtime={{ fio_runtime_in_s }}{% endif %}",
           "--rw={{ fio_mode }}",
           "--size={{ fio_filesize }}",
           "{% if fio_time_based|bool %}--time_based{% endif %}",

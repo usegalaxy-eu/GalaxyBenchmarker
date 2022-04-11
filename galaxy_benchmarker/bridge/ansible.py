@@ -13,6 +13,7 @@ log = logging.getLogger(__name__)
 
 LOG_ANSIBLE_OUTPUT = False
 
+_running_playbook: Optional[subprocess.Popen] = None
 
 def run_playbook(playbook: Path, host: str, extra_vars: Dict = {}):
     """Run ansible-playbook with the given parameters. Additional variables
@@ -38,9 +39,12 @@ def run_playbook(playbook: Path, host: str, extra_vars: Dict = {}):
     )
 
     with tempfile.TemporaryFile() as cached_output:
+        global _running_playbook
         process = subprocess.Popen(
             commands, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
+        _running_playbook = process
+
         while process.poll() is None:
             assert process.stdout, "Stdout of ansible subprocess is None"
             output = process.stdout.readline()
@@ -57,6 +61,12 @@ def run_playbook(playbook: Path, host: str, extra_vars: Dict = {}):
                 f"Ansible exited with non-zero exit code: {process.returncode}"
             )
 
+
+def stop_playbook(signal: int) -> None:
+    """Stop possible running playbook"""
+    if _running_playbook is None:
+        return
+    _running_playbook.send_signal(signal)
 
 _tasks: NamedConfigDicts = {}
 

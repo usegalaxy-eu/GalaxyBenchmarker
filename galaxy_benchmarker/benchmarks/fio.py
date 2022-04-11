@@ -138,6 +138,7 @@ class FioOneDimParams(FioFixedParams):
                 f"Property 'dim_values' (list) is missing for {name}. Must be a list of values for 'dim_key'"
             )
 
+        # Validate configurations
         key = self.dim_key
         for value in self.dim_values:
             fio_config = dataclasses.replace(self.merged_fio_config, **{key: value})
@@ -156,12 +157,12 @@ class FioOneDimParams(FioFixedParams):
                 current_config = dataclasses.replace(
                     self.merged_fio_config, **{key: value}
                 )
-                result_file = Path(temp_dir) / f"{self.name}_{value}_{i}.json"
 
-                self.benchmark_results[value] = {}
+                self.benchmark_results[value] = []
                 for i in range(self.repetitions):
                     log.info("Run %d of %d", i + 1, self.repetitions)
 
+                    result_file = Path(temp_dir) / f"{self.name}_{value}_{i}.json"
                     result = self._run_at(result_file, dest, current_config)
                     self.benchmark_results[value].append(result)
 
