@@ -1,0 +1,93 @@
+config:
+  log_ansible_output: false
+  results_print: false
+  results_save_to_file: true
+
+
+DefaultValues: &fio_defaults
+  type: FioFixedParams
+  repetitions: 5
+  destinations:
+    - host: irods_server
+      target_folder: /mnt/netapp
+
+
+benchmarks:
+  # fio_throughput_read:
+  #   <<: *fio_defaults
+  #   fio:
+  #     mode: read
+  #     blocksize: "1024k"
+  #     numjobs: 4
+  #     iodepth: 32
+
+  # fio_throughput_write:
+  #   <<: *fio_defaults
+  #   fio:
+  #     mode: write
+  #     blocksize: "1024k"
+  #     numjobs: 4
+  #     iodepth: 32
+
+  # fio_throughput_rw:
+  #   <<: *fio_defaults
+  #   fio:
+  #     mode: rw
+  #     blocksize: "1024k"
+  #     numjobs: 4
+  #     iodepth: 32
+
+  # fio_iops_read:
+  #   <<: *fio_defaults
+  #   fio:
+  #     mode: randread
+  #     blocksize: "4k"
+  #     numjobs: 4
+  #     iodepth: 32
+
+  # fio_iops_write:
+  #   <<: *fio_defaults
+  #   fio:
+  #     mode: randwrite
+  #     blocksize: "4k"
+  #     numjobs: 4
+  #     iodepth: 32
+
+  # fio_iops_rw:
+  #   <<: *fio_defaults
+  #   fio:
+  #     mode: randrw
+  #     blocksize: "4k"
+  #     numjobs: 4
+  #     iodepth: 32
+
+  # fio_latency_read:
+  #   <<: *fio_defaults
+  #   fio:
+  #     mode: randread
+  #     blocksize: "4k"
+  #     numjobs: 1
+  #     iodepth: 1
+
+  # fio_latency_write:
+  #   <<: *fio_defaults
+  #   fio:
+  #     mode: randwrite
+  #     blocksize: "4k"
+  #     numjobs: 1
+  #     iodepth: 1
+
+  # fio_latency_rw:
+  #   <<: *fio_defaults
+  #   fio:
+  #     mode: randrw
+  #     blocksize: "4k"
+  #     numjobs: 1
+  #     iodepth: 1
+
+  dd_throughput_read:
+    type: DdBenchmark
+    repetitions: 5
+    destinations:
+      - host: irods_server
+        target_folder: /mnt/netapp

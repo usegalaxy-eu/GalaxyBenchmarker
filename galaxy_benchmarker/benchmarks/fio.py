@@ -173,7 +173,7 @@ class FioOneDimParams(FioFixedParams):
             "dim_values": self.dim_values,
         }
 
-
+@base.register_benchmark
 class FioNotContainerized(FioFixedParams):
     """Run fio outside of a container"""
 

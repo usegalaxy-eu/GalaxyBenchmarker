@@ -1,0 +1,27 @@
+config:
+  log_ansible_output: false
+  results_print: false
+  results_save_to_file: true
+
+
+Default: &default
+  repetitions: 5
+  fio:
+    mode: write
+    blocksize: 1024k
+    numjobs: 4
+    iodepth: 32
+    runtime_in_s: 180
+  destinations:
+    - host: irods_server
+      target_folder: /mnt/isilon
+
+
+benchmarks:
+  throughput_fio_containerized:
+    <<: *default
+    type: FioFixedParams
+
+  throughput_fio_non_containerized:
+    <<: *default
+    type: FioNotContainerized
