@@ -1,0 +1,28 @@
+config:
+  log_ansible_output: false
+  results_print: false
+  results_save_to_file: true
+
+Default: &default
+  type: DdNetappRead
+  repetitions: 5
+  destinations:
+    - host: irods_server
+      target_folder: /mnt/netapp/read_benchmark
+  dd:
+    blocksize: 1024k
+
+  dim_key: blockcount
+  dim_values:
+    - 1024
+    - 2048
+    - 4096
+    - 8192
+    - 16384
+
+benchmarks:
+  netapp_cold_read:
+    <<: *default
+
+  netapp_hot_read:
+    <<: *default

@@ -25,6 +25,10 @@ log = logging.getLogger(__name__)
 class DdConfig:
     blocksize: str
     blockcount: str
+    input: str
+    output: str
+    flush: bool
+    cleanup: bool
 
     def asdict(self):
         return {k: v for k, v in dataclasses.asdict(self).items() if v is not None}
@@ -52,7 +56,11 @@ class DdFixedParams(base.Benchmark):
 
     dd_config_default = DdConfig(
         blocksize="1G",
-        blockcount="1"
+        blockcount="1",
+        input="/dev/zero",
+        output="/mnt/volume_under_test/dd-testfile.bin",
+        flush=True,
+        cleanup=True,
     )
 
     def __init__(self, name: str, config: dict, benchmarker: Benchmarker):
@@ -83,11 +91,11 @@ class DdFixedParams(base.Benchmark):
                     log.info("Run %d of %d", i + 1, self.repetitions)
                     result_file = Path(temp_dir) / f"{self.name}_{dest.name}_{i}.json"
 
-                    result = self._run_at(result_file, dest, self.merged_dd_config)
+                    result = self._run_at(result_file, dest, i, self.merged_dd_config)
                     self.benchmark_results[dest.name].append(result)
 
     def _run_at(
-        self, result_file: Path, dest: PosixBenchmarkDestination, dd_config: DdConfig
+        self, result_file: Path, dest: PosixBenchmarkDestination, repetition: int, dd_config: DdConfig
     ) -> dict:
         """Perform a single run"""
 
@@ -158,7 +166,7 @@ class DdOneDimParams(DdFixedParams):
                     log.info("Run %d of %d", i + 1, self.repetitions)
 
                     result_file = Path(temp_dir) / f"{self.name}_{value}_{i}.json"
-                    result = self._run_at(result_file, dest, current_config)
+                    result = self._run_at(result_file, dest, i, current_config)
                     self.benchmark_results[value].append(result)
 
     def get_tags(self) -> dict[str, str]:
@@ -167,3 +175,73 @@ class DdOneDimParams(DdFixedParams):
             "dim_key": self.dim_key,
             "dim_values": self.dim_values,
         }
+
+
+@base.register_benchmark
+class DdPrepareNetappRead(DdOneDimParams):
+    """Setup directory struture for DD read benchmark"""
+
+    def _run_at(
+        self, result_file: Path, dest: PosixBenchmarkDestination, repetition: int, dd_config: DdConfig
+    ) -> dict:
+        """Perform a single run"""
+
+        start_time = time.monotonic()
+
+        filename = f"{dd_config.blockcount}x{dd_config.blocksize}.{repetition}.bin"
+        current_config = dataclasses.replace(
+            dd_config,
+            input="/dev/urandom",
+            output=f"/mnt/volume_under_test/{filename}",
+            cleanup=False,
+        )
+
+        self._run_task.run_at(
+            dest.host,
+            {
+                "dd_dir": dest.target_folder,
+                "dd_result_file": result_file.name,
+                "controller_dir": result_file.parent,
+                **{f"dd_{key}": value for key, value in current_config.asdict().items()},
+            },
+        )
+
+        total_runtime = time.monotonic() - start_time
+        log.info("Run took %d s", total_runtime)
+        return {"runtime_in_s": total_runtime}
+
+@base.register_benchmark
+class DdNetappRead(DdOneDimParams):
+    def _run_at(
+        self, result_file: Path, dest: PosixBenchmarkDestination, repetition: int, dd_config: DdConfig
+    ) -> dict:
+        """Perform a single run"""
+
+        start_time = time.monotonic()
+
+        filename = f"{dd_config.blockcount}x{dd_config.blocksize}.{repetition}.bin"
+        current_config = dataclasses.replace(
+            dd_config,
+            input=f"/mnt/volume_under_test/{filename}",
+            output="/dev/null",
+            flush=False,
+            cleanup=False,
+        )
+
+        self._run_task.run_at(
+            dest.host,
+            {
+                "dd_dir": dest.target_folder,
+                "dd_result_file": result_file.name,
+                "controller_dir": result_file.parent,
+                **{f"dd_{key}": value for key, value in current_config.asdict().items()},
+            },
+        )
+
+        total_runtime = time.monotonic() - start_time
+
+        result = parse_result_file(result_file)
+        result["runtime_in_s"] = total_runtime
+        log.info("Run took %d s", total_runtime)
+
+        return result

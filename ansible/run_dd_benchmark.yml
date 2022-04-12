@@ -22,6 +22,13 @@
         force_tag: yes
         source: build
 
+    - name: Clear in-ram caches
+      become: yes
+      copy:
+        content: 3
+        dest: /proc/sys/vm/drop_caches
+        unsafe_writes: yes
+
     - name: Run dd container
       become: yes
       community.docker.docker_container:
@@ -35,9 +42,9 @@
         command: [
           "bs={{ dd_blocksize }}",
           "count={{ dd_blockcount }}",
-          "if=/dev/zero",
-          "of=/mnt/volume_under_test/dd-testfile.bin",
-          "conv=fsync"
+          "if={{ dd_input }}",
+          "of={{ dd_output }}",
+          "{% if dd_flush|bool %}conv=fsync{% endif %}",
         ]
       register: dd_results
 
@@ -54,6 +61,7 @@
       file:
         path: "{{ dd_dir }}/{{ item }}"
         state: absent
+      when: dd_cleanup|bool
       loop:
         - dd_in_progress
         - dd_build
