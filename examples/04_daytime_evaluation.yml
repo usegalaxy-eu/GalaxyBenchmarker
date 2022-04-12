@@ -1,0 +1,22 @@
+config:
+  log_ansible_output: false
+  results_print: false
+  results_save_to_file: true
+
+ConfigFio: &conf_fio
+  repetitions: 1
+  type: FioFixedParams
+  fio:
+    mode: write
+    blocksize: 1024k
+    numjobs: 4
+    iodepth: 32
+
+benchmarks:
+  throughput_by_daytime:
+    <<: *conf_fio
+    destinations:
+      - host: irods_server
+        target_folder: /mnt/isilon
+      - host: irods_server
+        target_folder: /mnt/netapp
