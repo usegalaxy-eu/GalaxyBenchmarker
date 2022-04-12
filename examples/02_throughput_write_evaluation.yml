@@ -36,15 +36,15 @@ ConfigDd: &conf_dd
   repetitions: 5
   type: DdOneDimParams
   dd:
-    blocksize: 1G
+    blocksize: 1024k
 
   dim_key: blockcount
   dim_values:
-    - 1
-    - 2
-    - 4
-    - 8
-    - 16
+    - 1024
+    - 2048
+    - 4096
+    - 8192
+    - 16384
 
 
 benchmarks:
