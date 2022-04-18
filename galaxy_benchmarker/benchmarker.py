@@ -107,11 +107,12 @@ class Benchmarker:
         for i, benchmark in enumerate(self.benchmarks):
             self.current_benchmark = benchmark
             current_run = f"({i+1}/{len(self.benchmarks)})"
-            log.info("%s Pre task for %s", current_run, benchmark.name)
-            benchmark.run_pre_tasks()
 
-            log.info("%s Start run for %s", current_run, benchmark.name)
             try:
+                log.info("%s Pre task for %s", current_run, benchmark.name)
+                benchmark.run_pre_tasks()
+
+                log.info("%s Start run for %s", current_run, benchmark.name)
                 benchmark.run()
             except Exception as e:
                 log.exception(
