@@ -5,14 +5,14 @@ config:
 
 
 DestIsilon: &dest_isilon
-  destinations:
-    - host: irods_server
-      target_folder: /mnt/isilon
+  destination:
+    host: irods_server
+    target_folder: /mnt/isilon
 
 DestNetapp: &dest_netapp
-  destinations:
-    - host: irods_server
-      target_folder: /mnt/netapp
+  destination:
+    host: irods_server
+    target_folder: /mnt/netapp
 
 ConfigFio: &conf_fio
   repetitions: 5

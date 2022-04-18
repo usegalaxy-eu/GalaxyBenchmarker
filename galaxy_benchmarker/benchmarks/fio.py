@@ -45,7 +45,7 @@ class FioConfig:
 
 @base.register_benchmark
 class FioFixedParams(base.Benchmark):
-    """Run fio with fixed params on one or more destinations"""
+    """Run fio with fixed params"""
 
     fio_config_default = FioConfig(
         runtime_in_s=60,
@@ -61,42 +61,37 @@ class FioFixedParams(base.Benchmark):
         self.merged_fio_config = FioConfig(**merged_dict)
         self.merged_fio_config.validate()
 
-        self.destinations: list[PosixBenchmarkDestination] = []
-        for item in config.get("destinations", []):
-            self.destinations.append(PosixBenchmarkDestination(**item))
-
-        if not self.destinations:
+        dest = config.get("destination", {})
+        if not dest:
             raise ValueError(
-                f"At least one destination is required for benchmark {self.__class__.__name__}"
+                f"'destination' property (type: dict) is missing for '{self.name}'"
             )
+        self.destination = PosixBenchmarkDestination(**dest)
 
         self._run_task = ansible.AnsibleTask(playbook="run_fio_benchmark.yml")
 
     def run(self):
-        """Run 'fio' on each destination"""
+        """Run 'fio'"""
 
         with tempfile.TemporaryDirectory() as temp_dir:
-            for dest in self.destinations:
-                log.info("Start %s for %s", self.name, dest.name)
-                self.benchmark_results[dest.name] = []
-                for i in range(self.repetitions):
-                    log.info("Run %d of %d", i + 1, self.repetitions)
-                    result_file = Path(temp_dir) / f"{self.name}_{dest.name}_{i}.json"
+            log.info("Start %s", self.name)
+            self.benchmark_results[self.name] = []
+            for i in range(self.repetitions):
+                log.info("Run %d of %d", i + 1, self.repetitions)
+                result_file = Path(temp_dir) / f"{self.name}_{i}.json"
 
-                    result = self._run_at(result_file, dest, self.merged_fio_config)
-                    self.benchmark_results[dest.name].append(result)
+                result = self._run_at(result_file, self.merged_fio_config)
+                self.benchmark_results[self.name].append(result)
 
-    def _run_at(
-        self, result_file: Path, dest: PosixBenchmarkDestination, fio_config: FioConfig
-    ) -> RunResult:
+    def _run_at(self, result_file: Path, fio_config: FioConfig) -> RunResult:
         """Perform a single run"""
 
         start_time = time.monotonic()
 
         self._run_task.run_at(
-            dest.host,
+            self.destination.host,
             {
-                "fio_dir": dest.target_folder,
+                "fio_dir": self.destination.target_folder,
                 "fio_result_file": result_file.name,
                 "controller_dir": result_file.parent,
                 "fio_jobname": self.name,
@@ -123,9 +118,6 @@ class FioOneDimParams(FioFixedParams):
     def __init__(self, name: str, config: dict, benchmarker: Benchmarker):
         super().__init__(name, config, benchmarker)
 
-        if len(self.destinations) != 1:
-            raise ValueError(f"A single destination is required for {name}")
-
         self.dim_key = config.get("dim_key", None)
         if not self.dim_key:
             raise ValueError(
@@ -148,8 +140,6 @@ class FioOneDimParams(FioFixedParams):
         """Run 'fio', only a single destination supported"""
 
         with tempfile.TemporaryDirectory() as temp_dir:
-            dest = self.destinations[0]
-
             key = self.dim_key
             for value in self.dim_values:
                 log.info("Run with %s set to %s", key, value)
@@ -163,7 +153,7 @@ class FioOneDimParams(FioFixedParams):
                     log.info("Run %d of %d", i + 1, self.repetitions)
 
                     result_file = Path(temp_dir) / f"{self.name}_{value}_{i}.json"
-                    result = self._run_at(result_file, dest, current_config)
+                    result = self._run_at(result_file, current_config)
                     self.benchmark_results[value].append(result)
 
     def get_tags(self) -> dict[str, str]:
@@ -173,6 +163,7 @@ class FioOneDimParams(FioFixedParams):
             "dim_values": self.dim_values,
         }
 
+
 @base.register_benchmark
 class FioNotContainerized(FioFixedParams):
     """Run fio outside of a container"""
@@ -180,10 +171,9 @@ class FioNotContainerized(FioFixedParams):
     def __init__(self, name: str, config: dict, benchmarker: Benchmarker):
         super().__init__(name, config, benchmarker)
 
-        hosts = set(dest.host for dest in self.destinations)
         self._pre_task = ansible.AnsibleTask(
             playbook="run_fio_benchmark_not_containerized_check.yml",
-            host=",".join(hosts) + ",",
+            host=f"{self.destination.host},",
         )
 
         self._run_task = ansible.AnsibleTask(

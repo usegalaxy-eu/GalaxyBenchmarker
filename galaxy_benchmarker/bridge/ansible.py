@@ -15,6 +15,7 @@ LOG_ANSIBLE_OUTPUT = False
 
 _running_playbook: Optional[subprocess.Popen] = None
 
+
 def run_playbook(playbook: Path, host: str, extra_vars: Dict = {}):
     """Run ansible-playbook with the given parameters. Additional variables
     can be given in values as a dict.
@@ -67,6 +68,7 @@ def stop_playbook(signal: int) -> None:
     if _running_playbook is None:
         return
     _running_playbook.send_signal(signal)
+
 
 _tasks: NamedConfigDicts = {}
 

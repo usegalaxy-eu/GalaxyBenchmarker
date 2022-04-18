@@ -12,9 +12,9 @@ Default: &default
     numjobs: 4
     iodepth: 32
     runtime_in_s: 180
-  destinations:
-    - host: irods_server
-      target_folder: /mnt/isilon
+  destination:
+    host: irods_server
+    target_folder: /mnt/isilon
 
 
 benchmarks:

@@ -13,10 +13,14 @@ ConfigFio: &conf_fio
     iodepth: 32
 
 benchmarks:
-  throughput_by_daytime:
+  throughput_by_daytime_isilon:
     <<: *conf_fio
-    destinations:
-      - host: irods_server
-        target_folder: /mnt/isilon
-      - host: irods_server
-        target_folder: /mnt/netapp
+    destination:
+      host: irods_server
+      target_folder: /mnt/isilon
+
+  throughput_by_daytime_netapp:
+    <<: *conf_fio
+    destination:
+      host: irods_server
+      target_folder: /mnt/netapp

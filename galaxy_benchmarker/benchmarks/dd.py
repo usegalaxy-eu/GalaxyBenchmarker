@@ -5,11 +5,11 @@ from __future__ import annotations
 
 import dataclasses
 import logging
+import re
 import tempfile
 import time
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
-import re
 
 from galaxy_benchmarker.benchmarks import base
 from galaxy_benchmarker.bridge import ansible
@@ -69,42 +69,37 @@ class DdFixedParams(base.Benchmark):
         merged_dict = {**self.dd_config_default.asdict(), **config.get("dd", {})}
         self.merged_dd_config = DdConfig(**merged_dict)
 
-        self.destinations: list[PosixBenchmarkDestination] = []
-        for item in config.get("destinations", []):
-            self.destinations.append(PosixBenchmarkDestination(**item))
-
-        if not self.destinations:
+        dest = config.get("destination", {})
+        if not dest:
             raise ValueError(
-                f"At least one destination is required for benchmark {self.__class__.__name__}"
+                f"'destination' property (type: dict) is missing for '{self.name}'"
             )
+        self.destination = PosixBenchmarkDestination(**dest)
 
         self._run_task = ansible.AnsibleTask(playbook="run_dd_benchmark.yml")
 
     def run(self):
-        """Run 'dd' on each destination"""
+        """Run 'dd'"""
 
         with tempfile.TemporaryDirectory() as temp_dir:
-            for dest in self.destinations:
-                log.info("Start %s for %s", self.name, dest.name)
-                self.benchmark_results[dest.name] = []
-                for i in range(self.repetitions):
-                    log.info("Run %d of %d", i + 1, self.repetitions)
-                    result_file = Path(temp_dir) / f"{self.name}_{dest.name}_{i}.json"
+            log.info("Start %s", self.name)
+            self.benchmark_results[self.name] = []
+            for i in range(self.repetitions):
+                log.info("Run %d of %d", i + 1, self.repetitions)
+                result_file = Path(temp_dir) / f"{self.name}_{i}.json"
 
-                    result = self._run_at(result_file, dest, i, self.merged_dd_config)
-                    self.benchmark_results[dest.name].append(result)
+                result = self._run_at(result_file, i, self.merged_dd_config)
+                self.benchmark_results[self.name].append(result)
 
-    def _run_at(
-        self, result_file: Path, dest: PosixBenchmarkDestination, repetition: int, dd_config: DdConfig
-    ) -> dict:
+    def _run_at(self, result_file: Path, repetition: int, dd_config: DdConfig) -> dict:
         """Perform a single run"""
 
         start_time = time.monotonic()
 
         self._run_task.run_at(
-            dest.host,
+            self.destination.host,
             {
-                "dd_dir": dest.target_folder,
+                "dd_dir": self.destination.target_folder,
                 "dd_result_file": result_file.name,
                 "controller_dir": result_file.parent,
                 **{f"dd_{key}": value for key, value in dd_config.asdict().items()},
@@ -127,9 +122,6 @@ class DdOneDimParams(DdFixedParams):
     def __init__(self, name: str, config: dict, benchmarker: Benchmarker):
         super().__init__(name, config, benchmarker)
 
-        if len(self.destinations) != 1:
-            raise ValueError(f"A single destination is required for {name}")
-
         self.dim_key = config.get("dim_key", None)
         if not self.dim_key:
             raise ValueError(
@@ -148,11 +140,9 @@ class DdOneDimParams(DdFixedParams):
             dataclasses.replace(self.merged_dd_config, **{key: value})
 
     def run(self):
-        """Run 'dd', only a single destination supported"""
+        """Run 'dd' with one changing parameter"""
 
         with tempfile.TemporaryDirectory() as temp_dir:
-            dest = self.destinations[0]
-
             key = self.dim_key
             for value in self.dim_values:
                 log.info("Run with %s set to %s", key, value)
@@ -166,7 +156,7 @@ class DdOneDimParams(DdFixedParams):
                     log.info("Run %d of %d", i + 1, self.repetitions)
 
                     result_file = Path(temp_dir) / f"{self.name}_{value}_{i}.json"
-                    result = self._run_at(result_file, dest, i, current_config)
+                    result = self._run_at(result_file, i, current_config)
                     self.benchmark_results[value].append(result)
 
     def get_tags(self) -> dict[str, str]:
@@ -181,9 +171,7 @@ class DdOneDimParams(DdFixedParams):
 class DdPrepareNetappRead(DdOneDimParams):
     """Setup directory struture for DD read benchmark"""
 
-    def _run_at(
-        self, result_file: Path, dest: PosixBenchmarkDestination, repetition: int, dd_config: DdConfig
-    ) -> dict:
+    def _run_at(self, result_file: Path, repetition: int, dd_config: DdConfig) -> dict:
         """Perform a single run"""
 
         start_time = time.monotonic()
@@ -197,12 +185,14 @@ class DdPrepareNetappRead(DdOneDimParams):
         )
 
         self._run_task.run_at(
-            dest.host,
+            self.destination.host,
             {
-                "dd_dir": dest.target_folder,
+                "dd_dir": self.destination.target_folder,
                 "dd_result_file": result_file.name,
                 "controller_dir": result_file.parent,
-                **{f"dd_{key}": value for key, value in current_config.asdict().items()},
+                **{
+                    f"dd_{key}": value for key, value in current_config.asdict().items()
+                },
             },
         )
 
@@ -210,11 +200,10 @@ class DdPrepareNetappRead(DdOneDimParams):
         log.info("Run took %d s", total_runtime)
         return {"runtime_in_s": total_runtime}
 
+
 @base.register_benchmark
 class DdNetappRead(DdOneDimParams):
-    def _run_at(
-        self, result_file: Path, dest: PosixBenchmarkDestination, repetition: int, dd_config: DdConfig
-    ) -> dict:
+    def _run_at(self, result_file: Path, repetition: int, dd_config: DdConfig) -> dict:
         """Perform a single run"""
 
         start_time = time.monotonic()
@@ -229,12 +218,14 @@ class DdNetappRead(DdOneDimParams):
         )
 
         self._run_task.run_at(
-            dest.host,
+            self.destination.host,
             {
-                "dd_dir": dest.target_folder,
+                "dd_dir": self.destination.target_folder,
                 "dd_result_file": result_file.name,
                 "controller_dir": result_file.parent,
-                **{f"dd_{key}": value for key, value in current_config.asdict().items()},
+                **{
+                    f"dd_{key}": value for key, value in current_config.asdict().items()
+                },
             },
         )
 

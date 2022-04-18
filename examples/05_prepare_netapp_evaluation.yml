@@ -7,9 +7,9 @@ benchmarks:
   setup_directory_struture:
     type: DdPrepareNetappRead
     repetitions: 5
-    destinations:
-      - host: irods_server
-        target_folder: /mnt/netapp/read_benchmark
+    destination:
+      host: irods_server
+      target_folder: /mnt/netapp/read_benchmark
     dd:
       blocksize: 1024k
 
