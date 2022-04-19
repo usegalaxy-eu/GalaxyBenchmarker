@@ -9,3 +9,6 @@ path_mappings:
   - irods_path: /zone_1/home/rods
     mapping_path: /
     resource_type: dir
+
+
+allow_other: true

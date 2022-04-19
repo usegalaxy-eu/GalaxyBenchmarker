@@ -6,7 +6,7 @@ RUN \
     fuse \
     wget \
   && wget https://github.com/cyverse/irodsfs/releases/download/v0.4.4/irodsfs_amd64_linux_v0.4.4.tar \
-  && mkdir /irodsfs \ 
+  && mkdir /irodsfs \
   && tar -xf irodsfs_amd64_linux_v0.4.4.tar -C /irodsfs \
   && rm irodsfs_amd64_linux_v0.4.4.tar \
   && apt-get clean \
@@ -14,6 +14,7 @@ RUN \
 
 COPY scripts/ /scripts
 
-RUN adduser --disabled-password --gecos "" --uid 1000 irods
+ARG host_owner_uid
+RUN adduser --disabled-password --gecos "" --uid "${host_owner_uid}" irods
 
 ENTRYPOINT ["/scripts/entrypoint.sh"]

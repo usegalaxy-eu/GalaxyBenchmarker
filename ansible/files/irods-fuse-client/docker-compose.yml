@@ -1,9 +1,13 @@
 version: "3"
 services:
   irods-fuse:
-    build: .
+    build:
+      context: .
+      args:
+        host_owner_uid: ${IRODS_HOST_VOLUME_OWNER}
     privileged: true
-    user: "1000:1000"
+    user: "${IRODS_HOST_VOLUME_OWNER}:${IRODS_HOST_VOLUME_OWNER}"
     volumes:
       # Volume under test
       - "${IRODS_HOST_VOLUME}/irods-fuse:/mnt/volume_under_test:rshared"
+      - "./volumes/fuse.conf:/etc/fuse.conf"

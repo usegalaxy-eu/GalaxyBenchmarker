@@ -181,6 +181,79 @@ class FioNotContainerized(FioFixedParams):
         )
 
 
+@base.register_benchmark
+class FioFullPosix(FioFixedParams):
+
+    def run(self):
+        """Run 'fio'"""
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            log.info("Start %s", self.name)
+
+            throughput_write_config = dataclasses.replace(
+                self.merged_fio_config,
+                mode="write",
+                blocksize="1024k",
+                numjobs=4,
+                iodepth=32,
+            )
+            throughput_read_config = dataclasses.replace(
+                self.merged_fio_config,
+                mode="read",
+                blocksize="1024k",
+                numjobs=4,
+                iodepth=32,
+            )
+            iops_write_config = dataclasses.replace(
+                self.merged_fio_config,
+                mode="randwrite",
+                blocksize="4k",
+                numjobs=4,
+                iodepth=32,
+            )
+            iops_read_config = dataclasses.replace(
+                self.merged_fio_config,
+                mode="randread",
+                blocksize="4k",
+                numjobs=4,
+                iodepth=32,
+            )
+            latency_write_config = dataclasses.replace(
+                self.merged_fio_config,
+                mode="randwrite",
+                blocksize="4k",
+                numjobs=1,
+                iodepth=1,
+            )
+            latency_read_config = dataclasses.replace(
+                self.merged_fio_config,
+                mode="randread",
+                blocksize="4k",
+                numjobs=1,
+                iodepth=1,
+            )
+
+            runs = [
+                ("throughput_write", throughput_write_config),
+                ("throughput_read", throughput_read_config),
+                ("iops_write", iops_write_config),
+                ("iops_read", iops_read_config),
+                ("latency_write", latency_write_config),
+                ("latency_read", latency_read_config),
+            ]
+
+            for name, config in runs:
+                self.benchmark_results[name] = []
+                log.info("Start %s", name)
+                for i in range(self.repetitions):
+                    log.info("Run %d of %d", i + 1, self.repetitions)
+                    result_file = Path(temp_dir) / f"{name}_{i}.json"
+
+                    result = self._run_at(result_file, config)
+                    self.benchmark_results[name].append(result)
+
+
+
 def parse_result_file(file: Path, jobname: str) -> dict[str, Any]:
     if not file.is_file():
         raise ValueError(f"{file} is not a fio result file.")

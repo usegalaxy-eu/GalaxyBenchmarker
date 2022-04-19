@@ -17,8 +17,8 @@
       file:
         path: "{{ irods_host_volume }}/irods-fuse"
         state: directory
-        owner: "1000"
-        group: "1000"
+        owner: "{{ irods_host_volume_owner_uid }}"
+        group: "{{ irods_host_volume_owner_uid }}"
         mode: '0755'
 
     - name: Build and start container
@@ -28,6 +28,7 @@
         build: yes
       environment:
         IRODS_HOST_VOLUME: "{{ irods_host_volume }}"
+        IRODS_HOST_VOLUME_OWNER: "{{ irods_host_volume_owner_uid }}"
       register: output
 
     # - name: Debug startup logs

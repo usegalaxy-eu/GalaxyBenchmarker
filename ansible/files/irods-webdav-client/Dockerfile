@@ -11,6 +11,7 @@ COPY scripts/ /scripts
 
 RUN echo "/mnt/volume_under_test rods adminpass" >> /etc/davfs2/secrets
 
-RUN adduser --disabled-password --gecos "" --uid 1000 irods
+ARG host_owner_uid
+RUN adduser --disabled-password --gecos "" --uid "${host_owner_uid}" irods
 
 ENTRYPOINT ["/scripts/entrypoint.sh"]

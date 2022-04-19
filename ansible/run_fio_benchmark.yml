@@ -35,6 +35,7 @@
         command: [
           "--bs={{ fio_blocksize }}",
           "--direct=1",
+          "--end_fsync=1",
           "--filename=testfile.fio",
           "--group_reporting",
           "--iodepth={{ fio_iodepth }}",

@@ -1,7 +1,10 @@
 version: "3"
 services:
   irods-webdav:
-    build: .
+    build:
+      context: .
+      args:
+        host_owner_uid: ${IRODS_HOST_VOLUME_OWNER}
     privileged: true
     volumes:
       # Configure mount for non-root users
