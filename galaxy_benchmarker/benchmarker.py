@@ -93,7 +93,7 @@ class Benchmarker:
         # if glx_conf["shed_install"]:
         #     self.glx.install_tools_for_workflows(list(self.workflows.values()))
 
-    def run(self) -> None:
+    def run(self, run_pretasks=True, run_benchmarks=True, run_posttasks=True) -> None:
         """Run all benchmarks sequentially
 
         Steps:
@@ -109,19 +109,22 @@ class Benchmarker:
             current_run = f"({i+1}/{len(self.benchmarks)})"
 
             try:
-                log.info("%s Pre task for %s", current_run, benchmark.name)
-                benchmark.run_pre_tasks()
+                if run_pretasks:
+                    log.info("%s Pre task for %s", current_run, benchmark.name)
+                    benchmark.run_pre_tasks()
 
-                log.info("%s Start run for %s", current_run, benchmark.name)
-                benchmark.run()
+                if run_benchmarks:
+                    log.info("%s Start run for %s", current_run, benchmark.name)
+                    benchmark.run()
             except Exception as e:
                 log.exception(
                     "Benchmark run failed with exception. Continuing with next benchmark"
                 )
             self.save_results_of_current_benchmark()
 
-            log.info("%s Post task for %s", current_run, benchmark.name)
-            benchmark.run_post_tasks()
+            if run_posttasks:
+                log.info("%s Post task for %s", current_run, benchmark.name)
+                benchmark.run_post_tasks()
 
     def save_results_of_current_benchmark(self) -> None:
         """Save the result of the current benchmark
