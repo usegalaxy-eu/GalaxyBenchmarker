@@ -16,9 +16,10 @@ def main() -> None:
         "--cfg", type=str, default="benchmark_config.yml", help="Path to config file"
     )
     parser.add_argument("--only-pre-tasks", dest="only_pre_tasks", action="store_true")
+    parser.add_argument("--only-benchmark", dest="only_benchmark", action="store_true")
     parser.add_argument("--only-post-tasks", dest="only_post_tasks", action="store_true")
     parser.add_argument("--verbose", dest="verbose", action="store_true")
-    parser.set_defaults(verbose=False, only_pre_tasks=False, only_post_tasks=False)
+    parser.set_defaults(verbose=False, only_pre_tasks=False, only_benchmark=False, only_post_tasks=False)
 
     args = parser.parse_args()
 
@@ -40,6 +41,8 @@ def main() -> None:
     log.info("Start benchmarker.")
     if args.only_pre_tasks:
         flags = (True, False, False)
+    elif args.only_benchmark:
+        flags = (False, True, False)
     elif args.only_post_tasks:
         flags = (False, False, True)
     else:
