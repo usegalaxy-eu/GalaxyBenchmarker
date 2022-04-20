@@ -39,6 +39,7 @@
   wait_for:
     port: 1247
     delay: 5
+    timeout: 30
 
 - name: Configure rods user for i-Commands
   community.docker.docker_container_exec:

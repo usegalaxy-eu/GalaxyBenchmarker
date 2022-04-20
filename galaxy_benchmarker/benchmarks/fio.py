@@ -259,7 +259,9 @@ def parse_result_file(file: Path, jobname: str) -> dict[str, Any]:
         raise ValueError(f"{file} is not a fio result file.")
 
     with file.open() as file_handle:
-        result_json = json.load(file_handle)
+        lines = file_handle.readlines()
+        lines = [l for l in lines if not l.startswith("fio: pid=")]
+        result_json = json.loads("\n".join(lines))
 
     jobs = [job for job in result_json["jobs"] if job["jobname"] == jobname]
 
