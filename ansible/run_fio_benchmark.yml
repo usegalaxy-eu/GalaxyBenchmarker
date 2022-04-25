@@ -9,7 +9,7 @@
     - name: Create temporary build directory
       tempfile:
         state: directory
-        suffix: fio.build
+        suffix: .fio.build
       register: tempdir
 
     - name: Copy Dockerfile
@@ -67,10 +67,11 @@
       debug: var=fio_results
       when: fio_mode == "read"
 
-    - name: Pause for 10 seconds (or it crashes, github issue opened)
-      pause:
-        seconds: 10
+    - name: Try to read file, may need some time, otherwise will result in remote I/O error
+      shell: dd if={{ fio_dir }}/fio_in_progress/testfile.fio of=/dev/null bs=1024k count=1
       when: fio_mode == "read"
+      retries: 6
+      delay: 5
 
     - name: Run fio container
       become: yes
@@ -114,14 +115,14 @@
         dest: "{{ controller_dir }}/{{ fio_result_file }}"
         flat: yes
 
-    - name: Pause for 10 seconds (or it crashes, github issue opened)
-      pause:
-        seconds: 10
-
     - name: Cleanup
       file:
-        path: "{{ fio_dir }}/{{ item }}"
+        path: "{{ item }}"
         state: absent
       loop:
-        - fio_in_progress
-        - fio_build
+        - "{{ fio_dir }}/fio_in_progress"
+        - "{{ tempdir.path }}"
+      retries: 15
+      delay: 5
+      register: cleanup
+      until: not cleanup["failed"]
