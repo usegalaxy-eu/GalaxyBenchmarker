@@ -1,5 +1,5 @@
 config:
-  log_ansible_output: false
+  log_ansible_output: true
   results_print: false
   results_save_to_file: true
 
