@@ -6,6 +6,10 @@ run_sudo:
 	sudo -E docker-compose up -d
 	sudo docker-compose logs -f benchmarker
 
+.PHONY: run_cron
+run_cron:
+	/usr/local/bin/docker-compose up -d
+
 stop:
 	echo "Gracefull shutdown. Benchmarker has 30 seconds to save results"
 	docker-compose stop -t 30 benchmarker
