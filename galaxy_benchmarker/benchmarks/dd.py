@@ -109,7 +109,6 @@ class DdFixedParams(base.Benchmark):
         total_runtime = time.monotonic() - start_time
 
         result = parse_result_file(result_file)
-        result["runtime_in_s"] = total_runtime
         log.info("Run took %d s", total_runtime)
 
         return result
@@ -232,7 +231,6 @@ class DdNetappRead(DdOneDimParams):
         total_runtime = time.monotonic() - start_time
 
         result = parse_result_file(result_file)
-        result["runtime_in_s"] = total_runtime
         log.info("Run took %d s", total_runtime)
 
         return result

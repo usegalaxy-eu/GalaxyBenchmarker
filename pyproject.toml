@@ -8,27 +8,27 @@ authors = [
 ]
 
 [tool.poetry.dependencies]
-python = "3.10.*"
+python = "^3.10"
 
 # Connectors/Bridges
-ansible = "5.*"
+ansible = "^5"
 bioblend = { git = "https://github.com/galaxyproject/bioblend.git", branch = "main" }
-paramiko = "2.*"
-planemo = "0.74.*"
-python-openstackclient = "5.*"
+paramiko = "^2"
+planemo = "^0.74"
+python-openstackclient = "^5"
 
 # File operations
 ## Templates
-Jinja2 = "3.*"
+Jinja2 = "^3"
 ## Serialization/Deserialization
-pyserde = "0.6.*"
-pyyaml = "6.*"
+pyserde = "^0.6"
+pyyaml = "^6"
 
 [tool.poetry.dev-dependencies]
-isort = "5.*"
-black = "21.12b0"
-types-requests = "*"
-types-paramiko = "2.*"
+isort = "^5"
+black = "*"
+types-requests = "^2"
+types-paramiko = "^2"
 
 [build-system]
 # Fix for editable installs

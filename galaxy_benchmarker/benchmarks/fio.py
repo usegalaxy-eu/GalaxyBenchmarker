@@ -102,7 +102,6 @@ class FioFixedParams(base.Benchmark):
         total_runtime = time.monotonic() - start_time
 
         result = parse_result_file(result_file, self.name)
-        result["runtime_in_s"] = total_runtime
         log.info("Run took %d s", total_runtime)
 
         return result
@@ -183,7 +182,6 @@ class FioNotContainerized(FioFixedParams):
 
 @base.register_benchmark
 class FioFullPosix(FioFixedParams):
-
     def run(self):
         """Run 'fio'"""
 
@@ -251,7 +249,6 @@ class FioFullPosix(FioFixedParams):
 
                     result = self._run_at(result_file, config)
                     self.benchmark_results[name].append(result)
-
 
 
 def parse_result_file(file: Path, jobname: str) -> dict[str, Any]:

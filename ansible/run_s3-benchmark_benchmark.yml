@@ -1,0 +1,59 @@
+- hosts: "{{ host }}"
+  tasks:
+    - name: Create temporary build directory
+      tempfile:
+        state: directory
+        suffix: .s3-benchmark.build
+      register: tempdir
+
+    - name: Copy Dockerfile
+      ansible.posix.synchronize:
+        src: tool-s3-benchmark/
+        dest: "{{ tempdir.path }}"
+        recursive: yes
+
+    - name: Build latest s3-benchmark image
+      become: yes
+      community.docker.docker_image:
+        build:
+          path: "{{ tempdir.path }}"
+        name: galaxybenchmarker/tool-s3-benchmark
+        tag: latest
+        force_source: yes
+        force_tag: yes
+        source: build
+
+    - name: Run s3-benchmark container
+      become: yes
+      community.docker.docker_container:
+        name: s3-benchmark
+        image: galaxybenchmarker/tool-s3-benchmark
+        detach: false
+        cleanup: true
+        command: [
+          "-a", "{{ s3b_access_key_id }}",
+          "-b", "{{ s3b_bucket_name }}",
+          "-d", "{{ s3b_runtime_in_s }}",
+          "-s", "{{ s3b_secret_access_key }}",
+          "-t", "{{ s3b_threads }}",
+          "-u", "{{ s3b_base_url }}",
+          "-r", "{{ s3b_region }}",
+          "-z", "{{ s3b_filesize}}",
+        ]
+      register: s3b_results
+
+    - name: debug
+      debug: var=s3b_results
+
+    - name: Save results
+      local_action:
+        module: copy
+        content: "{{ s3b_results.container.Output }}"
+        dest: "{{ controller_dir }}/{{ s3b_result_file }}"
+
+    - name: Cleanup
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - tempdir.path

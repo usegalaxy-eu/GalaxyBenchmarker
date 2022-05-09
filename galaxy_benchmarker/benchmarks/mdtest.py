@@ -43,7 +43,10 @@ class MdtestFixedParams(base.Benchmark):
     def __init__(self, name: str, config: dict, benchmarker: Benchmarker):
         super().__init__(name, config, benchmarker)
 
-        merged_dict = {**self.mdtest_config_default.asdict(), **config.get("mdtest", {})}
+        merged_dict = {
+            **self.mdtest_config_default.asdict(),
+            **config.get("mdtest", {}),
+        }
         self.merged_mdtest_config = MdtestConfig(**merged_dict)
 
         dest = config.get("destination", {})
@@ -79,14 +82,16 @@ class MdtestFixedParams(base.Benchmark):
                 "mdtest_dir": self.destination.target_folder,
                 "mdtest_result_file": result_file.name,
                 "controller_dir": result_file.parent,
-                **{f"mdtest_{key}": value for key, value in mdtest_config.asdict().items()},
+                **{
+                    f"mdtest_{key}": value
+                    for key, value in mdtest_config.asdict().items()
+                },
             },
         )
 
         total_runtime = time.monotonic() - start_time
 
         result = parse_result_file(result_file)
-        result["runtime_in_s"] = total_runtime
         log.info("Run took %d s", total_runtime)
 
         return result
