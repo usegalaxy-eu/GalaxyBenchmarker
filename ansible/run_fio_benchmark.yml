@@ -102,6 +102,7 @@
           "--size={{ fio_filesize }}",
           "{% if fio_time_based|bool %}--time_based{% endif %}",
           "{% if fio_mode == 'read' %}--create_on_open=1{% endif %}",
+          "{% if fio_ramptime_in_s %}--ramp_time={{ fio_ramptime_in_s }}{% endif%}",
         ]
       register: fio_results
       ignore_errors: yes
