@@ -44,6 +44,7 @@ class Benchmark:
 
     def __init__(self, name: str, config: dict, benchmarker: Benchmarker):
         self.name = name
+        self.benchmarker = benchmarker
 
         repetitions = config.get("repetitions", None)
         if not repetitions:
@@ -122,15 +123,16 @@ class Benchmark:
 
     def save_results_to_file(self, directory: Path) -> str:
         """Write all metrics to a file."""
-        file = directory / self.get_result_filename()
+        file = directory / self.result_file.name
         results = {"tags": self.get_tags(), "results": self.benchmark_results}
         json_results = json.dumps(results, indent=2)
         file.write_text(json_results)
 
         return str(file)
 
-    def get_result_filename(self) -> str:
-        return f"{self.id}_{self.name}.json"
+    @property
+    def result_file(self) -> Path:
+        return Path(f"{self.id}_{self.name}.json")
 
     def get_tags(self) -> dict[str, str]:
         return {

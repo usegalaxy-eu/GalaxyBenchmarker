@@ -26,6 +26,7 @@ class BenchmarkerConfig:
 
     results_path: str = "results/"
     results_save_to_file: bool = True
+    results_save_raw_results: bool = False
     results_print: bool = True
 
     log_ansible_output: bool = False
