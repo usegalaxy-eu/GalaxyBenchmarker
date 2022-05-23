@@ -32,6 +32,7 @@ ConfigFio: &conf_fio
     - 4G
     - 8G
     - 16G
+    - 32G
 
 ConfigDd: &conf_dd
   repetitions: 5
@@ -46,7 +47,7 @@ ConfigDd: &conf_dd
     - 4096
     - 8192
     - 16384
-
+    - 32768
 
 benchmarks:
   throughput_write_fio_isilon:

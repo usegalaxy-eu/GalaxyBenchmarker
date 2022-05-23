@@ -1,0 +1,112 @@
+config:
+  log_ansible_output: false
+  results_print: false
+  results_save_to_file: true
+
+
+DestIsilon: &dest_isilon
+  destination:
+    host: irods_server
+    target_folder: /mnt/isilon
+
+DestNetapp: &dest_netapp
+  destination:
+    host: irods_server
+    target_folder: /mnt/netapp
+
+ConfigFioIoDepth: &conf_fio_iodepth
+  repetitions: 5
+  type: FioOneDimParams
+  fio:
+    mode: randwrite
+    blocksize: 1024k
+    filesize: 4G
+    numjobs: 4
+    time_based: true
+    runtime_in_s: 60
+
+  dim_key: iodepth
+  dim_values:
+    - 1
+    - 2
+    - 4
+    - 8
+    - 16
+    - 32
+    - 64
+
+ConfigFioBlocksize: &conf_fio_blocksize
+  repetitions: 5
+  type: FioOneDimParams
+  fio:
+    mode: randwrite
+    filesize: 4G
+    numjobs: 4
+    iodepth: 32
+    time_based: true
+    runtime_in_s: 60
+
+  dim_key: blocksize
+  dim_values:
+    - 1k
+    - 4k
+    - 16k
+    - 64k
+
+ConfigFioJobs: &conf_fio_numjobs
+  repetitions: 5
+  type: FioOneDimParams
+  fio:
+    mode: randwrite
+    blocksize: 1024k
+    filesize: 4G
+    iodepth: 32
+    time_based: true
+    runtime_in_s: 60
+
+  dim_key: numjobs
+  dim_values:
+    - 1
+    - 2
+    - 4
+    - 8
+    - 16
+
+ConfigFioFilesize: &conf_fio_filesize
+  repetitions: 5
+  type: FioOneDimParams
+  fio:
+    mode: randwrite
+    blocksize: 1024k
+    numjobs: 4
+    iodepth: 32
+    time_based: true
+    runtime_in_s: 60
+
+  dim_key: filesize
+  dim_values:
+    - 256M
+    - 1G
+    - 4G
+    - 16G
+
+benchmarks:
+  iops_write_iodepth_isilon:
+    <<: [*dest_isilon, *conf_fio_iodepth]
+  iops_write_iodepth_netapp:
+    <<: [*dest_netapp, *conf_fio_iodepth]
+
+  iops_write_blocksize_isilon:
+    <<: [*dest_isilon, *conf_fio_blocksize]
+  iops_write_blocksize_netapp:
+    <<: [*dest_netapp, *conf_fio_blocksize]
+
+  iops_write_numjobs_isilon:
+    <<: [*dest_isilon, *conf_fio_numjobs]
+  iops_write_numjobs_netapp:
+    <<: [*dest_netapp, *conf_fio_numjobs]
+
+  iops_write_filesize_isilon:
+    <<: [*dest_isilon, *conf_fio_filesize]
+  iops_write_filesize_netapp:
+    <<: [*dest_netapp, *conf_fio_filesize]
