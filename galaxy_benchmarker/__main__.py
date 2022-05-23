@@ -24,6 +24,7 @@ def main() -> None:
     parser.set_defaults(
         verbose=False, only_pre_tasks=False, only_benchmark=False, only_post_tasks=False
     )
+    parser.add_argument("--benchmarks", nargs="+", default=[])
 
     args = parser.parse_args()
 
@@ -53,7 +54,12 @@ def main() -> None:
         flags = (True, True, True)
 
     pre, bench, post = flags
-    benchmarker.run(run_pretasks=pre, run_benchmarks=bench, run_posttasks=post)
+    benchmarker.run(
+        run_pretasks=pre,
+        run_benchmarks=bench,
+        run_posttasks=post,
+        filter_benchmarks=args.benchmarks,
+    )
 
 
 def configure_logger(verbose: bool) -> logging.Logger:
