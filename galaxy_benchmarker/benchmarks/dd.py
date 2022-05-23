@@ -55,7 +55,7 @@ class DdFixedParams(base.Benchmark):
     """Benchmarking system with 'dd'"""
 
     dd_config_default = DdConfig(
-        blocksize="1G",
+        blocksize="1024k",
         blockcount="1",
         input="/dev/zero",
         output="/mnt/volume_under_test/dd-testfile.bin",
