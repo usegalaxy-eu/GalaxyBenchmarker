@@ -91,7 +91,7 @@
           "--filename=testfile.fio",
           "--group_reporting",
           "--iodepth={{ fio_iodepth }}",
-          "--ioengine=libaio",
+          "--ioengine={{ fio_ioengine }}",
           "--name={{ fio_jobname }}",
           "--numjobs={{ fio_numjobs }}",
           "--output", "/results/{{ fio_result_file }}",

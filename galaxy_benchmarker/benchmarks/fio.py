@@ -35,6 +35,7 @@ class FioConfig:
     refill_buffers: Optional[bool] = None
     time_based: Optional[bool] = None
     ramptime_in_s: Optional[int] = None
+    ioengine: Optional[str] = None
 
     def asdict(self):
         return {k: v for k, v in dataclasses.asdict(self).items() if v is not None}
@@ -54,6 +55,7 @@ class FioFixedParams(base.Benchmark):
         refill_buffers=True,
         time_based=True,
         ramptime_in_s=0,
+        ioengine="libaio",
     )
 
     def __init__(self, name: str, config: dict, benchmarker: Benchmarker):

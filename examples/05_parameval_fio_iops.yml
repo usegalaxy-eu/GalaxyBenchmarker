@@ -19,7 +19,7 @@ ConfigFioIoDepth: &conf_fio_iodepth
   type: FioOneDimParams
   fio:
     mode: randwrite
-    blocksize: 1024k
+    blocksize: 4k
     filesize: 4G
     numjobs: 4
     time_based: true
@@ -58,7 +58,7 @@ ConfigFioJobs: &conf_fio_numjobs
   type: FioOneDimParams
   fio:
     mode: randwrite
-    blocksize: 1024k
+    blocksize: 4k
     filesize: 4G
     iodepth: 32
     time_based: true
@@ -77,7 +77,7 @@ ConfigFioFilesize: &conf_fio_filesize
   type: FioOneDimParams
   fio:
     mode: randwrite
-    blocksize: 1024k
+    blocksize: 4k
     numjobs: 4
     iodepth: 32
     time_based: true
