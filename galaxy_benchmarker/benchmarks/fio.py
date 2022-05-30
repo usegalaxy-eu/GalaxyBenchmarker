@@ -9,7 +9,7 @@ import logging
 import tempfile
 import time
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any
 
 from galaxy_benchmarker.benchmarks import base
 from galaxy_benchmarker.bridge import ansible
@@ -23,47 +23,29 @@ log = logging.getLogger(__name__)
 
 
 @dataclasses.dataclass
-class FioConfig:
+class FioConfig(base.BenchmarkConfig):
     """Available parameters for fio"""
 
-    mode: Optional[str] = None
-    blocksize: Optional[str] = None
-    numjobs: Optional[int] = None
-    iodepth: Optional[int] = None
-    runtime_in_s: Optional[int] = None
-    filesize: Optional[str] = None
-    refill_buffers: Optional[bool] = None
-    time_based: Optional[bool] = None
-    ramptime_in_s: Optional[int] = None
-    ioengine: Optional[str] = None
-
-    def asdict(self):
-        return {k: v for k, v in dataclasses.asdict(self).items() if v is not None}
-
-    def validate(self):
-        # TODO: Implement validation logic
-        pass
+    blocksize: str = ""
+    filesize: str = "5G"
+    iodepth: int = 32
+    ioengine: str = "libaio"
+    mode: str = ""
+    numjobs: int = 4
+    ramptime_in_s: int = 0
+    refill_buffers: bool = True
+    runtime_in_s: int = 60
+    time_based: bool = True
 
 
 @base.register_benchmark
 class FioFixedParams(base.Benchmark):
     """Run fio with fixed params"""
 
-    fio_config_default = FioConfig(
-        runtime_in_s=60,
-        filesize="5G",
-        refill_buffers=True,
-        time_based=True,
-        ramptime_in_s=0,
-        ioengine="libaio",
-    )
-
     def __init__(self, name: str, config: dict, benchmarker: Benchmarker):
         super().__init__(name, config, benchmarker)
 
-        merged_dict = {**self.fio_config_default.asdict(), **config.get("fio", {})}
-        self.merged_fio_config = FioConfig(**merged_dict)
-        self.merged_fio_config.validate()
+        self.config = FioConfig(**config.get("fio", {}))
 
         dest = config.get("destination", {})
         if not dest:
@@ -84,7 +66,7 @@ class FioFixedParams(base.Benchmark):
                 log.info("Run %d of %d", i + 1, self.repetitions)
                 result_file = Path(temp_dir) / f"{self.name}_{i}.json"
 
-                result = self._run_at(result_file, self.merged_fio_config)
+                result = self._run_at(result_file, self.config)
                 self.benchmark_results[self.name].append(result)
 
     def _run_at(self, result_file: Path, fio_config: FioConfig) -> RunResult:
@@ -116,7 +98,7 @@ class FioFixedParams(base.Benchmark):
         return result
 
     def get_tags(self) -> dict[str, str]:
-        return {**super().get_tags(), "fio": self.merged_fio_config.asdict()}
+        return {**super().get_tags(), "fio": self.config.asdict()}
 
 
 @base.register_benchmark
@@ -141,8 +123,7 @@ class FioOneDimParams(FioFixedParams):
         # Validate configurations
         key = self.dim_key
         for value in self.dim_values:
-            fio_config = dataclasses.replace(self.merged_fio_config, **{key: value})
-            fio_config.validate()
+            dataclasses.replace(self.config, **{key: value})
 
     def run(self):
         """Run 'fio', only a single destination supported"""
@@ -152,9 +133,7 @@ class FioOneDimParams(FioFixedParams):
             for value in self.dim_values:
                 log.info("Run with %s set to %s", key, value)
 
-                current_config = dataclasses.replace(
-                    self.merged_fio_config, **{key: value}
-                )
+                current_config = dataclasses.replace(self.config, **{key: value})
 
                 self.benchmark_results[value] = []
                 for i in range(self.repetitions):
@@ -198,42 +177,42 @@ class FioFullPosix(FioFixedParams):
             log.info("Start %s", self.name)
 
             throughput_write_config = dataclasses.replace(
-                self.merged_fio_config,
+                self.config,
                 mode="write",
                 blocksize="1024k",
                 numjobs=4,
                 iodepth=32,
             )
             throughput_read_config = dataclasses.replace(
-                self.merged_fio_config,
+                self.config,
                 mode="read",
                 blocksize="1024k",
                 numjobs=4,
                 iodepth=32,
             )
             iops_write_config = dataclasses.replace(
-                self.merged_fio_config,
+                self.config,
                 mode="randwrite",
                 blocksize="4k",
                 numjobs=4,
                 iodepth=32,
             )
             iops_read_config = dataclasses.replace(
-                self.merged_fio_config,
+                self.config,
                 mode="randread",
                 blocksize="4k",
                 numjobs=4,
                 iodepth=32,
             )
             latency_write_config = dataclasses.replace(
-                self.merged_fio_config,
+                self.config,
                 mode="randwrite",
                 blocksize="4k",
                 numjobs=1,
                 iodepth=1,
             )
             latency_read_config = dataclasses.replace(
-                self.merged_fio_config,
+                self.config,
                 mode="randread",
                 blocksize="4k",
                 numjobs=1,

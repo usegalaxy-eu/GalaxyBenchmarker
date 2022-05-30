@@ -23,31 +23,20 @@ log = logging.getLogger(__name__)
 
 
 @dataclasses.dataclass
-class MdtestConfig:
+class MdtestConfig(base.BenchmarkConfig):
     """Available parameters for mdtest"""
 
-    num_files: Optional[int] = None
-
-    def asdict(self):
-        return {k: v for k, v in dataclasses.asdict(self).items() if v is not None}
+    num_files: int = 1
 
 
 @base.register_benchmark
 class MdtestFixedParams(base.Benchmark):
     """Run mdtest with fixed params"""
 
-    mdtest_config_default = MdtestConfig(
-        num_files=100,
-    )
-
     def __init__(self, name: str, config: dict, benchmarker: Benchmarker):
         super().__init__(name, config, benchmarker)
 
-        merged_dict = {
-            **self.mdtest_config_default.asdict(),
-            **config.get("mdtest", {}),
-        }
-        self.merged_mdtest_config = MdtestConfig(**merged_dict)
+        self.config = MdtestConfig(**config.get("mdtest", {}))
 
         dest = config.get("destination", {})
         if not dest:
@@ -68,7 +57,7 @@ class MdtestFixedParams(base.Benchmark):
                 log.info("Run %d of %d", i + 1, self.repetitions)
                 result_file = Path(temp_dir) / f"{self.name}_{i}.json"
 
-                result = self._run_at(result_file, self.merged_mdtest_config)
+                result = self._run_at(result_file, self.config)
                 self.benchmark_results[self.name].append(result)
 
     def _run_at(self, result_file: Path, mdtest_config: MdtestConfig) -> RunResult:
@@ -102,7 +91,7 @@ class MdtestFixedParams(base.Benchmark):
         return result
 
     def get_tags(self) -> dict[str, str]:
-        return {**super().get_tags(), "mdtest": self.merged_mdtest_config.asdict()}
+        return {**super().get_tags(), "mdtest": self.config.asdict()}
 
 
 def parse_result_file(file: Path) -> dict[str, Any]:

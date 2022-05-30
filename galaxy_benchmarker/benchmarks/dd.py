@@ -22,16 +22,13 @@ log = logging.getLogger(__name__)
 
 
 @dataclasses.dataclass
-class DdConfig:
-    blocksize: str
-    blockcount: str
-    input: str
-    output: str
-    flush: bool
-    cleanup: bool
-
-    def asdict(self):
-        return {k: v for k, v in dataclasses.asdict(self).items() if v is not None}
+class DdConfig(base.BenchmarkConfig):
+    blocksize: str = ""
+    blockcount: str = ""
+    input: str = "/dev/zero"
+    output: str = "/mnt/volume_under_test/dd-testfile.bin"
+    flush: bool = True
+    cleanup: bool = True
 
 
 def parse_result_file(file: Path) -> dict[str, Any]:
@@ -41,7 +38,9 @@ def parse_result_file(file: Path) -> dict[str, Any]:
     with file.open() as file_handle:
         last_line = file_handle.readlines()[-1]
 
-    match = re.search(r"([0-9]+) bytes .* copied, ([0-9\.]+) s, ([0-9\.]+) MB/s$", last_line)
+    match = re.search(
+        r"([0-9]+) bytes .* copied, ([0-9\.]+) s, ([0-9\.]+) MB/s$", last_line
+    )
 
     if not match:
         return {}
@@ -52,32 +51,23 @@ def parse_result_file(file: Path) -> dict[str, Any]:
     bw_in_MB_calulated = (bytes / 1000**2) / time
 
     if bw_in_MB != round(bw_in_MB_calulated, 0):
-        log.warning("Missmatch between calculated and parsed bandwidth in MB: Parsed: %.2f, Calculated %.2f", bw_in_MB, bw_in_MB_calulated)
+        log.warning(
+            "Missmatch between calculated and parsed bandwidth in MB: Parsed: %.2f, Calculated %.2f",
+            bw_in_MB,
+            bw_in_MB_calulated,
+        )
 
-    return {
-        "bw_in_MiB": bw_in_MiB,
-        "bw_in_mb": bw_in_MB
-    }
+    return {"bw_in_MiB": bw_in_MiB, "bw_in_mb": bw_in_MB}
 
 
 @base.register_benchmark
 class DdFixedParams(base.Benchmark):
     """Benchmarking system with 'dd'"""
 
-    dd_config_default = DdConfig(
-        blocksize="",
-        blockcount="",
-        input="/dev/zero",
-        output="/mnt/volume_under_test/dd-testfile.bin",
-        flush=True,
-        cleanup=True,
-    )
-
     def __init__(self, name: str, config: dict, benchmarker: Benchmarker):
         super().__init__(name, config, benchmarker)
 
-        merged_dict = {**self.dd_config_default.asdict(), **config.get("dd", {})}
-        self.merged_dd_config = DdConfig(**merged_dict)
+        self.config = DdConfig(**config.get("dd", {}))
 
         dest = config.get("destination", {})
         if not dest:
@@ -98,7 +88,7 @@ class DdFixedParams(base.Benchmark):
                 log.info("Run %d of %d", i + 1, self.repetitions)
                 result_file = Path(temp_dir) / f"{self.name}_{i}.json"
 
-                result = self._run_at(result_file, i, self.merged_dd_config)
+                result = self._run_at(result_file, i, self.config)
                 self.benchmark_results[self.name].append(result)
 
     def _run_at(self, result_file: Path, repetition: int, dd_config: DdConfig) -> dict:
@@ -151,7 +141,7 @@ class DdOneDimParams(DdFixedParams):
         # Validate configurations
         key = self.dim_key
         for value in self.dim_values:
-            dataclasses.replace(self.merged_dd_config, **{key: value})
+            dataclasses.replace(self.config, **{key: value})
 
     def run(self):
         """Run 'dd' with one changing parameter"""
@@ -161,9 +151,7 @@ class DdOneDimParams(DdFixedParams):
             for value in self.dim_values:
                 log.info("Run with %s set to %s", key, value)
 
-                current_config = dataclasses.replace(
-                    self.merged_dd_config, **{key: value}
-                )
+                current_config = dataclasses.replace(self.config, **{key: value})
 
                 self.benchmark_results[value] = []
                 for i in range(self.repetitions):

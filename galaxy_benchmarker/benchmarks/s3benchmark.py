@@ -22,18 +22,15 @@ log = logging.getLogger(__name__)
 
 
 @dataclasses.dataclass
-class S3BenchmarkConfig:
-    access_key_id: str
-    base_url: str
-    bucket_name: str
-    filesize: str
-    region: str
-    runtime_in_s: int
-    secret_access_key: str
-    threads: int
-
-    def asdict(self):
-        return {k: v for k, v in dataclasses.asdict(self).items() if v is not None}
+class S3BenchmarkConfig(base.BenchmarkConfig):
+    access_key_id: str = ""
+    base_url: str = ""
+    bucket_name: str = ""
+    filesize: str = ""
+    region: str = ""
+    runtime_in_s: int = 60
+    secret_access_key: str = ""
+    threads: int = 1
 
 
 def parse_result_file(file: Path) -> dict[str, Any]:
@@ -83,25 +80,10 @@ def parse_result_file(file: Path) -> dict[str, Any]:
 class S3BenchmarkFixedParams(base.Benchmark):
     """Benchmarking system with 's3benchmark'"""
 
-    s3benchmark_config_default = S3BenchmarkConfig(
-        access_key_id="",
-        base_url="",
-        bucket_name="",
-        filesize="",
-        region="",
-        runtime_in_s=60,
-        secret_access_key="",
-        threads="",
-    )
-
     def __init__(self, name: str, config: dict, benchmarker: Benchmarker):
         super().__init__(name, config, benchmarker)
 
-        merged_dict = {
-            **self.s3benchmark_config_default.asdict(),
-            **config.get("s3benchmark", {}),
-        }
-        self.merged_s3benchmark_config = S3BenchmarkConfig(**merged_dict)
+        self.config = S3BenchmarkConfig(**config.get("s3benchmark", {}))
 
         dest = config.get("destination", {})
         if not dest:
@@ -122,7 +104,7 @@ class S3BenchmarkFixedParams(base.Benchmark):
                 log.info("Run %d of %d", i + 1, self.repetitions)
                 result_file = Path(temp_dir) / f"{self.name}_{i}.json"
 
-                result = self._run_at(result_file, i, self.merged_s3benchmark_config)
+                result = self._run_at(result_file, i, self.config)
                 self.benchmark_results[self.name].append(result)
 
     def _run_at(

@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+import dataclasses
 import json
 import logging
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Type, TypeVar
+from typing import TYPE_CHECKING, Type, TypeVar
 
 from galaxy_benchmarker.bridge.ansible import AnsibleTask
 from galaxy_benchmarker.typing import BenchmarkResults
@@ -35,6 +36,11 @@ def register_benchmark(cls: SubClass) -> SubClass:
     _registered_benchmarks[name] = cls
 
     return cls
+
+
+class BenchmarkConfig:
+    def asdict(self):
+        return {k: v for k, v in dataclasses.asdict(self).items() if v is not None}
 
 
 class Benchmark:
