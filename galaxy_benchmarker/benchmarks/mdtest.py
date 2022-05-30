@@ -4,12 +4,10 @@ Definition of different benchmark-types.
 from __future__ import annotations
 
 import dataclasses
-import json
 import logging
-import tempfile
 import time
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any
 
 from galaxy_benchmarker.benchmarks import base
 from galaxy_benchmarker.bridge import ansible

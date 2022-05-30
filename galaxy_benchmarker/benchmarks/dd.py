@@ -6,7 +6,6 @@ from __future__ import annotations
 import dataclasses
 import logging
 import re
-import tempfile
 import time
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -107,53 +106,8 @@ class DdFixedParams(base.Benchmark):
 
 
 @base.register_benchmark
-class DdOneDimParams(DdFixedParams):
+class DdOneDimParams(base.BenchmarkOneDimMixin, DdFixedParams):
     """Run dd with multiple values for a singel dimension"""
-
-    def __init__(self, name: str, config: dict, benchmarker: Benchmarker):
-        super().__init__(name, config, benchmarker)
-
-        self.dim_key = config.get("dim_key", None)
-        if not self.dim_key:
-            raise ValueError(
-                f"Property 'dim_key' (str) is missing for {name}. Must be a vaild dd_config property name"
-            )
-
-        self.dim_values = config.get("dim_values", [])
-        if not self.dim_values:
-            raise ValueError(
-                f"Property 'dim_values' (list) is missing for {name}. Must be a list of values for 'dim_key'"
-            )
-
-        # Validate configurations
-        key = self.dim_key
-        for value in self.dim_values:
-            dataclasses.replace(self.config, **{key: value})
-
-    def run(self):
-        """Run 'dd' with one changing parameter"""
-
-        with tempfile.TemporaryDirectory() as temp_dir:
-            key = self.dim_key
-            for value in self.dim_values:
-                log.info("Run with %s set to %s", key, value)
-
-                current_config = dataclasses.replace(self.config, **{key: value})
-
-                self.benchmark_results[value] = []
-                for i in range(self.repetitions):
-                    log.info("Run %d of %d", i + 1, self.repetitions)
-
-                    result_file = Path(temp_dir) / f"{self.name}_{value}_{i}.json"
-                    result = self._run_at(result_file, i, current_config)
-                    self.benchmark_results[value].append(result)
-
-    def get_tags(self) -> dict[str, str]:
-        return {
-            **super().get_tags(),
-            "dim_key": self.dim_key,
-            "dim_values": self.dim_values,
-        }
 
 
 @base.register_benchmark
