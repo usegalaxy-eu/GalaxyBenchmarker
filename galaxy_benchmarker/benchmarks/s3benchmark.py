@@ -94,19 +94,6 @@ class S3BenchmarkFixedParams(base.Benchmark):
 
         self._run_task = ansible.AnsibleTask(playbook="run_s3-benchmark_benchmark.yml")
 
-    def run(self):
-        """Run 's3-benchmark'"""
-
-        with tempfile.TemporaryDirectory() as temp_dir:
-            log.info("Start %s", self.name)
-            self.benchmark_results[self.name] = []
-            for i in range(self.repetitions):
-                log.info("Run %d of %d", i + 1, self.repetitions)
-                result_file = Path(temp_dir) / f"{self.name}_{i}.json"
-
-                result = self._run_at(result_file, i, self.config)
-                self.benchmark_results[self.name].append(result)
-
     def _run_at(
         self, result_file: Path, repetition: int, s3benchmark_config: S3BenchmarkConfig
     ) -> dict:

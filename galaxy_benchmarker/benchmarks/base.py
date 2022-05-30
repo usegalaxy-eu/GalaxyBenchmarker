@@ -3,6 +3,7 @@ from __future__ import annotations
 import dataclasses
 import json
 import logging
+import tempfile
 import time
 from datetime import datetime
 from pathlib import Path
@@ -63,6 +64,7 @@ class Benchmark:
 
         self.id = datetime.now().replace(microsecond=0).isoformat()
         self.benchmark_results: BenchmarkResults = {}
+        self.config = BenchmarkConfig()
 
         # Parse pre tasks
         self._pre_tasks: list[AnsibleTask] = []
@@ -121,10 +123,24 @@ class Benchmark:
         for task in self._post_tasks:
             task.run()
 
-    def run(self) -> None:
+    def run(self):
         """Run benchmark"""
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            log.info("Start %s", self.name)
+            self.benchmark_results[self.name] = []
+            for i in range(self.repetitions):
+                log.info("Run %d of %d", i + 1, self.repetitions)
+                result_file = Path(temp_dir) / f"{self.name}_{i}.json"
+
+                result = self._run_at(result_file, i, self.config)
+                self.benchmark_results[self.name].append(result)
+
+    def _run_at(
+        self, result_file: Path, repetition: int, config: BenchmarkConfig
+    ) -> dict:
         raise NotImplementedError(
-            "Benchmark.run is not defined. Overwrite in child class"
+            "Benchmark._run_at is not defined. Overwrite in child class"
         )
 
     def save_results_to_file(self, directory: Path) -> str:

@@ -56,20 +56,9 @@ class FioFixedParams(base.Benchmark):
 
         self._run_task = ansible.AnsibleTask(playbook="run_fio_benchmark.yml")
 
-    def run(self):
-        """Run 'fio'"""
-
-        with tempfile.TemporaryDirectory() as temp_dir:
-            log.info("Start %s", self.name)
-            self.benchmark_results[self.name] = []
-            for i in range(self.repetitions):
-                log.info("Run %d of %d", i + 1, self.repetitions)
-                result_file = Path(temp_dir) / f"{self.name}_{i}.json"
-
-                result = self._run_at(result_file, self.config)
-                self.benchmark_results[self.name].append(result)
-
-    def _run_at(self, result_file: Path, fio_config: FioConfig) -> RunResult:
+    def _run_at(
+        self, result_file: Path, repetition: int, fio_config: FioConfig
+    ) -> RunResult:
         """Perform a single run"""
 
         start_time = time.monotonic()

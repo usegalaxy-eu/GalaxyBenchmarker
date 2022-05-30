@@ -47,20 +47,9 @@ class MdtestFixedParams(base.Benchmark):
 
         self._run_task = ansible.AnsibleTask(playbook="run_mdtest_benchmark.yml")
 
-    def run(self):
-        """Run 'mdtest'"""
-
-        with tempfile.TemporaryDirectory() as temp_dir:
-            log.info("Start %s", self.name)
-            self.benchmark_results[self.name] = []
-            for i in range(self.repetitions):
-                log.info("Run %d of %d", i + 1, self.repetitions)
-                result_file = Path(temp_dir) / f"{self.name}_{i}.json"
-
-                result = self._run_at(result_file, self.config)
-                self.benchmark_results[self.name].append(result)
-
-    def _run_at(self, result_file: Path, mdtest_config: MdtestConfig) -> RunResult:
+    def _run_at(
+        self, result_file: Path, repetition: int, mdtest_config: MdtestConfig
+    ) -> RunResult:
         """Perform a single run"""
 
         start_time = time.monotonic()
