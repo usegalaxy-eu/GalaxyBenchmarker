@@ -34,47 +34,6 @@ ConfigFio: &conf_fio
     - 16G
     - 32G
 
-
-ConfigFioSync4: &conf_fio_sync4
-  repetitions: 5
-  type: FioOneDimParams
-  fio:
-    mode: write
-    blocksize: 1024k
-    numjobs: 4
-    iodepth: 1
-    time_based: false
-    ioengine: sync
-
-  dim_key: filesize
-  dim_values:
-    - 1G
-    - 2G
-    - 4G
-    - 8G
-    - 16G
-    - 32G
-
-ConfigFioSync1: &conf_fio_sync1
-  repetitions: 5
-  type: FioOneDimParams
-  fio:
-    mode: write
-    blocksize: 1024k
-    numjobs: 1
-    iodepth: 1
-    time_based: false
-    ioengine: sync
-
-  dim_key: filesize
-  dim_values:
-    - 1G
-    - 2G
-    - 4G
-    - 8G
-    - 16G
-    - 32G
-
 ConfigDd: &conf_dd
   repetitions: 5
   type: DdOneDimParams
@@ -94,23 +53,11 @@ benchmarks:
   throughput_write_fio_isilon:
     <<: [*dest_isilon, *conf_fio]
 
-  throughput_write_fio_sync1_isilon:
-    <<: [*dest_isilon, *conf_fio_sync1]
-
-  throughput_write_fio_sync4_isilon:
-    <<: [*dest_isilon, *conf_fio_sync4]
-
   throughput_write_dd_isilon:
     <<: [*dest_isilon, *conf_dd]
 
   throughput_write_fio_netapp:
     <<: [*dest_netapp, *conf_fio]
-
-  throughput_write_fio_sync1_netapp:
-    <<: [*dest_netapp, *conf_fio_sync1]
-
-  throughput_write_fio_sync4_netapp:
-    <<: [*dest_netapp, *conf_fio_sync4]
 
   throughput_write_dd_netapp:
     <<: [*dest_netapp, *conf_dd]
