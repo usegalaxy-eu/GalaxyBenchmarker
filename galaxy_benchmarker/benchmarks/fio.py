@@ -292,9 +292,9 @@ def parse_result_file(file: Path, jobname: str) -> dict[str, Any]:
 
 def _parse_job_result(result: dict, prefix: str) -> dict[str, Any]:
     return {
-        f"{prefix}_bw_min_in_mb": result["bw_min"] / 1024,
-        f"{prefix}_bw_max_in_mb": result["bw_max"] / 1024,
-        f"{prefix}_bw_mean_in_mb": result["bw_mean"] / 1024,
+        f"{prefix}_bw_min_in_MiB": result["bw_min"] / 1024,
+        f"{prefix}_bw_max_in_MiB": result["bw_max"] / 1024,
+        f"{prefix}_bw_mean_in_MiB": result["bw_mean"] / 1024,
         f"{prefix}_iops_min": result["iops_min"],
         f"{prefix}_iops_max": result["iops_max"],
         f"{prefix}_iops_mean": result["iops_mean"],

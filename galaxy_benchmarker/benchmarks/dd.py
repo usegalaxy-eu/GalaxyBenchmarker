@@ -41,13 +41,23 @@ def parse_result_file(file: Path) -> dict[str, Any]:
     with file.open() as file_handle:
         last_line = file_handle.readlines()[-1]
 
-    match = re.search(r" s, ([0-9\.]+) MB/s$", last_line)
-    if match:
-        bw = float(match.groups()[0])
-    else:
-        bw = 0
+    match = re.search(r"([0-9]+) bytes .* copied, ([0-9\.]+) s, ([0-9\.]+) MB/s$", last_line)
 
-    return {"bw_in_mb": bw}
+    if not match:
+        return {}
+
+    bytes, time, bw_in_MB = match.groups()
+    bytes, time, bw_in_MB = int(bytes), float(time), float(bw_in_MB)
+    bw_in_MiB = (bytes / 1024**2) / time
+    bw_in_MB_calulated = (bytes / 1000**2) / time
+
+    if bw_in_MB != round(bw_in_MB_calulated, 0):
+        log.warning("Missmatch between calculated and parsed bandwidth in MB: Parsed: %.2f, Calculated %.2f", bw_in_MB, bw_in_MB_calulated)
+
+    return {
+        "bw_in_MiB": bw_in_MiB,
+        "bw_in_mb": bw_in_MB
+    }
 
 
 @base.register_benchmark
