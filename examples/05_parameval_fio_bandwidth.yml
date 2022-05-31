@@ -33,27 +33,7 @@ ConfigFioRuntime: &conf_fio_runtime
     - 120
     - 300
 
-ConfigFioRuntimeFixedRamptime: &conf_fio_runtime_with_fixed_ramptime
-  repetitions: 5
-  type: FioOneDimParams
-  fio:
-    mode: write
-    blocksize: 1024k
-    filesize: 4G
-    numjobs: 4
-    iodepth: 32
-    time_based: true
-    ramptime_in_s: 60
-
-  dim_key: runtime_in_s
-  dim_values:
-    - 10
-    - 20
-    - 60
-    - 120
-    - 300
-
-ConfigFioRuntime3: &conf_fio_ramptime_with_fixed_runtime
+ConfigFioRuntime3: &conf_fio_ramptime
   repetitions: 5
   type: FioOneDimParams
   fio:
@@ -140,7 +120,6 @@ ConfigFioFilesize: &conf_fio_filesize
   fio:
     mode: write
     blocksize: 1024k
-    : 4G
     numjobs: 4
     iodepth: 32
     time_based: true
@@ -154,37 +133,32 @@ ConfigFioFilesize: &conf_fio_filesize
     - 16G
 
 benchmarks:
-  throughput_write_runtime_isilon:
+  param_study_throughput_write_runtime_isilon:
     <<: [*dest_isilon, *conf_fio_runtime]
-  throughput_write_runtime_netapp:
+  param_study_throughput_write_runtime_netapp:
     <<: [*dest_netapp, *conf_fio_runtime]
 
-  throughput_write_runtime2_isilon:
-    <<: [*dest_isilon, *conf_fio_runtime_with_fixed_ramptime]
-  throughput_write_runtime2_netapp:
-    <<: [*dest_netapp, *conf_fio_runtime_with_fixed_ramptime]
+  param_study_throughput_write_ramptime_isilon:
+    <<: [*dest_isilon, *conf_fio_ramptime]
+  param_study_throughput_write_ramptime_netapp:
+    <<: [*dest_netapp, *conf_fio_ramptime]
 
-  throughput_write_ramptime_isilon:
-    <<: [*dest_isilon, *conf_fio_ramptime_with_fixed_runtime]
-  throughput_write_ramptime_netapp:
-    <<: [*dest_netapp, *conf_fio_ramptime_with_fixed_runtime]
-
-  throughput_write_iodepth_isilon:
+  param_study_throughput_write_iodepth_isilon:
     <<: [*dest_isilon, *conf_fio_iodepth]
-  throughput_write_iodepth_netapp:
+  param_study_throughput_write_iodepth_netapp:
     <<: [*dest_netapp, *conf_fio_iodepth]
 
-  throughput_write_blocksize_isilon:
+  param_study_throughput_write_blocksize_isilon:
     <<: [*dest_isilon, *conf_fio_blocksize]
-  throughput_write_blocksize_netapp:
+  param_study_throughput_write_blocksize_netapp:
     <<: [*dest_netapp, *conf_fio_blocksize]
 
-  throughput_write_numjobs_isilon:
+  param_study_throughput_write_numjobs_isilon:
     <<: [*dest_isilon, *conf_fio_numjobs]
-  throughput_write_numjobs_netapp:
+  param_study_throughput_write_numjobs_netapp:
     <<: [*dest_netapp, *conf_fio_numjobs]
 
-  throughput_write_filesize_isilon:
+  param_study_throughput_write_filesize_isilon:
     <<: [*dest_isilon, *conf_fio_filesize]
-  throughput_write_filesize_netapp:
+  param_study_throughput_write_filesize_netapp:
     <<: [*dest_netapp, *conf_fio_filesize]
