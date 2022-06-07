@@ -1,15 +1,16 @@
 FROM ubuntu:20.04
 
-ENV DEBIAN_FRONTEND=noninteractive
+ENV MDTEST_VERSION_TAG=3.3.0
 
 RUN \
   apt-get update \
-  && apt-get install -y \
+  && DEBIAN_FRONTEND=noninteractive apt-get install -y \
     git automake autoconf make gcc mpich \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/* /tmp/* \
   && git clone https://github.com/hpc/ior /mdtest \
   && cd /mdtest \
+  && git checkout ${MDTEST_VERSION_TAG} \
   && ./bootstrap \
   && mkdir build \
   && cd build \
