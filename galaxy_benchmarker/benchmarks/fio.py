@@ -179,7 +179,7 @@ class FioFullPosix(FioFixedParams):
                     log.info("Run %d of %d", i + 1, self.repetitions)
                     result_file = Path(temp_dir) / f"{name}_{i}.json"
 
-                    result = self._run_at(result_file, config)
+                    result = self._run_at(result_file, i, config)
                     self.benchmark_results[name].append(result)
 
 
