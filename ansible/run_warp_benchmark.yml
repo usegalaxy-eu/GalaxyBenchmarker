@@ -1,0 +1,61 @@
+- hosts: "{{ host }}"
+  tasks:
+    - name: Create temporary build directory
+      tempfile:
+        state: directory
+        suffix: .warp.build
+      register: tempdir
+
+    - name: Copy Dockerfile
+      ansible.posix.synchronize:
+        src: tool-warp/
+        dest: "{{ tempdir.path }}"
+        recursive: yes
+
+    - name: Build latest warp image
+      become: yes
+      community.docker.docker_image:
+        build:
+          path: "{{ tempdir.path }}"
+        name: galaxybenchmarker/tool-warp
+        tag: latest
+        force_source: yes
+        force_tag: yes
+        source: build
+
+    - name: Run warp container
+      become: yes
+      community.docker.docker_container:
+        name: warp
+        image: galaxybenchmarker/tool-warp
+        detach: false
+        cleanup: true
+        command: [
+          "{{ warp_mode}}",
+          "--access-key={{ warp_access_key_id }}",
+          "--bucket={{ warp_bucket_name }}",
+          "--concurrent{{ warp_concurrent_ops }}",
+          "--duration={{ warp_runtime }}",
+          "--host={{ warp_base_url }}",
+          "--obj.size={{ warp_filesize}}",
+          "--region={{ warp_region }}",
+          "--secret-key={{ warp_secret_access_key }}",
+          "--tls",
+        ]
+      register: warp_results
+
+    - name: debug
+      debug: var=warp_results
+
+    - name: Save results
+      local_action:
+        module: copy
+        content: "{{ warp_results.container.Output }}"
+        dest: "{{ controller_dir }}/{{ warp_result_file }}"
+
+    - name: Cleanup
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - tempdir.path
