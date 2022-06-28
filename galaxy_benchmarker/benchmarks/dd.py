@@ -1,5 +1,5 @@
 """
-Definition of different benchmark-types.
+Definition of dd-based benchmarks
 """
 from __future__ import annotations
 

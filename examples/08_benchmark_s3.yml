@@ -3,8 +3,6 @@ config:
   results_print: false
   results_save_to_file: true
 
-Default: &default
-
 benchmarks:
   netapp_s3:
     type: S3BenchmarkFixedParams

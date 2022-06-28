@@ -1,5 +1,5 @@
 """
-Definition of different benchmark-types.
+Definition of s3benchmark-based benchmarks
 """
 from __future__ import annotations
 
