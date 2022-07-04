@@ -13,7 +13,7 @@ from galaxy_benchmarker.bridge import ansible
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--cfg", type=str, default="benchmark_config.yml", help="Path to config file"
+        "--cfgs", nargs="+", default=[], help="Path(s) to config file(s)"
     )
     parser.add_argument("--only-pre-tasks", dest="only_pre_tasks", action="store_true")
     parser.add_argument("--only-benchmark", dest="only_benchmark", action="store_true")
@@ -24,42 +24,43 @@ def main() -> None:
     parser.set_defaults(
         verbose=False, only_pre_tasks=False, only_benchmark=False, only_post_tasks=False
     )
-    parser.add_argument("--benchmarks", nargs="+", default=[])
+    parser.add_argument("--benchmarks", nargs="+", default=[], help="List of benchmark(s)")
 
     args = parser.parse_args()
 
     log = configure_logger(args.verbose)
 
-    cfg_path = Path(args.cfg)
-    if not cfg_path.is_file():
-        raise ValueError(f"Path to config '{args.cfg}' is not a file")
+    for config_name in args.cfgs:
+        cfg_path = Path(config_name)
+        if not cfg_path.is_file():
+            raise ValueError(f"Path to config '{config_name}' is not a file")
 
-    log.debug("Loading Configuration from file {filename}".format(filename=args.cfg))
+        log.debug("Loading Configuration from file {filename}".format(filename=config_name))
 
-    cfg = from_yaml(GlobalConfig, cfg_path.read_text())
+        cfg = from_yaml(GlobalConfig, cfg_path.read_text())
 
-    ansible.AnsibleTask.register(cfg.tasks or {})
+        ansible.AnsibleTask.register(cfg.tasks or {})
 
-    log.info("Initializing Benchmarker.")
-    benchmarker = Benchmarker(cfg.config or BenchmarkerConfig(), cfg.benchmarks)
+        log.info("Initializing Benchmarker.")
+        benchmarker = Benchmarker(cfg.config or BenchmarkerConfig(), cfg.benchmarks)
 
-    log.info("Start benchmarker.")
-    if args.only_pre_tasks:
-        flags = (True, False, False)
-    elif args.only_benchmark:
-        flags = (False, True, False)
-    elif args.only_post_tasks:
-        flags = (False, False, True)
-    else:
-        flags = (True, True, True)
+        log.info("Start benchmarker.")
+        if args.only_pre_tasks:
+            flags = (True, False, False)
+        elif args.only_benchmark:
+            flags = (False, True, False)
+        elif args.only_post_tasks:
+            flags = (False, False, True)
+        else:
+            flags = (True, True, True)
 
-    pre, bench, post = flags
-    benchmarker.run(
-        run_pretasks=pre,
-        run_benchmarks=bench,
-        run_posttasks=post,
-        filter_benchmarks=args.benchmarks,
-    )
+        pre, bench, post = flags
+        benchmarker.run(
+            run_pretasks=pre,
+            run_benchmarks=bench,
+            run_posttasks=post,
+            filter_benchmarks=args.benchmarks,
+        )
 
 
 def configure_logger(verbose: bool) -> logging.Logger:
