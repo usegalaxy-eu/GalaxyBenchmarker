@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import signal
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 from types import FrameType
 from typing import Optional
@@ -139,6 +140,9 @@ class Benchmarker:
             if run_posttasks:
                 log.info("%s Post task for %s", current_run, benchmark.name)
                 benchmark.run_post_tasks()
+
+            time = datetime.now().replace(microsecond=0).isoformat()
+            log.info("%s Finished benchmark run at %s", current_run, time)
 
     def save_results_of_current_benchmark(self) -> None:
         """Save the result of the current benchmark
