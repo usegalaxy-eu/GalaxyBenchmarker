@@ -23,5 +23,5 @@ services:
       "examples/02_throughput_write_evaluation.yml",
       "examples/03_container_vs_native.yml",
       "examples/04_parameval_fio_bandwidth.yml",
-      "examples/04_parameval_fio_iops",
+      "examples/04_parameval_fio_iops.yml",
     ]
