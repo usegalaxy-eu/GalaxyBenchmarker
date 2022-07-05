@@ -7,6 +7,7 @@ import dataclasses
 import logging
 import re
 import time
+import shutil
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -112,7 +113,7 @@ class DdFixedParams(base.Benchmark):
         if self.benchmarker.config.results_save_raw_results:
             new_path = self.benchmarker.results / self.result_file.stem
             new_path.mkdir(exist_ok=True)
-            result_file.rename(new_path / result_file.name)
+            shutil.move(result_file, new_path / result_file.name)
 
         log.info("Run took %d s", total_runtime)
 
