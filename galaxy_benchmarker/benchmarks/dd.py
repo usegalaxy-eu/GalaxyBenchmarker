@@ -61,7 +61,7 @@ def parse_result_file(file: Path) -> dict[str, Any]:
         bw_in_MiB = (bytes / 1024**2) / time
         bw_in_MB_calulated = (bytes / 1000**2) / time
 
-        if bw_in_MB != round(bw_in_MB_calulated, 0):
+        if bw_in_MB not in [round(bw_in_MB_calulated, 0),round(bw_in_MB_calulated, 1)]:
             log.warning(
                 "Missmatch between calculated and parsed bandwidth in MB: Parsed: %.2f, Calculated %.2f",
                 bw_in_MB,
