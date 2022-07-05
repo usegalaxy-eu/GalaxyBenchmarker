@@ -5,7 +5,7 @@ config:
 
 
 ThroughputWrite: &throughputWrite
-  repetitions: 5
+  repetitions: 1
   fio:
     mode: write
     blocksize: 1024k
@@ -16,7 +16,7 @@ ThroughputWrite: &throughputWrite
     target_folder: /mnt/isilon
 
 ThroughputRead: &throughputRead
-  repetitions: 5
+  repetitions: 1
   fio:
     mode: read
     blocksize: 1024k
@@ -27,7 +27,7 @@ ThroughputRead: &throughputRead
     target_folder: /mnt/isilon
 
 IopsWrite: &iopsWrite
-  repetitions: 5
+  repetitions: 1
   fio:
     mode: randwrite
     blocksize: 4k
@@ -38,7 +38,7 @@ IopsWrite: &iopsWrite
     target_folder: /mnt/isilon
 
 IopsRead: &iopsRead
-  repetitions: 5
+  repetitions: 1
   fio:
     mode: randread
     blocksize: 4k
@@ -49,7 +49,7 @@ IopsRead: &iopsRead
     target_folder: /mnt/isilon
 
 LatencyWrite: &latencyWrite
-  repetitions: 5
+  repetitions: 1
   fio:
     mode: randwrite
     blocksize: 4k
@@ -60,7 +60,7 @@ LatencyWrite: &latencyWrite
     target_folder: /mnt/isilon
 
 LatencyRead: &latencyRead
-  repetitions: 5
+  repetitions: 1
   fio:
     mode: randread
     blocksize: 4k

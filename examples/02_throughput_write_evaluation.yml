@@ -16,7 +16,7 @@ DestNetapp: &dest_netapp
     target_folder: /mnt/netapp
 
 ConfigFio: &conf_fio
-  repetitions: 5
+  repetitions: 1
   type: FioOneDimParams
   fio:
     mode: write
@@ -34,7 +34,7 @@ ConfigFio: &conf_fio
     - 16G
 
 ConfigDd: &conf_dd
-  repetitions: 5
+  repetitions: 1
   type: DdOneDimParams
   dd:
     blocksize: 1024k

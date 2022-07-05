@@ -15,7 +15,7 @@ DestNetapp: &dest_netapp
     target_folder: /mnt/netapp
 
 ConfigFioIoDepth: &conf_fio_iodepth
-  repetitions: 5
+  repetitions: 1
   type: FioOneDimParams
   fio:
     mode: randwrite
@@ -36,7 +36,7 @@ ConfigFioIoDepth: &conf_fio_iodepth
     - 64
 
 ConfigFioBlocksize: &conf_fio_blocksize
-  repetitions: 5
+  repetitions: 1
   type: FioOneDimParams
   fio:
     mode: randwrite
@@ -54,7 +54,7 @@ ConfigFioBlocksize: &conf_fio_blocksize
     - 64k
 
 ConfigFioJobs: &conf_fio_numjobs
-  repetitions: 5
+  repetitions: 1
   type: FioOneDimParams
   fio:
     mode: randwrite
@@ -73,7 +73,7 @@ ConfigFioJobs: &conf_fio_numjobs
     - 16
 
 ConfigFioFilesize: &conf_fio_filesize
-  repetitions: 5
+  repetitions: 1
   type: FioOneDimParams
   fio:
     mode: randwrite

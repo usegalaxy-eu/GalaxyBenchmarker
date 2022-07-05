@@ -16,7 +16,7 @@ DestNetapp: &dest_netapp
     target_folder: /mnt/netapp
 
 ConfigDdSingle: &conf_dd_single
-  repetitions: 5
+  repetitions: 1
   type: DdOneDimParams
   dd:
     blocksize: 1024k
@@ -30,7 +30,7 @@ ConfigDdSingle: &conf_dd_single
     - 16384
 
 ConfigDdParallel: &conf_dd_parallel
-  repetitions: 5
+  repetitions: 1
   type: DdOneDimParams
   dd:
     blocksize: 1024k
