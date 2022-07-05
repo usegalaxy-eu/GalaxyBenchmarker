@@ -126,3 +126,6 @@ class WarpFixedParams(base.Benchmark):
         log.info("Run took %d s", total_runtime)
 
         return result
+
+    def get_tags(self) -> dict[str, str]:
+        return {**super().get_tags(), "warp": self.config.asdict()}

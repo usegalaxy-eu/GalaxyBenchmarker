@@ -28,35 +28,49 @@ class DdConfig(base.BenchmarkConfig):
     output: str = "/mnt/volume_under_test/dd-testfile.bin"
     flush: bool = True
     cleanup: bool = True
+    parallel: bool = False
 
 
 def parse_result_file(file: Path) -> dict[str, Any]:
     if not file.is_file():
         raise ValueError(f"{file} is not a file.")
 
-    with file.open() as file_handle:
-        last_line = file_handle.readlines()[-1]
+    # Example output
+    # 512+0 records in
+    # 512+0 records out
+    # 512+0 records in
+    # 512+0 records out
+    # 536870912 bytes (537 MB, 512 MiB) copied, 2.32072 s, 231 MB/s
+    # 536870912 bytes (537 MB, 512 MiB) copied, 2.3709 s, 226 MB/s
 
-    match = re.search(
-        r"([0-9]+) bytes .* copied, ([0-9\.]+) s, ([0-9\.]+) MB/s$", last_line
+    pattern = re.compile(
+        r"([0-9]+) bytes .* copied, ([0-9\.]+) s, ([0-9\.]+) MB/s$"
     )
 
-    if not match:
-        return {}
+    matches = []
+    with file.open() as file_handle:
+        for line in file_handle:
+            match = pattern.match(line)
+            if match:
+                matches.append(match.groups())
 
-    bytes, time, bw_in_MB = match.groups()
-    bytes, time, bw_in_MB = int(bytes), float(time), float(bw_in_MB)
-    bw_in_MiB = (bytes / 1024**2) / time
-    bw_in_MB_calulated = (bytes / 1000**2) / time
+    total_bw_in_MiB = 0.0
+    total_bw_in_mb = 0.0
+    for bytes, time, bw_in_MB in matches:
+        bytes, time, bw_in_MB = int(bytes), float(time), float(bw_in_MB)
+        bw_in_MiB = (bytes / 1024**2) / time
+        bw_in_MB_calulated = (bytes / 1000**2) / time
 
-    if bw_in_MB != round(bw_in_MB_calulated, 0):
-        log.warning(
-            "Missmatch between calculated and parsed bandwidth in MB: Parsed: %.2f, Calculated %.2f",
-            bw_in_MB,
-            bw_in_MB_calulated,
-        )
+        if bw_in_MB != round(bw_in_MB_calulated, 0):
+            log.warning(
+                "Missmatch between calculated and parsed bandwidth in MB: Parsed: %.2f, Calculated %.2f",
+                bw_in_MB,
+                bw_in_MB_calulated,
+            )
+        total_bw_in_MiB += bw_in_MiB
+        total_bw_in_mb += bw_in_MB
 
-    return {"bw_in_MiB": bw_in_MiB, "bw_in_mb": bw_in_MB}
+    return {"bw_in_MiB": total_bw_in_MiB, "bw_in_mb": total_bw_in_mb}
 
 
 @base.register_benchmark
@@ -103,6 +117,9 @@ class DdFixedParams(base.Benchmark):
         log.info("Run took %d s", total_runtime)
 
         return result
+
+    def get_tags(self) -> dict[str, str]:
+        return {**super().get_tags(), "dd": self.config.asdict()}
 
 
 @base.register_benchmark

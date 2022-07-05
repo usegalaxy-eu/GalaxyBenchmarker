@@ -1,3 +1,6 @@
 FROM ubuntu:22.04
 
-ENTRYPOINT [ "dd" ]
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+ENTRYPOINT [ "/entrypoint.sh" ]
