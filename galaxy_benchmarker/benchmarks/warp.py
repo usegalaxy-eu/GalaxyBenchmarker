@@ -35,48 +35,52 @@ class WarpConfig(base.BenchmarkConfig):
 
 def parse_result_file(file: Path) -> dict[str, Any]:
 
-    ## TODO
     if not file.is_file():
         raise ValueError(f"{file} is not a file.")
 
     # Example output
-    # Loop 1: PUT time 10.2 secs, objects = 1074, speed = 105.3MB/sec, 105.3 operations/sec. Slowdowns = 0
-    # Loop 1: GET time 10.1 secs, objects = 1124, speed = 111.4MB/sec, 111.4 operations/sec. Slowdowns = 0
-    # Loop 1: DELETE time 0.8 secs, 1286.9 deletes/sec. Slowdowns = 0
+    # Operation: DELETE, 11%, Concurrency: 20, Ran 3m47s.
+    #  * Throughput: 0.28 obj/s
 
-    l_get, l_put, l_delete = "", "", ""
+    # Operation: GET, 38%, Concurrency: 20, Ran 4m15s.
+    #  * Throughput: 8.21 MiB/s, 0.82 obj/s
+
+    # Operation: PUT, 13%, Concurrency: 20, Ran 4m19s.
+    #  * Throughput: 2.85 MiB/s, 0.29 obj/s
+
+    # Operation: STAT, 33%, Concurrency: 20, Ran 4m2s.
+    #  * Throughput: 0.65 obj/s
+    result = {}
+    op = ""
+    pattern_op = re.compile(r"Operation: ([A-Z]+),?")
+    pattern_throughput = re.compile(r"([0-9\.]+) MiB/s,")
+    pattern_ops = re.compile(r"([0-9\.]+) obj/s")
+
     with file.open() as file_handle:
         for line in file_handle:
-            if not line.startswith("Loop"):
+            if line.startswith("Operation: "):
+                # Get op to parse next line
+                op = pattern_op.match(line).groups()[1]
+                continue
+            if not op:
                 continue
 
-            striped = line.split(":")[1].lstrip()
-            if striped.startswith("GET"):
-                l_get = striped
-            elif striped.startswith("PUT"):
-                l_put = striped
-            elif striped.startswith("DELETE"):
-                l_delete = striped
-            else:
-                raise ValueError(f"Unknown linestart: {striped}")
+            throughput_match = pattern_throughput.search(line)
+            ops_match = pattern_ops.search(line)
 
-    pattern = re.compile(
-        r", objects = ([0-9]+), speed = ([0-9\.]+)MB/sec, ([0-9\.]+) operations/sec"
-    )
-    get_num_obj, get_bw, get_ops = pattern.search(l_get).groups()
-    put_num_obj, put_bw, put_ops = pattern.search(l_put).groups()
-    del_ops = re.search(r", ([0-9\.]+) deletes/sec", l_delete).groups()[0]
+            if op == "GET":
+                result["get_bw_in_MiB"] = throughput_match.groups()[1]
+                result["get_ops"] = ops_match.groups()[1]
+            elif op == "PUT":
+                result["put_bw_in_MiB"] = throughput_match.groups()[1]
+                result["put_ops"] = ops_match.groups()[1]
+            elif op == "DELETE":
+                result["delete_ops"] = ops_match.groups()[1]
+            elif op == "STAT":
+                result["stat_ops"] = ops_match.groups()[1]
+            op = ""
 
-    return {
-        "get_num_objects": get_num_obj,
-        "get_bw_in_mibi": get_bw,
-        "get_op_per_s": get_ops,
-        "put_num_objects": put_num_obj,
-        "put_bw_in_mibi": put_bw,
-        "put_op_per_s": put_ops,
-        "del_op_per_s": del_ops,
-    }
-
+    return result
 
 @base.register_benchmark
 class WarpFixedParams(base.Benchmark):
