@@ -51,9 +51,9 @@ def parse_result_file(file: Path) -> dict[str, Any]:
     matches = []
     with file.open() as file_handle:
         for line in file_handle:
-            match = pattern.match(line)
+            match = pattern.findall(line)
             if match:
-                matches.append(match.groups())
+                matches.extend(match)
 
     total_bw_in_MiB = 0.0
     total_bw_in_mb = 0.0
@@ -71,7 +71,11 @@ def parse_result_file(file: Path) -> dict[str, Any]:
         total_bw_in_MiB += bw_in_MiB
         total_bw_in_mb += bw_in_MB
 
-    return {"bw_in_MiB": total_bw_in_MiB, "bw_in_mb": total_bw_in_mb}
+    return {
+        "bw_in_MiB": total_bw_in_MiB,
+        "bw_in_mb": total_bw_in_mb,
+        "detected_matches": len(matches)
+    }
 
 
 @base.register_benchmark
