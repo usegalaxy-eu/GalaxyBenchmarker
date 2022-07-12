@@ -61,7 +61,7 @@ def parse_result_file(file: Path) -> dict[str, Any]:
         for line in file_handle:
             if line.startswith("Operation: "):
                 # Get op to parse next line
-                op = pattern_op.match(line).groups()[1]
+                op = pattern_op.match(line).groups()[0]
                 continue
             if not op:
                 continue
@@ -70,15 +70,15 @@ def parse_result_file(file: Path) -> dict[str, Any]:
             ops_match = pattern_ops.search(line)
 
             if op == "GET":
-                result["get_bw_in_MiB"] = throughput_match.groups()[1]
-                result["get_ops"] = ops_match.groups()[1]
+                result["get_bw_in_MiB"] = throughput_match.groups()[0]
+                result["get_ops"] = ops_match.groups()[0]
             elif op == "PUT":
-                result["put_bw_in_MiB"] = throughput_match.groups()[1]
-                result["put_ops"] = ops_match.groups()[1]
+                result["put_bw_in_MiB"] = throughput_match.groups()[0]
+                result["put_ops"] = ops_match.groups()[0]
             elif op == "DELETE":
-                result["delete_ops"] = ops_match.groups()[1]
+                result["delete_ops"] = ops_match.groups()[0]
             elif op == "STAT":
-                result["stat_ops"] = ops_match.groups()[1]
+                result["stat_ops"] = ops_match.groups()[0]
             op = ""
 
     return result
