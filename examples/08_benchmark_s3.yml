@@ -1,24 +1,25 @@
 config:
   log_ansible_output: false
   results_print: false
+  results_save_raw_results: false
   results_save_to_file: true
 
 benchmarks:
-  # netapp_s3_s3bechmark:
-  #   type: S3BenchmarkFixedParams
-  #   repetitions: 1
-  #   destination:
-  #     host: irods_server
-  #     target_folder: not-needed
-  #   s3benchmark:
-  #     access_key_id: D1U2HMMF0WOK3B41ERFX
-  #     base_url: https://s3.bwsfs.uni-freiburg.de/
-  #     bucket_name: frct-smoe-bench-ec61-01
-  #     filesize: 1M
-  #     region: fr-repl
-  #     secret_access_key: G9q1Nr8W2CaAyF1iDsNyX5iK/m3JU2o/WlDQUIA7
-  #     threads: 8
-  #     runtime_in_s: 60
+  netapp_s3_s3bechmark:
+    type: S3BenchmarkFixedParams
+    repetitions: 1
+    destination:
+      host: irods_server
+      target_folder: not-needed
+    s3benchmark:
+      access_key_id: D1U2HMMF0WOK3B41ERFX
+      base_url: https://s3.bwsfs.uni-freiburg.de/
+      bucket_name: frct-smoe-bench-ec61-01
+      filesize: 1M
+      region: fr-repl
+      secret_access_key: G9q1Nr8W2CaAyF1iDsNyX5iK/m3JU2o/WlDQUIA7
+      threads: 8
+      runtime_in_s: 60
 
   netapp_s3_warp_get:
     type: WarpFixedParams
@@ -35,7 +36,7 @@ benchmarks:
       filesize: 10MiB
       region: fr-repl
       secret_access_key: G9q1Nr8W2CaAyF1iDsNyX5iK/m3JU2o/WlDQUIA7
-      runtime: 30s
+      runtime: 5m0s
 
   netapp_s3_warp_put:
     type: WarpFixedParams
@@ -52,7 +53,7 @@ benchmarks:
       filesize: 10MiB
       region: fr-repl
       secret_access_key: G9q1Nr8W2CaAyF1iDsNyX5iK/m3JU2o/WlDQUIA7
-      runtime: 30s
+      runtime: 5m0s
 
   netapp_s3_warp_delete:
     type: WarpFixedParams
@@ -69,4 +70,4 @@ benchmarks:
       filesize: 1KiB
       region: fr-repl
       secret_access_key: G9q1Nr8W2CaAyF1iDsNyX5iK/m3JU2o/WlDQUIA7
-      runtime: 30s
+      runtime: 5m0s
