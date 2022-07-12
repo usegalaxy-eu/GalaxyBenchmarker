@@ -4,18 +4,69 @@ config:
   results_save_to_file: true
 
 benchmarks:
-  netapp_s3:
-    type: S3BenchmarkFixedParams
+  # netapp_s3_s3bechmark:
+  #   type: S3BenchmarkFixedParams
+  #   repetitions: 1
+  #   destination:
+  #     host: irods_server
+  #     target_folder: not-needed
+  #   s3benchmark:
+  #     access_key_id: D1U2HMMF0WOK3B41ERFX
+  #     base_url: https://s3.bwsfs.uni-freiburg.de/
+  #     bucket_name: frct-smoe-bench-ec61-01
+  #     filesize: 1M
+  #     region: fr-repl
+  #     secret_access_key: G9q1Nr8W2CaAyF1iDsNyX5iK/m3JU2o/WlDQUIA7
+  #     threads: 8
+  #     runtime_in_s: 60
+
+  netapp_s3_warp_get:
+    type: WarpFixedParams
     repetitions: 1
     destination:
-      host: master_vm_1
+      host: irods_server
       target_folder: not-needed
-    s3benchmark:
+    warp:
+      mode: get
       access_key_id: D1U2HMMF0WOK3B41ERFX
-      base_url: https://s3.bwsfs.uni-freiburg.de/
+      base_url: s3.bwsfs.uni-freiburg.de
       bucket_name: frct-smoe-bench-ec61-01
-      filesize: 1M
+      concurrent_ops: 20
+      filesize: 10MiB
       region: fr-repl
       secret_access_key: G9q1Nr8W2CaAyF1iDsNyX5iK/m3JU2o/WlDQUIA7
-      threads: 16
-      runtime_in_s: 10
+      runtime: 30s
+
+  netapp_s3_warp_put:
+    type: WarpFixedParams
+    repetitions: 1
+    destination:
+      host: irods_server
+      target_folder: not-needed
+    warp:
+      mode: put
+      access_key_id: D1U2HMMF0WOK3B41ERFX
+      base_url: s3.bwsfs.uni-freiburg.de
+      bucket_name: frct-smoe-bench-ec61-01
+      concurrent_ops: 20
+      filesize: 10MiB
+      region: fr-repl
+      secret_access_key: G9q1Nr8W2CaAyF1iDsNyX5iK/m3JU2o/WlDQUIA7
+      runtime: 30s
+
+  netapp_s3_warp_delete:
+    type: WarpFixedParams
+    repetitions: 1
+    destination:
+      host: irods_server
+      target_folder: not-needed
+    warp:
+      mode: delete
+      access_key_id: D1U2HMMF0WOK3B41ERFX
+      base_url: s3.bwsfs.uni-freiburg.de
+      bucket_name: frct-smoe-bench-ec61-01
+      concurrent_ops: 20
+      filesize: 1KiB
+      region: fr-repl
+      secret_access_key: G9q1Nr8W2CaAyF1iDsNyX5iK/m3JU2o/WlDQUIA7
+      runtime: 30s

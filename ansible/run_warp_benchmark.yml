@@ -31,15 +31,15 @@
         detach: false
         cleanup: true
         command: [
-          "{{ warp_mode}}",
-          "--access-key={{ warp_access_key_id }}",
-          "--bucket={{ warp_bucket_name }}",
-          "--concurrent{{ warp_concurrent_ops }}",
-          "--duration={{ warp_runtime }}",
-          "--host={{ warp_base_url }}",
-          "--obj.size={{ warp_filesize}}",
-          "--region={{ warp_region }}",
-          "--secret-key={{ warp_secret_access_key }}",
+          "{{ warp_mode }}",
+          "--access-key", "{{ warp_access_key_id }}",
+          "--bucket", "{{ warp_bucket_name }}",
+          "--concurrent", "{{ warp_concurrent_ops }}",
+          "--duration", "{{ warp_runtime }}",
+          "--host", "{{ warp_base_url }}",
+          "--obj.size", "{{ warp_filesize}}",
+          "--region", "{{ warp_region }}",
+          "--secret-key", "{{ warp_secret_access_key }}",
           "--tls",
         ]
       register: warp_results

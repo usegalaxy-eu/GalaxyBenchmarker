@@ -4,7 +4,7 @@
       file:
         path: "{{ fio_dir }}/fio_in_progress"
         state: directory
-        mode: '0755'
+        mode: '0777'
 
     - name: Create temporary build directory
       tempfile:
@@ -105,7 +105,7 @@
           "{% if fio_ramptime_in_s %}--ramp_time={{ fio_ramptime_in_s }}{% endif%}",
         ]
       register: fio_results
-      ignore_errors: yes
+      # ignore_errors: yes
 
     - name: debug
       debug: var=fio_results

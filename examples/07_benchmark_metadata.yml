@@ -5,7 +5,7 @@ config:
 
 Default: &default
   type: MdtestFixedParams
-  repetitions: 5
+  repetitions: 1
   mdtest:
     num_files: 100
 
@@ -13,14 +13,20 @@ benchmarks:
   mdtest_isilon:
     <<: *default
     destination:
-      host: master_vm_1
+      host: irods_server
       target_folder: /mnt/isilon
 
   mdtest_netapp:
     <<: *default
     destination:
-      host: master_vm_1
+      host: irods_server
       target_folder: /mnt/netapp
+
+  benchmark_ssd_tank:
+    <<: *default
+    destination:
+      host: irods_server
+      target_folder: /mnt/ssd_tank/test_moehrles
 
   mdtest_irods_fuse_on_isilon:
     <<: *default
