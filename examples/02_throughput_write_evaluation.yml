@@ -38,6 +38,7 @@ ConfigDd: &conf_dd
   type: DdOneDimParams
   dd:
     blocksize: 1024k
+    parallel: True
 
   dim_key: blockcount
   dim_values:
