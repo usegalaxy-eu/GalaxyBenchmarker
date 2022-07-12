@@ -45,6 +45,10 @@ class FioFixedParams(base.Benchmark):
     def __init__(self, name: str, config: dict, benchmarker: Benchmarker):
         super().__init__(name, config, benchmarker)
 
+        if not "fio" in config:
+            raise ValueError(
+                f"'fio' property (type: dict) is missing for '{self.name}'"
+            )
         self.config = FioConfig(**config.get("fio", {}))
 
         dest = config.get("destination", {})

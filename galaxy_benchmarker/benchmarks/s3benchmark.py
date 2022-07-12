@@ -82,7 +82,11 @@ class S3BenchmarkFixedParams(base.Benchmark):
     def __init__(self, name: str, config: dict, benchmarker: Benchmarker):
         super().__init__(name, config, benchmarker)
 
-        self.config = S3BenchmarkConfig(**config.get("s3benchmark", {}))
+        if not "s3benchmark" in config:
+            raise ValueError(
+                f"'s3benchmark' property (type: dict) is missing for '{self.name}'"
+            )
+        self.config = S3BenchmarkConfig(**config.get("s3benchmark"))
 
         dest = config.get("destination", {})
         if not dest:

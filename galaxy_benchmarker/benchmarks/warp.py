@@ -89,7 +89,11 @@ class WarpFixedParams(base.Benchmark):
     def __init__(self, name: str, config: dict, benchmarker: Benchmarker):
         super().__init__(name, config, benchmarker)
 
-        self.config = WarpConfig(**config.get("warp", {}))
+        if not "warp" in config:
+            raise ValueError(
+                f"'warp' property (type: dict) is missing for '{self.name}'"
+            )
+        self.config = WarpConfig(**config.get("warp"))
 
         dest = config.get("destination", {})
         if not dest:

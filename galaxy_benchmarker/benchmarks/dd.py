@@ -85,6 +85,10 @@ class DdFixedParams(base.Benchmark):
     def __init__(self, name: str, config: dict, benchmarker: Benchmarker):
         super().__init__(name, config, benchmarker)
 
+        if not "dd" in config:
+            raise ValueError(
+                f"'dd' property (type: dict) is missing for '{self.name}'"
+            )
         self.config = DdConfig(**config.get("dd", {}))
 
         dest = config.get("destination", {})

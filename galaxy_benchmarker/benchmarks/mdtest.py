@@ -34,7 +34,11 @@ class MdtestFixedParams(base.Benchmark):
     def __init__(self, name: str, config: dict, benchmarker: Benchmarker):
         super().__init__(name, config, benchmarker)
 
-        self.config = MdtestConfig(**config.get("mdtest", {}))
+        if not "mdtest" in config:
+            raise ValueError(
+                f"'mdtest' property (type: dict) is missing for '{self.name}'"
+            )
+        self.config = MdtestConfig(**config.get("mdtest"))
 
         dest = config.get("destination", {})
         if not dest:
@@ -112,8 +116,15 @@ def parse_result_file(file: Path) -> dict[str, Any]:
         # Line has to be of format:
         # Op                  Max    Min    Mean   Std Dev
         # "Directory creation 48.473 48.473 48.473 0.000"
-        assert len(l) == 6
+        def is_float(value):
+            try:
+                float(value)
+            except ValueError:
+                return False
+            return True
+        floats = [float(item) for item in l if is_float(item)]
+        assert len(floats) == 4
         metric = metrics[key]
-        result[metric] = float(l[4])
+        result[metric] = floats[2]
 
     return result
