@@ -45,7 +45,7 @@ ConfigDdParallel: &conf_dd_parallel
     - 16384
 
 benchmarks:
-  throughput_write_dd_isilon:
+  parameval_dd_isilon:
     type: BenchmarkCompare
     repetitions: 1
     bench_a:
@@ -53,7 +53,7 @@ benchmarks:
     bench_b:
       <<: [*dest_isilon, *conf_dd_parallel]
 
-  throughput_write_dd_netapp:
+  parameval_dd_netapp:
     type: BenchmarkCompare
     repetitions: 1
     bench_a:

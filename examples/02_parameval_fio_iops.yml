@@ -91,22 +91,22 @@ ConfigFioFilesize: &conf_fio_filesize
     - 16G
 
 benchmarks:
-  iops_write_iodepth_isilon:
+  parameval_fio_iops_iodepth_isilon:
     <<: [*dest_isilon, *conf_fio_iodepth]
-  iops_write_iodepth_netapp:
+  parameval_fio_iops_iodepth_netapp:
     <<: [*dest_netapp, *conf_fio_iodepth]
 
-  iops_write_blocksize_isilon:
+  parameval_fio_iops_blocksize_isilon:
     <<: [*dest_isilon, *conf_fio_blocksize]
-  iops_write_blocksize_netapp:
+  parameval_fio_iops_blocksize_netapp:
     <<: [*dest_netapp, *conf_fio_blocksize]
 
-  iops_write_numjobs_isilon:
+  parameval_fio_iops_numjobs_isilon:
     <<: [*dest_isilon, *conf_fio_numjobs]
-  iops_write_numjobs_netapp:
+  parameval_fio_iops_numjobs_netapp:
     <<: [*dest_netapp, *conf_fio_numjobs]
 
-  iops_write_filesize_isilon:
+  parameval_fio_iops_filesize_isilon:
     <<: [*dest_isilon, *conf_fio_filesize]
-  iops_write_filesize_netapp:
+  parameval_fio_iops_filesize_netapp:
     <<: [*dest_netapp, *conf_fio_filesize]
