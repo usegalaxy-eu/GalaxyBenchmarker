@@ -10,25 +10,25 @@ Default: &default
     runtime_in_s: 60
 
 benchmarks:
-  benchmark_isilon:
+  benchmark_posix_isilon:
     <<: *default
     destination:
       host: irods_server
       target_folder: /mnt/isilon
 
-  benchmark_netapp:
+  benchmark_posix_netapp:
     <<: *default
     destination:
       host: irods_server
       target_folder: /mnt/netapp
 
-  benchmark_ssd_tank:
+  benchmark_posix_ssd_tank:
     <<: *default
     destination:
       host: irods_server
       target_folder: /mnt/ssd_tank/test_moehrles
 
-  benchmark_irods_fuse_on_isilon:
+  benchmark_posix_irods_fuse_on_isilon:
     <<: *default
     destination:
       host: irods_client
@@ -55,7 +55,7 @@ benchmarks:
         extra_vars:
           irods_host_volume: /mnt/volume_under_test
 
-  benchmark_irods_fuse_on_netapp:
+  benchmark_posix_irods_fuse_on_netapp:
     <<: *default
     destination:
       host: irods_client
@@ -82,7 +82,7 @@ benchmarks:
         extra_vars:
           irods_host_volume: /mnt/volume_under_test
 
-  benchmark_irods_davrods_on_isilon:
+  benchmark_posix_irods_davrods_on_isilon:
     <<: *default
     destination:
       host: irods_client
@@ -110,7 +110,7 @@ benchmarks:
         extra_vars:
           irods_host_volume: /mnt/isilon
 
-  benchmark_irods_davrods_on_netapp:
+  benchmark_posix_irods_davrods_on_netapp:
     <<: *default
     destination:
       host: irods_client
@@ -138,7 +138,7 @@ benchmarks:
         extra_vars:
           irods_host_volume: /mnt/netapp
 
-  benchmark_irods_fuse_on_s3:
+  benchmark_posix_irods_fuse_on_s3:
     <<: *default
     destination:
       host: irods_client

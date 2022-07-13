@@ -5,7 +5,7 @@ config:
   results_save_to_file: true
 
 benchmarks:
-  netapp_s3_s3bechmark:
+  benchmark_s3_s3bechmark:
     type: S3BenchmarkFixedParams
     repetitions: 1
     destination:
@@ -21,7 +21,7 @@ benchmarks:
       threads: 8
       runtime_in_s: 60
 
-  netapp_s3_warp_get:
+  benchmark_s3_warp_get:
     type: WarpFixedParams
     repetitions: 1
     destination:
@@ -38,7 +38,7 @@ benchmarks:
       secret_access_key: G9q1Nr8W2CaAyF1iDsNyX5iK/m3JU2o/WlDQUIA7
       runtime: 5m0s
 
-  netapp_s3_warp_put:
+  benchmark_s3_warp_put:
     type: WarpFixedParams
     repetitions: 1
     destination:
@@ -55,7 +55,7 @@ benchmarks:
       secret_access_key: G9q1Nr8W2CaAyF1iDsNyX5iK/m3JU2o/WlDQUIA7
       runtime: 5m0s
 
-  netapp_s3_warp_delete:
+  benchmark_s3_warp_delete:
     type: WarpFixedParams
     repetitions: 1
     destination:

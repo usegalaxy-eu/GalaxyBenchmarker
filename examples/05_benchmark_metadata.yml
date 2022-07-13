@@ -10,25 +10,25 @@ Default: &default
     num_files: 100
 
 benchmarks:
-  mdtest_isilon:
+  benchmark_metadata_isilon:
     <<: *default
     destination:
       host: irods_server
       target_folder: /mnt/isilon
 
-  mdtest_netapp:
+  benchmark_metadata_netapp:
     <<: *default
     destination:
       host: irods_server
       target_folder: /mnt/netapp
 
-  benchmark_ssd_tank:
+  benchmark_metadata_ssd_tank:
     <<: *default
     destination:
       host: irods_server
       target_folder: /mnt/ssd_tank/test_moehrles
 
-  mdtest_irods_fuse_on_isilon:
+  benchmark_metadata_irods_fuse_on_isilon:
     <<: *default
     destination:
       host: irods_client
@@ -55,7 +55,7 @@ benchmarks:
         extra_vars:
           irods_host_volume: /mnt/volume_under_test
 
-  mdtest_irods_davrods_on_isilon:
+  benchmark_metadata_irods_davrods_on_isilon:
     <<: *default
     destination:
       host: irods_client
