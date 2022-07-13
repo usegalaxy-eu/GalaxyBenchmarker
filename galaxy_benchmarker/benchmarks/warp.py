@@ -138,3 +138,7 @@ class WarpFixedParams(base.Benchmark):
 
     def get_tags(self) -> dict[str, str]:
         return {**super().get_tags(), "warp": self.config.asdict()}
+
+@base.register_benchmark
+class WarpOneDimParams(base.BenchmarkOneDimMixin, WarpFixedParams):
+    """Run warp with multiple values for a singel dimension"""

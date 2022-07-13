@@ -1,0 +1,52 @@
+config:
+  log_ansible_output: false
+  results_print: false
+  results_save_raw_results: false
+  results_save_to_file: true
+
+benchmarks:
+  parameval_s3benchmark_threads:
+    type: S3BenchmarkOneDimParams
+    repetitions: 1
+    destination:
+      host: irods_server
+      target_folder: not-needed
+    s3benchmark:
+      access_key_id: D1U2HMMF0WOK3B41ERFX
+      base_url: https://s3.bwsfs.uni-freiburg.de/
+      bucket_name: frct-smoe-bench-ec61-01
+      filesize: 1M
+      region: fr-repl
+      secret_access_key: G9q1Nr8W2CaAyF1iDsNyX5iK/m3JU2o/WlDQUIA7
+      runtime_in_s: 60
+
+    dim_key: threads
+    dim_values:
+      - 1
+      - 2
+      - 4
+      - 8
+      - 16
+
+  parameval_s3benchmark_runtime:
+    type: S3BenchmarkOneDimParams
+    repetitions: 1
+    destination:
+      host: irods_server
+      target_folder: not-needed
+    s3benchmark:
+      access_key_id: D1U2HMMF0WOK3B41ERFX
+      base_url: https://s3.bwsfs.uni-freiburg.de/
+      bucket_name: frct-smoe-bench-ec61-01
+      filesize: 1M
+      region: fr-repl
+      secret_access_key: G9q1Nr8W2CaAyF1iDsNyX5iK/m3JU2o/WlDQUIA7
+      threads: 8
+
+    dim_key: runtime_in_s
+    dim_values:
+      - 10
+      - 20
+      - 60
+      - 120
+      - 300

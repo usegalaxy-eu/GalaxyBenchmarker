@@ -131,3 +131,8 @@ class S3BenchmarkFixedParams(base.Benchmark):
 
     def get_tags(self) -> dict[str, str]:
         return {**super().get_tags(), "s3b": self.config.asdict()}
+
+
+@base.register_benchmark
+class S3BenchmarkOneDimParams(base.BenchmarkOneDimMixin, S3BenchmarkFixedParams):
+    """Run s3benchmark with multiple values for a singel dimension"""
