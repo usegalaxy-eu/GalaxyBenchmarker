@@ -1,0 +1,22 @@
+version: "3"
+services:
+  galaxy:
+    image: bgruening/galaxy-stable
+    hostname: galaxy
+    domainname: local
+    ports:
+    # FTP Upload
+    # - "8021:21"
+    # ??
+    # - "8022:22"
+    # Webserver
+    - "8080:80"
+    # supvisord web app
+    - "9002:9002"
+    volumes:
+      - ./export:/export
+      - ./custom_tools:/custom_tools
+    environment:
+      - GALAXY_CONFIG_TOOL_CONFIG_FILE=/custom_tools/custom_tool_conf.xml
+
+      # watch -n 1 "find files -type f | wc -l"

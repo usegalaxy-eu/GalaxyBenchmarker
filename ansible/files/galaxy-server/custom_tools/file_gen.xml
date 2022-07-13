@@ -1,0 +1,20 @@
+<tool id="demo_1" name="File Generator" version="0.0.1">
+    <description>Create files</description>
+    <command>
+python '$__tool_directory__/file_gen.py' '${num_files}' '${file_size}' './output'
+    </command>
+    <inputs>
+        <param name="num_files" type="integer" value="1" label="Number of files"/>
+        <param name="file_size" type="integer" value="1024" label="File size"/>
+    </inputs>
+    <outputs>
+        <collection name="out_dir" type="list" label="Generated files">
+            <discover_datasets pattern="__name_and_ext__" directory="output" />
+        </collection>
+    </outputs>
+    <tests>
+    </tests>
+    <help>
+**DEMO**
+    </help>
+</tool>
