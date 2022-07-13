@@ -49,7 +49,7 @@ ConfigDd: &conf_dd
     - 16384
 
 benchmarks:
-  throughput_write_isilon:
+  dd_vs_fio_isilon:
     type: BenchmarkCompare
     repetitions: 1
     bench_a:
@@ -57,7 +57,7 @@ benchmarks:
     bench_b:
       <<: [*dest_isilon, *conf_dd]
 
-  throughput_write_netapp:
+  dd_vs_fio_netapp:
     type: BenchmarkCompare
     repetitions: 1
     bench_a:

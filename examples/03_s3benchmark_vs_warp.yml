@@ -1,0 +1,23 @@
+config:
+  log_ansible_output: false
+  results_print: false
+  results_save_raw_results: false
+  results_save_to_file: true
+
+
+benchmarks:
+  s3benchmark_vs_warp_isilon:
+    type: BenchmarkCompare
+    repetitions: 1
+    bench_a:
+      <<: [*dest_isilon, *conf_fio]
+    bench_b:
+      <<: [*dest_isilon, *conf_dd]
+
+  s3benchmark_vs_warp_netapp:
+    type: BenchmarkCompare
+    repetitions: 1
+    bench_a:
+      <<: [*dest_netapp, *conf_fio]
+    bench_b:
+      <<: [*dest_netapp, *conf_dd]
