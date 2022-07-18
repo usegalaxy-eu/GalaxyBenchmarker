@@ -2,7 +2,7 @@ FROM ubuntu:20.04
 
 ## Install official release version
 
-# ENV IRODSFS_VERSION=v0.6.0
+# ENV IRODSFS_VERSION=v0.7.3
 # ENV IRODSFS_TAR=irodsfs_amd64_linux_${IRODSFS_VERSION}.tar
 
 # RUN \

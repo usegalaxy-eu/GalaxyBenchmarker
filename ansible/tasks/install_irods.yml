@@ -45,7 +45,9 @@
   community.docker.docker_container_exec:
     container: irods_irods_1
     argv:
-      - /scripts/auth.sh
+      - /bin/bash
+      - "-c"
+      - iinit adminpass
   retries: 3
   delay: 3
   register: result

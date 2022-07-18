@@ -1,6 +1,6 @@
 FROM ubuntu:18.04
 
-ENV IRODS_VERSION=4.3.0
+ENV IRODS_VERSION=4.2.10
 
 RUN \
   apt-get update \
@@ -13,6 +13,8 @@ RUN \
   && echo "deb [arch=amd64] https://packages.irods.org/apt/ $(lsb_release -sc) main" | tee /etc/apt/sources.list.d/renci-irods.list \
   && apt-get update \
   && apt-get install -y \
+    irods-runtime=${IRODS_VERSION}* \
+    irods-icommands=${IRODS_VERSION}* \
     irods-server=${IRODS_VERSION}* \
     irods-database-plugin-postgres=${IRODS_VERSION}* \
     irods-resource-plugin-s3=${IRODS_VERSION}* \
