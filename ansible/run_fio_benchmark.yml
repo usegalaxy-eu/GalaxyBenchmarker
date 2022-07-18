@@ -1,129 +1,161 @@
 - hosts: "{{ host }}"
   tasks:
-    - name: Create test directory
-      file:
-        path: "{{ fio_dir }}/fio_in_progress"
-        state: directory
-        mode: '0777'
+    - name: Run fio benchmark
+      block:
+      - name: Create test directory
+        file:
+          path: "{{ fio_dir }}/fio_in_progress"
+          state: directory
+          mode: '0777'
 
-    - name: Create temporary build directory
-      tempfile:
-        state: directory
-        suffix: .fio.build
-      register: tempdir
+      - name: Create temporary build directory
+        tempfile:
+          state: directory
+          suffix: .fio.build
+        register: tempdir
 
-    - name: Copy Dockerfile
-      ansible.posix.synchronize:
-        src: tool-fio/
-        dest: "{{ tempdir.path }}"
-        recursive: yes
+      - name: Copy Dockerfile
+        ansible.posix.synchronize:
+          src: tool-fio/
+          dest: "{{ tempdir.path }}"
+          recursive: yes
 
-    - name: Build latest fio image
-      become: yes
-      community.docker.docker_image:
-        build:
-          path: "{{ tempdir.path }}"
-        name: galaxybenchmarker/tool-fio
-        tag: latest
-        force_source: yes
-        force_tag: yes
-        source: build
+      - name: Build latest fio image
+        become: yes
+        community.docker.docker_image:
+          build:
+            path: "{{ tempdir.path }}"
+          name: galaxybenchmarker/tool-fio
+          tag: latest
+          force_source: yes
+          force_tag: yes
+          source: build
 
-    - name: Run fio container (create files)
-      become: yes
-      community.docker.docker_container:
-        name: fio
-        image: galaxybenchmarker/tool-fio
-        detach: false
-        cleanup: true
-        volumes:
-          - "{{ tempdir.path }}:/results:rw"
-          - "{{ fio_dir }}/fio_in_progress:/mnt/volume_under_test:rw"
-        working_dir: /mnt/volume_under_test
-        command: [
-          "--bs={{ fio_blocksize }}",
-          "--direct=1",
-          "--end_fsync=1",
-          "--filename=testfile.fio",
-          "--group_reporting",
-          "--iodepth={{ fio_iodepth }}",
-          "--ioengine=libaio",
-          "--name={{ fio_jobname }}",
-          "--numjobs={{ fio_numjobs }}",
-          "--output", "/results/{{ fio_result_file }}",
-          "--output-format=json",
-          "{% if fio_refill_buffers|bool %}--refill_buffers{% endif %}",
-          "{% if fio_time_based|bool %}--runtime={{ fio_runtime_in_s }}{% endif %}",
-          "--rw={{ fio_mode }}",
-          "--size={{ fio_filesize }}",
-          "{% if fio_time_based|bool %}--time_based{% endif %}",
-          "--create_only=1",
-        ]
-      register: fio_results
-      ignore_errors: yes
-      when: fio_mode == "read"
+      - name: Prepare read benchmark
+        when: fio_mode in ["read", "randread"]
+        block:
+        - name: Run fio container (create files)
+          become: yes
+          community.docker.docker_container:
+            name: fio
+            image: galaxybenchmarker/tool-fio
+            detach: false
+            cleanup: true
+            volumes:
+              - "{{ tempdir.path }}:/results:rw"
+              - "{{ fio_dir }}/fio_in_progress:/mnt/volume_under_test:rw"
+            working_dir: /mnt/volume_under_test
+            command: [
+              "--bs={{ fio_blocksize }}",
+              "--direct=1",
+              "--end_fsync=1",
+              "--filename=testfile.fio",
+              "--group_reporting",
+              "--iodepth={{ fio_iodepth }}",
+              "--ioengine=libaio",
+              "--name={{ fio_jobname }}",
+              "--numjobs={{ fio_numjobs }}",
+              "--output", "/results/{{ fio_result_file }}",
+              "--output-format=json",
+              "{% if fio_refill_buffers|bool %}--refill_buffers{% endif %}",
+              "{% if fio_time_based|bool %}--runtime={{ fio_runtime_in_s }}{% endif %}",
+              "--rw={{ fio_mode }}",
+              "--size={{ fio_filesize }}",
+              "{% if fio_time_based|bool %}--time_based{% endif %}",
+              "--create_only=1",
+            ]
+          register: fio_results
+          ignore_errors: yes
 
-    - name: debug
-      debug: var=fio_results
-      when: fio_mode == "read"
+        - name: debug
+          debug: var=fio_results
 
-    - name: Try to read file, may need some time, otherwise will result in remote I/O error
-      shell: dd if={{ fio_dir }}/fio_in_progress/testfile.fio of=/dev/null bs=1024k count=1
-      when: fio_mode == "read"
-      retries: 6
-      delay: 5
+        # Stat breaks with OSError
+        # - name: Check if file exists
+        #   stat: path={{ fio_dir }}/fio_in_progress/testfile.fio
+        #   when: fio_mode in ["read", "randread"]
+        #   register: stat_result
+        - name: Check if file exists (1)
+          shell: ls -la {{ fio_dir }}/fio_in_progress/testfile.fio
+          register: ls_result
 
-    - name: Run fio container
-      become: yes
-      community.docker.docker_container:
-        name: fio
-        image: galaxybenchmarker/tool-fio
-        detach: false
-        cleanup: true
-        volumes:
-          - "{{ tempdir.path }}:/results:rw"
-          - "{{ fio_dir }}/fio_in_progress:/mnt/volume_under_test:rw"
-        working_dir: /mnt/volume_under_test
-        command: [
-          "--bs={{ fio_blocksize }}",
-          "--direct=1",
-          "--end_fsync=1",
-          "--filename=testfile.fio",
-          "--group_reporting",
-          "--iodepth={{ fio_iodepth }}",
-          "--ioengine={{ fio_ioengine }}",
-          "--name={{ fio_jobname }}",
-          "--numjobs={{ fio_numjobs }}",
-          "--output", "/results/{{ fio_result_file }}",
-          "--output-format=json",
-          "{% if fio_refill_buffers|bool %}--refill_buffers{% endif %}",
-          "{% if fio_time_based|bool %}--runtime={{ fio_runtime_in_s }}{% endif %}",
-          "--rw={{ fio_mode }}",
-          "--size={{ fio_filesize }}",
-          "{% if fio_time_based|bool %}--time_based{% endif %}",
-          "{% if fio_mode == 'read' %}--create_on_open=1{% endif %}",
-          "{% if fio_ramptime_in_s %}--ramp_time={{ fio_ramptime_in_s }}{% endif%}",
-        ]
-      register: fio_results
-      # ignore_errors: yes
+        - name: Wait for file
+          when: not ("{{ fio_filesize_in_bytes }}" in ls_result.stdout)
+          block:
+          - name: Pause for 10 seconds to wait for file
+            pause:
+              seconds: 10
 
-    - name: debug
-      debug: var=fio_results
+          - name: Check if file exists (2)
+            shell: ls -la {{ fio_dir }}/fio_in_progress/testfile.fio
+            register: ls_result2
 
-    - name: Collect result
-      ansible.builtin.fetch:
-        src: "{{ tempdir.path }}/{{ fio_result_file }}"
-        dest: "{{ controller_dir }}/{{ fio_result_file }}"
-        flat: yes
+          - name: Wait for file looonger
+            when: not ("{{ fio_filesize_in_bytes }}" in ls_result2.stdout)
+            block:
 
-    - name: Cleanup
-      file:
-        path: "{{ item }}"
-        state: absent
-      loop:
-        - "{{ fio_dir }}/fio_in_progress"
-        - "{{ tempdir.path }}"
-      retries: 15
-      delay: 5
-      register: cleanup
-      until: not cleanup["failed"]
+            - name: Pause for 1 minute to wait for file
+              pause:
+                minutes: 1
+
+            - name: Check if file exists (3)
+              shell: ls -la {{ fio_dir }}/fio_in_progress/testfile.fio
+              register: ls_result3
+              failed_when: not ("{{ fio_filesize_in_bytes }}" in ls_result3.stdout)
+
+      - name: Run fio container
+        become: yes
+        community.docker.docker_container:
+          name: fio
+          image: galaxybenchmarker/tool-fio
+          detach: false
+          cleanup: true
+          volumes:
+            - "{{ tempdir.path }}:/results:rw"
+            - "{{ fio_dir }}/fio_in_progress:/mnt/volume_under_test:rw"
+          working_dir: /mnt/volume_under_test
+          command: [
+            "--bs={{ fio_blocksize }}",
+            "--direct=1",
+            "--end_fsync=1",
+            "--filename=testfile.fio",
+            "--group_reporting",
+            "--iodepth={{ fio_iodepth }}",
+            "--ioengine={{ fio_ioengine }}",
+            "--name={{ fio_jobname }}",
+            "--numjobs={{ fio_numjobs }}",
+            "--output", "/results/{{ fio_result_file }}",
+            "--output-format=json",
+            "{% if fio_refill_buffers|bool %}--refill_buffers{% endif %}",
+            "{% if fio_time_based|bool %}--runtime={{ fio_runtime_in_s }}{% endif %}",
+            "--rw={{ fio_mode }}",
+            "--size={{ fio_filesize }}",
+            "{% if fio_time_based|bool %}--time_based{% endif %}",
+            "{% if fio_mode in ['read', 'randread'] %}--create_on_open=1{% endif %}",
+            "{% if fio_ramptime_in_s %}--ramp_time={{ fio_ramptime_in_s }}{% endif%}",
+          ]
+        register: fio_results
+        # IRODSFS generates errors during cleanup
+        ignore_errors: yes
+
+      - name: debug
+        debug: var=fio_results
+
+      - name: Collect result
+        ansible.builtin.fetch:
+          src: "{{ tempdir.path }}/{{ fio_result_file }}"
+          dest: "{{ controller_dir }}/{{ fio_result_file }}"
+          flat: yes
+
+      always:
+        - name: Cleanup
+          file:
+            path: "{{ item }}"
+            state: absent
+          loop:
+            - "{{ fio_dir }}/fio_in_progress"
+            - "{{ tempdir.path }}"
+          retries: 15
+          delay: 5
+          register: cleanup
+          until: not cleanup["failed"]

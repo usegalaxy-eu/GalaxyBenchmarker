@@ -75,6 +75,7 @@ class FioFixedParams(base.Benchmark):
                 "fio_result_file": result_file.name,
                 "controller_dir": result_file.parent,
                 "fio_jobname": self.name,
+                "fio_filesize_in_bytes": self._filesize_to_bytes(fio_config.filesize),
                 **{f"fio_{key}": value for key, value in fio_config.asdict().items()},
             },
         )
@@ -93,6 +94,27 @@ class FioFixedParams(base.Benchmark):
 
     def get_tags(self) -> dict[str, str]:
         return {**super().get_tags(), "fio": self.config.asdict()}
+
+    @staticmethod
+    def _filesize_to_bytes(filesize: str) -> str:
+        """
+        Examples:
+        "5G" -> "5368709120"
+        """
+        unit = filesize.strip()[-1]
+        number = filesize.strip()[:-1]
+        match unit.upper():
+            case "G":
+                multiplier = 1024**3
+            case "M":
+                multiplier = 1024**2
+            case "K":
+                multiplier = 1024**1
+            case _:
+                assert filesize.isnumeric(), "Unknown unit for filesize"
+                multiplier = 1024**0
+                number = filesize.strip()
+        return str(int(number)*multiplier)
 
 
 @base.register_benchmark
@@ -169,12 +191,12 @@ class FioFullPosix(FioFixedParams):
             )
 
             runs = [
-                ("throughput_write", throughput_write_config),
                 ("throughput_read", throughput_read_config),
-                ("iops_write", iops_write_config),
+                ("throughput_write", throughput_write_config),
                 ("iops_read", iops_read_config),
-                ("latency_write", latency_write_config),
+                ("iops_write", iops_write_config),
                 ("latency_read", latency_read_config),
+                ("latency_write", latency_write_config),
             ]
 
             for name, config in runs:
@@ -184,8 +206,11 @@ class FioFullPosix(FioFixedParams):
                     log.info("Run %d of %d", i + 1, self.repetitions)
                     result_file = Path(temp_dir) / f"{name}_{i}.json"
 
-                    result = self._run_at(result_file, i, config)
-                    self.benchmark_results[name].append(result)
+                    try:
+                        result = self._run_at(result_file, i, config)
+                        self.benchmark_results[name].append(result)
+                    except Exception as e:
+                        log.exception("Error during '%s' run: %s", name, e)
 
 
 def parse_result_file(file: Path, jobname: str) -> dict[str, Any]:
