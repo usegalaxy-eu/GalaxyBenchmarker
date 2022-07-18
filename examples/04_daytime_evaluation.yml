@@ -12,6 +12,20 @@ ConfigFio: &conf_fio
     numjobs: 4
     iodepth: 32
 
+ConfigWarp: &conf_warp
+  repetitions: 1
+  type: WarpFixedParams
+  warp:
+    mode: put
+    access_key_id: D1U2HMMF0WOK3B41ERFX
+    base_url: s3.bwsfs.uni-freiburg.de
+    bucket_name: frct-smoe-bench-ec61-01
+    concurrent_ops: 32
+    filesize: 10MiB
+    region: fr-repl
+    secret_access_key: G9q1Nr8W2CaAyF1iDsNyX5iK/m3JU2o/WlDQUIA7
+    runtime: 60s
+
 benchmarks:
   daytime_evaluation_isilon_01:
     <<: *conf_fio
@@ -25,6 +39,12 @@ benchmarks:
       host: irods_server
       target_folder: /mnt/netapp
 
+  daytime_evaluation_s3_01:
+    <<: *conf_warp
+    destination:
+      host: irods_server
+      target_folder: not-needed
+
   daytime_evaluation_isilon_02:
     <<: *conf_fio
     destination:
@@ -36,3 +56,9 @@ benchmarks:
     destination:
       host: irods_server
       target_folder: /mnt/netapp
+
+  daytime_evaluation_s3_02:
+    <<: *conf_warp
+    destination:
+      host: irods_server
+      target_folder: not-needed
