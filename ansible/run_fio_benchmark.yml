@@ -101,7 +101,19 @@
             - name: Check if file exists (3)
               shell: ls -la {{ fio_dir }}/fio_in_progress/testfile.fio
               register: ls_result3
-              failed_when: not ("{{ fio_filesize_in_bytes }}" in ls_result3.stdout)
+
+            - name: Wait for file loooooonger
+              when: not ("{{ fio_filesize_in_bytes }}" in ls_result3.stdout)
+              block:
+
+              - name: Pause for 1 more minute to wait for file
+                pause:
+                  minutes: 1
+
+              - name: Check if file exists (4)
+                shell: ls -la {{ fio_dir }}/fio_in_progress/testfile.fio
+                register: ls_result4
+                failed_when: not ("{{ fio_filesize_in_bytes }}" in ls_result4.stdout)
 
       - name: Run fio container
         become: yes
