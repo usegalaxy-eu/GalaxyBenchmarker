@@ -164,3 +164,30 @@ benchmarks:
         host: irods_client
         extra_vars:
           irods_host_volume: /mnt/volume_under_test
+
+  benchmark_posix_irods_davrods_on_s3:
+    <<: *default
+    destination:
+      host: irods_client
+      target_folder: /mnt/volume_under_test/irods-webdav
+
+    pre_tasks:
+      - playbook: setup_irods_server_with_davrods.yml
+        host: irods_server
+        extra_vars:
+          irods_host_volume: /mnt/isilon
+      - playbook: setup_irods_webdav_client.yml
+        host: irods_client
+        extra_vars:
+          irods_host_volume: /mnt/volume_under_test
+          irods_server_host: "132.230.223.139"
+          irods_host_volume_owner_uid: "1000"
+    post_tasks:
+      - playbook: cleanup_irods_server_with_davrods.yml
+        host: irods_server
+        extra_vars:
+          irods_host_volume: /mnt/isilon
+      - playbook: cleanup_irods_webdav_client.yml
+        host: irods_client
+        extra_vars:
+          irods_host_volume: /mnt/volume_under_test

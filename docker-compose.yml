@@ -19,8 +19,9 @@ services:
 
     command: [
       "--cfg",
-      "examples/02_throughput_write_evaluation.yml",
-      "examples/06_benchmark_posix.yml",
-      "examples/07_benchmark_metadata.yml",
-      "examples/08_benchmark_s3.yml",
+      "examples/02_parameval_s3benchmark.yml",
+      "examples/03_s3benchmark_vs_warp.yml",
+      "examples/05_benchmark_s3.yml",
+      "examples/05_benchmark_metadata.yml",
+      "examples/05_benchmark_posix.yml",
     ]

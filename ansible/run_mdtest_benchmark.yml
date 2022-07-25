@@ -4,7 +4,7 @@
       file:
         path: "{{ mdtest_dir }}/mdtest_in_progress"
         state: directory
-        mode: '0755'
+        mode: '0777'
 
     - name: Create temporary build directory
       tempfile:
