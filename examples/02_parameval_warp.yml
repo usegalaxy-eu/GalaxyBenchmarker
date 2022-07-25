@@ -29,6 +29,10 @@ benchmarks:
       - 8
       - 16
       - 32
+      - 33
+      - 34
+      - 35
+      - 64
 
   parameval_warp_runtime:
     type: WarpOneDimParams
