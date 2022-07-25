@@ -10,7 +10,6 @@ benchmarks:
     repetitions: 1
     destination:
       host: irods_server
-      target_folder: not-needed
     s3benchmark:
       access_key_id: D1U2HMMF0WOK3B41ERFX
       base_url: https://s3.bwsfs.uni-freiburg.de/
@@ -39,7 +38,6 @@ benchmarks:
     repetitions: 1
     destination:
       host: irods_server
-      target_folder: not-needed
     s3benchmark:
       access_key_id: D1U2HMMF0WOK3B41ERFX
       base_url: https://s3.bwsfs.uni-freiburg.de/

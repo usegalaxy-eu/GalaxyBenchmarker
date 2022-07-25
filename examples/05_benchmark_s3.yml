@@ -10,7 +10,6 @@ benchmarks:
     repetitions: 1
     destination:
       host: irods_server
-      target_folder: not-needed
     warp:
       mode: get
       access_key_id: D1U2HMMF0WOK3B41ERFX
@@ -27,7 +26,6 @@ benchmarks:
     repetitions: 1
     destination:
       host: irods_server
-      target_folder: not-needed
     warp:
       mode: put
       access_key_id: D1U2HMMF0WOK3B41ERFX
@@ -44,7 +42,6 @@ benchmarks:
     repetitions: 1
     destination:
       host: irods_server
-      target_folder: not-needed
     warp:
       mode: delete
       access_key_id: D1U2HMMF0WOK3B41ERFX

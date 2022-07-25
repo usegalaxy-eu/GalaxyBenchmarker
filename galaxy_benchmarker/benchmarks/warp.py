@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING, Any
 
 from galaxy_benchmarker.benchmarks import base
 from galaxy_benchmarker.bridge import ansible
-from galaxy_benchmarker.utils.destinations import PosixBenchmarkDestination
+from galaxy_benchmarker.utils.destinations import BenchmarkDestination
 
 if TYPE_CHECKING:
     from galaxy_benchmarker.benchmarker import Benchmarker
@@ -101,7 +101,7 @@ class WarpFixedParams(base.Benchmark):
             raise ValueError(
                 f"'destination' property (type: dict) is missing for '{self.name}'"
             )
-        self.destination = PosixBenchmarkDestination(**dest)
+        self.destination = BenchmarkDestination(**dest)
 
         self._run_task = ansible.AnsibleTask(playbook="run_warp_benchmark.yml")
 

@@ -43,7 +43,6 @@ benchmarks:
     <<: *conf_warp
     destination:
       host: irods_server
-      target_folder: not-needed
 
   daytime_evaluation_isilon_02:
     <<: *conf_fio
@@ -61,4 +60,3 @@ benchmarks:
     <<: *conf_warp
     destination:
       host: irods_server
-      target_folder: not-needed
