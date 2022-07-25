@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING, Any
 
 from galaxy_benchmarker.benchmarks import base
 from galaxy_benchmarker.bridge import ansible
-from galaxy_benchmarker.utils.posix import PosixBenchmarkDestination
+from galaxy_benchmarker.utils.destinations import PosixBenchmarkDestination
 
 if TYPE_CHECKING:
     from galaxy_benchmarker.benchmarker import Benchmarker
