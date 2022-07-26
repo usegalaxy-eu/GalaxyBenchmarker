@@ -1,0 +1,31 @@
+- hosts: "{{ host }}"
+  become: true
+  tasks:
+    - name: Copy container setup onto host (sychronize preserves file permissions)
+      ansible.posix.synchronize:
+        src: ../files/galaxy-server/
+        dest: /galaxy
+        recursive: yes
+
+    - name: Build and start container
+      community.docker.docker_compose:
+        project_src: /galaxy
+        state: present
+        build: yes
+      register: output
+
+    - name: "Check 'Build and start container'"
+      assert:
+        that:
+          - "output.services.galaxy.galaxy_galaxy_1.state.running"
+
+    - name: Wait for port 8080
+      uri:
+        url: "http://localhost:8080/api/histories"
+        status_code: 200
+        headers:
+          x-api-key: fakekey
+      register: result
+      until: result.status == 200
+      retries: 24
+      delay: 5

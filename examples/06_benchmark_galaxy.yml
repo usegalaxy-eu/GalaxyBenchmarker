@@ -1,0 +1,23 @@
+config:
+  log_ansible_output: false
+  results_print: false
+  results_save_raw_results: true
+  results_save_to_file: true
+
+benchmarks:
+  benchmark_galaxy_local:
+    type: GalaxyFileGen
+    repetitions: 1
+    destination:
+      host: irods_client
+    galaxy_job_input:
+      num_files: 10
+      file_size_in_bytes: 1024
+
+    pre_tasks:
+      - playbook: setup_galaxy_server.yml
+        host: irods_client
+
+    post_tasks:
+      - playbook: cleanup_galaxy_server.yml
+        host: irods_client

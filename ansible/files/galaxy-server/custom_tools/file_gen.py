@@ -29,7 +29,7 @@ def fill_file_from_buffer(file: Path, buffer: io.BytesIO, file_size: int):
 def main():
 
     num_files = int(sys.argv[1])
-    file_size = int(sys.argv[2])
+    file_size_in_bytes = int(sys.argv[2])
     output_dir = Path(sys.argv[3])
 
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -44,7 +44,7 @@ def main():
 
         for i in range(num_files):
             file = output_dir / f"data_{i}.data"
-            fill_file_from_buffer(file, buffer, file_size)
+            fill_file_from_buffer(file, buffer, file_size_in_bytes)
 
 
 if __name__ == "__main__":

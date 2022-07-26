@@ -1,11 +1,11 @@
-<tool id="demo_1" name="File Generator" version="0.0.1">
-    <description>Create files</description>
+<tool id="file_gen" name="File Generator" version="0.0.1">
+    <description>Create random files</description>
     <command>
-python '$__tool_directory__/file_gen.py' '${num_files}' '${file_size}' './output'
+python '$__tool_directory__/file_gen.py' '${num_files}' '${file_size_in_bytes}' './output'
     </command>
     <inputs>
         <param name="num_files" type="integer" value="1" label="Number of files"/>
-        <param name="file_size" type="integer" value="1024" label="File size"/>
+        <param name="file_size_in_bytes" type="integer" value="1024" label="File size in bytes"/>
     </inputs>
     <outputs>
         <collection name="out_dir" type="list" label="Generated files">
@@ -15,6 +15,6 @@ python '$__tool_directory__/file_gen.py' '${num_files}' '${file_size}' './output
     <tests>
     </tests>
     <help>
-**DEMO**
+Create **num_files** files with **file_size_in_bytes** bytes.
     </help>
 </tool>

@@ -14,9 +14,13 @@ services:
     # supvisord web app
     - "9002:9002"
     volumes:
-      - ./export:/export
+      # Stat is entirely in /export. Enable for debug purposes
+      # - ./export:/export
       - ./custom_tools:/custom_tools
     environment:
       - GALAXY_CONFIG_TOOL_CONFIG_FILE=/custom_tools/custom_tool_conf.xml
+
+  galaxy-script:
+    build: .
 
       # watch -n 1 "find files -type f | wc -l"
