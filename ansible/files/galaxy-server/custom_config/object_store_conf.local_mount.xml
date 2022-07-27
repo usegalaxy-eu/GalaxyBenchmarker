@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<object_store type="hierarchical">
+    <backends>
+
+        <object_store type="disk" id="primary" order="0">
+            <files_dir path="/mnt/volume_under_test/files"/>
+            <extra_dir type="temp" path="database/tmp"/>
+            <extra_dir type="job_work" path="database/job_working_directory"/>
+        </object_store>
+
+    </backends>
+</object_store>

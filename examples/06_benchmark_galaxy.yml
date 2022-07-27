@@ -5,7 +5,28 @@ config:
   results_save_to_file: true
 
 benchmarks:
-  benchmark_galaxy_local:
+  benchmark_galaxy_isilon_backend:
+    type: GalaxyFileGen
+    repetitions: 1
+    destination:
+      host: irods_client
+    galaxy_job_input:
+      num_files: 10
+      file_size_in_bytes: 1024
+
+    pre_tasks:
+      - playbook: setup_galaxy_server.yml
+        host: irods_client
+        extra_vars:
+          galaxy_use_mount: True
+          galaxy_host_volume: /mnt/isilon
+    post_tasks:
+      - playbook: cleanup_galaxy_server.yml
+        host: irods_client
+        extra_vars:
+          galaxy_host_volume: /mnt/isilon
+
+  benchmark_galaxy_s3_backend:
     type: GalaxyFileGen
     repetitions: 1
     destination:

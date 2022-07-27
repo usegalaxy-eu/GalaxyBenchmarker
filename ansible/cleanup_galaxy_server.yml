@@ -4,3 +4,16 @@
     - import_tasks: tasks/remove_container.yml
       vars:
         path: "/galaxy"
+
+
+    - name: Cleanup
+      when: galaxy_host_volume
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "{{ galaxy_host_volume }}/galaxy_in_progress"
+      retries: 15
+      delay: 5
+      register: cleanup
+      until: not cleanup["failed"]

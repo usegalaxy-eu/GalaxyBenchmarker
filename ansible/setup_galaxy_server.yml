@@ -19,7 +19,7 @@
         that:
           - "output.services.galaxy.galaxy_galaxy_1.state.running"
 
-    - name: Wait for port 8080
+    - name: Wait for server to become available
       uri:
         url: "http://localhost:8080/api/histories"
         status_code: 200
@@ -29,3 +29,35 @@
       until: result.status == 200
       retries: 24
       delay: 5
+
+    - name: Setup mount backend
+      when: galaxy_use_mount|bool
+      block:
+        - name: Create galaxy files directory
+          file:
+            path: "{{ galaxy_host_volume }}/galaxy_in_progress"
+            state: directory
+            owner: "1450"
+            group: "1450"
+            mode: '0777'
+
+        - name: Update docker-compose with object store config
+          lineinfile:
+            path: /galaxy/docker-compose.yml
+            backrefs: yes
+            regexp: '^(.*)# PLACEHOLDER_ENV'
+            line: '\1- GALAXY_CONFIG_OBJECT_STORE_CONFIG_FILE=/custom_config/object_store_conf.local_mount.xml'
+
+        - name: Update docker-compose volume mounts
+          lineinfile:
+            path: /galaxy/docker-compose.yml
+            backrefs: yes
+            regexp: '^(.*)# PLACEHOLDER_VOLUMES'
+            line: '\1- ${GALAXY_HOST_VOLUME}/galaxy_in_progress:/mnt/volume_under_test'
+
+        - name: Restart galaxy
+          community.docker.docker_compose:
+            project_src: /galaxy
+            restarted: yes
+          environment:
+            GALAXY_HOST_VOLUME: "{{ galaxy_host_volume }}"
