@@ -7,31 +7,10 @@
         dest: /galaxy
         recursive: yes
 
-    - name: Build and start container
-      community.docker.docker_compose:
-        project_src: /galaxy
-        state: present
-        build: yes
-      register: output
-
-    - name: "Check 'Build and start container'"
-      assert:
-        that:
-          - "output.services.galaxy.galaxy_galaxy_1.state.running"
-
-    - name: Wait for server to become available
-      uri:
-        url: "http://localhost:8080/api/histories"
-        status_code: 200
-        headers:
-          x-api-key: fakekey
-      register: result
-      until: result.status == 200
-      retries: 24
-      delay: 5
+    - include_tasks: tasks/initial_start_galaxy.yml
 
     - name: Setup mount backend
-      when: galaxy_use_mount|bool
+      when: (galaxy_use_mount is defined) and (galaxy_use_mount|bool)
       block:
         - name: Create galaxy files directory
           file:
@@ -61,3 +40,18 @@
             restarted: yes
           environment:
             GALAXY_HOST_VOLUME: "{{ galaxy_host_volume }}"
+
+    - name: Setup s3 backend
+      when: (galaxy_use_s3 is defined) and (galaxy_use_s3|bool)
+      block:
+        - name: Update docker-compose with object store config
+          lineinfile:
+            path: /galaxy/docker-compose.yml
+            backrefs: yes
+            regexp: '^(.*)# PLACEHOLDER_ENV'
+            line: '\1- GALAXY_CONFIG_OBJECT_STORE_CONFIG_FILE=/custom_config/object_store_conf.s3.xml'
+
+        - name: Restart galaxy
+          community.docker.docker_compose:
+            project_src: /galaxy
+            restarted: yes

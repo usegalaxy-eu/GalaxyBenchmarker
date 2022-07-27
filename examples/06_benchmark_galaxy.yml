@@ -38,6 +38,8 @@ benchmarks:
     pre_tasks:
       - playbook: setup_galaxy_server.yml
         host: irods_client
+        extra_vars:
+          galaxy_use_s3: True
 
     post_tasks:
       - playbook: cleanup_galaxy_server.yml

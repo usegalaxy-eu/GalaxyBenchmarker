@@ -7,7 +7,7 @@
 
 
     - name: Cleanup
-      when: galaxy_host_volume
+      when: galaxy_host_volume is defined
       file:
         path: "{{ item }}"
         state: absent
