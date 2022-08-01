@@ -25,5 +25,3 @@ services:
 
   galaxy-script:
     build: .
-
-      # watch -n 1 "find files -type f | wc -l"

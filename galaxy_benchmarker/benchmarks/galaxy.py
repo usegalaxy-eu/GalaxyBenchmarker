@@ -3,70 +3,23 @@ Definition of galaxyjob-based benchmarks
 """
 from __future__ import annotations
 
+import boto3
 import dataclasses
 import logging
 import json
 import time
-import shutil
 import shlex
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from galaxy_benchmarker.benchmarks import base
 from galaxy_benchmarker.bridge import ansible
-from galaxy_benchmarker.utils.destinations import BenchmarkDestination
+from galaxy_benchmarker.utils.destinations import BenchmarkDestination, PosixBenchmarkDestination
 
 if TYPE_CHECKING:
     from galaxy_benchmarker.benchmarker import Benchmarker
 
 log = logging.getLogger(__name__)
-
-
-def parse_result_file(file: Path) -> dict[str, Any]:
-    # if not file.is_file():
-    #     raise ValueError(f"{file} is not a file.")
-
-    # # Example output
-    # # 512+0 records in
-    # # 512+0 records out
-    # # 512+0 records in
-    # # 512+0 records out
-    # # 536870912 bytes (537 MB, 512 MiB) copied, 2.32072 s, 231 MB/s
-    # # 536870912 bytes (537 MB, 512 MiB) copied, 2.3709 s, 226 MB/s
-
-    # pattern = re.compile(
-    #     r"([0-9]+) bytes .* copied, ([0-9\.]+) s, ([0-9\.]+) MB/s$"
-    # )
-
-    # matches = []
-    # with file.open() as file_handle:
-    #     for line in file_handle:
-    #         match = pattern.findall(line)
-    #         if match:
-    #             matches.extend(match)
-
-    # total_bw_in_MiB = 0.0
-    # total_bw_in_mb = 0.0
-    # for bytes, time, bw_in_MB in matches:
-    #     bytes, time, bw_in_MB = int(bytes), float(time), float(bw_in_MB)
-    #     bw_in_MiB = (bytes / 1024**2) / time
-    #     bw_in_MB_calulated = (bytes / 1000**2) / time
-
-    #     if bw_in_MB not in [round(bw_in_MB_calulated, 0),round(bw_in_MB_calulated, 1)]:
-    #         log.warning(
-    #             "Missmatch between calculated and parsed bandwidth in MB: Parsed: %.2f, Calculated %.2f",
-    #             bw_in_MB,
-    #             bw_in_MB_calulated,
-    #         )
-    #     total_bw_in_MiB += bw_in_MiB
-    #     total_bw_in_mb += bw_in_MB
-
-    # return {
-    #     "bw_in_MiB": total_bw_in_MiB,
-    #     "bw_in_mb": total_bw_in_mb,
-    #     "detected_matches": len(matches)
-    # }
-    pass
 
 
 @dataclasses.dataclass
@@ -79,7 +32,7 @@ class GalaxyJob(base.Benchmark):
     """Benchmarking system with 'dd'"""
     galaxy_tool_id = ""
     galaxy_tool_input_class = None
-
+    galaxy_job_config_class = GalaxyJobConfig
 
     def __init__(self, name: str, config: dict, benchmarker: Benchmarker):
         super().__init__(name, config, benchmarker)
@@ -89,12 +42,20 @@ class GalaxyJob(base.Benchmark):
         if not self.galaxy_tool_input_class:
             raise ValueError("Subclass of GalaxyJob has to specify class property 'galaxy_tool_input_class' (dataclass)")
 
-        if not "galaxy_job_input" in config:
+        if not "galaxy_job" in config:
             raise ValueError(
-                f"'galaxy_job_input' property (type: dict) is missing for '{self.name}'"
+                f"'galaxy_job' property (type: dict) is missing for '{self.name}'"
             )
-        self.config = GalaxyJobConfig(
-            input=self.galaxy_tool_input_class(**config.get("galaxy_job_input", {}))
+        glx_job_config = config.get("galaxy_job")
+
+        if not "input" in glx_job_config:
+            raise ValueError(
+                f"'galaxy_job'->'input' property (type: dict) is missing for '{self.name}'"
+            )
+
+        self.config = self.galaxy_job_config_class(
+            input=self.galaxy_tool_input_class(**glx_job_config.pop("input")),
+            **glx_job_config
         )
 
         dest = config.get("destination", {})
@@ -118,21 +79,17 @@ class GalaxyJob(base.Benchmark):
         self._run_task.run_at(
             self.destination.host,
             {
-                "glx_result_file": result_file.name,
-                "controller_dir": result_file.parent,
                 "glx_tool_id": self.galaxy_tool_id,
-                "glx_tool_input": shlex.quote(input_str)
+                "glx_tool_input": shlex.quote(input_str),
+                **{f"glx_{key}": value for key, value in galaxy_job_config.asdict().items()},
             },
         )
 
         total_runtime = time.monotonic() - start_time
 
-        if self.benchmarker.config.results_save_raw_results:
-            new_path = self.benchmarker.results / self.result_file.stem
-            new_path.mkdir(exist_ok=True)
-            shutil.copy(result_file, new_path / result_file.name)
-
-        result = parse_result_file(result_file)
+        result = {
+            "total_runtime_in_s": total_runtime
+        }
         log.info("Run took %d s", total_runtime)
 
         return result
@@ -146,12 +103,128 @@ class GalaxyJob(base.Benchmark):
 
 
 @dataclasses.dataclass
+class GalaxyFileGenOnMountVolumeConfig(GalaxyJobConfig):
+    input: GalaxyFileGenInput
+    expected_num_files: int
+    verification_timeout_in_s: int
+    path_to_files: str
+
+@dataclasses.dataclass
 class GalaxyFileGenInput:
     num_files: int
     file_size_in_bytes: int
 
 
 @base.register_benchmark
-class GalaxyFileGen(GalaxyJob):
+class GalaxyFileGenOnMountVolume(GalaxyJob):
     galaxy_tool_id = "file_gen"
     galaxy_tool_input_class = GalaxyFileGenInput
+    galaxy_job_config_class = GalaxyFileGenOnMountVolumeConfig
+
+    def __init__(self, name: str, config: dict, benchmarker: Benchmarker):
+        # Store destination
+        dest_conf = config.pop("destination", {})
+        config["destination"] = { "host": "dummy"}
+
+        super().__init__(name, config, benchmarker)
+
+        # Restore destination
+        config["destination"] = dest_conf
+        self.destination = PosixBenchmarkDestination(**dest_conf)
+
+        self._run_task = ansible.AnsibleTask(playbook="run_galaxy_mount_benchmark.yml")
+        self._pre_tasks.append(
+            ansible.AnsibleTask(
+                playbook="setup_galaxy_server.yml",
+                host=self.destination.host,
+                extra_vars= {
+                    "galaxy_use_mount": True,
+                    "galaxy_host_volume": self.destination.target_folder,
+                }
+            )
+        )
+        self._post_tasks.append(
+            ansible.AnsibleTask(
+                playbook="cleanup_galaxy_server.yml",
+                host=self.destination.host,
+                extra_vars= {
+                    "galaxy_host_volume": self.destination.target_folder,
+                }
+            )
+        )
+
+
+@dataclasses.dataclass
+class GalaxyFileGenOnS3Config(GalaxyJobConfig):
+    input: GalaxyFileGenInput
+    expected_num_files: int
+    verification_timeout_in_s: int
+
+
+@base.register_benchmark
+class GalaxyFileGenOnS3(GalaxyJob):
+    galaxy_tool_id = "file_gen"
+    galaxy_tool_input_class = GalaxyFileGenInput
+    galaxy_job_config_class = GalaxyFileGenOnS3Config
+
+    def __init__(self, name: str, config: dict, benchmarker: Benchmarker):
+        super().__init__(name, config, benchmarker)
+
+        self._pre_tasks.append(
+            ansible.AnsibleTask(
+                playbook="setup_galaxy_server.yml",
+                host=self.destination.host,
+                extra_vars= {"galaxy_use_s3": True }
+            )
+        )
+        self._post_tasks.append(ansible.AnsibleTask(playbook="cleanup_galaxy_server.yml", host=self.destination.host))
+
+    def _run_at(self, result_file: Path, repetition: int, galaxy_job_config: GalaxyFileGenOnS3Config) -> dict:
+        """Perform a single run"""
+
+        start_time = time.monotonic()
+
+        # Trigger galaxy job
+        super()._run_at(result_file, repetition, galaxy_job_config)
+
+        # Check s3 bucket for files
+        num_files = 0
+
+        while num_files < galaxy_job_config.expected_num_files:
+            current_runtime = time.monotonic() - start_time
+            if current_runtime >= galaxy_job_config.verification_timeout_in_s:
+                raise RuntimeError("Verification timed out")
+
+            num_files = self._get_current_num_files()
+            log.info("Currently %d files present", num_files)
+            time.sleep(5)
+
+        total_runtime = time.monotonic() - start_time
+        result = {
+            "total_runtime_in_s": total_runtime
+        }
+        log.info("Run took %d s", total_runtime)
+
+        log.info("Empty s3 bucket")
+        client = boto3.resource("s3", endpoint_url="https://s3.bwsfs.uni-freiburg.de/", aws_access_key_id="D1U2HMMF0WOK3B41ERFX", aws_secret_access_key="G9q1Nr8W2CaAyF1iDsNyX5iK/m3JU2o/WlDQUIA7")
+        bucket = client.Bucket("frct-smoe-bench-ec61-01")
+        bucket.objects.all().delete()
+        log.info("Empty s3 bucket done")
+
+        return result
+
+    def _get_current_num_files(self) -> int:
+        client = boto3.client("s3", endpoint_url="https://s3.bwsfs.uni-freiburg.de/", aws_access_key_id="D1U2HMMF0WOK3B41ERFX", aws_secret_access_key="G9q1Nr8W2CaAyF1iDsNyX5iK/m3JU2o/WlDQUIA7")
+        result = client.list_objects_v2(Bucket="frct-smoe-bench-ec61-01", Delimiter="/")
+        if "CommonPrefixes" not in result:
+            return 0
+
+        # Each prefix contains 1000 files, except the last one
+        num = (len(result["CommonPrefixes"][:-1])) * 1000
+        # Subtract one because prefix 000 only has 999 files
+        num = max(0, num-1)
+
+        last_prefix = result["CommonPrefixes"][-1]["Prefix"]
+        resp = client.list_objects_v2(Bucket="frct-smoe-bench-ec61-01", Prefix=last_prefix)
+        num += len(resp["Contents"])
+        return num
