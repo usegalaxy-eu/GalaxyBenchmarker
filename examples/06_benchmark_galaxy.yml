@@ -4,6 +4,14 @@ config:
   results_save_raw_results: true
   results_save_to_file: true
 
+Default: &default
+  input:
+    num_files: 10
+    file_size_in_bytes: 1024
+  expected_num_files: 10
+  verification_timeout_in_s: 100
+
+
 benchmarks:
   benchmark_galaxy_isilon_backend:
     type: GalaxyFileGenOnMountVolume
@@ -12,12 +20,8 @@ benchmarks:
       host: irods_client
       target_folder: /mnt/isilon
     galaxy_job:
-      input:
-        num_files: 10
-        file_size_in_bytes: 1024
-      expected_num_files: 10
+      <<: *default
       path_to_files: /mnt/isilon/galaxy_in_progress/files
-      verification_timeout_in_s: 100
 
   benchmark_galaxy_netapp_backend:
     type: GalaxyFileGenOnMountVolume
@@ -26,12 +30,8 @@ benchmarks:
       host: irods_client
       target_folder: /mnt/netapp
     galaxy_job:
-      input:
-        num_files: 10
-        file_size_in_bytes: 1024
-      expected_num_files: 10
+      <<: *default
       path_to_files: /mnt/netapp/galaxy_in_progress/files
-      verification_timeout_in_s: 100
 
   benchmark_galaxy_ssd_tank_backend:
     type: GalaxyFileGenOnMountVolume
@@ -40,12 +40,8 @@ benchmarks:
       host: irods_client
       target_folder: /mnt/ssd_tank/test_moehrles
     galaxy_job:
-      input:
-        num_files: 10
-        file_size_in_bytes: 1024
-      expected_num_files: 10
+      <<: *default
       path_to_files: /mnt/ssd_tank/test_moehrles/galaxy_in_progress/files
-      verification_timeout_in_s: 100
 
   benchmark_galaxy_s3_backend:
     type: GalaxyFileGenOnS3
@@ -53,11 +49,7 @@ benchmarks:
     destination:
       host: irods_client
     galaxy_job:
-      input:
-        num_files: 10
-        file_size_in_bytes: 1024
-      expected_num_files: 10
-      verification_timeout_in_s: 500
+      <<: *default
       base_url: https://s3.bwsfs.uni-freiburg.de
       bucket_name: frct-smoe-bench-ec61-01
 
@@ -68,12 +60,8 @@ benchmarks:
       host: irods_client
       target_folder: /mnt/volume_under_test/irods-fuse
     galaxy_job:
-      input:
-        num_files: 1
-        file_size_in_bytes: 1024
-      expected_num_files: 1
+      <<: *default
       path_to_files: /mnt/isilon/irods/home/rods/galaxy_in_progress/files
-      verification_timeout_in_s: 100
 
     pre_tasks:
       - playbook: setup_irods_server.yml
@@ -104,12 +92,8 @@ benchmarks:
       host: irods_client
       target_folder: /mnt/volume_under_test/irods-webdav
     galaxy_job:
-      input:
-        num_files: 1000
-        file_size_in_bytes: 1024
-      expected_num_files: 1000
+      <<: *default
       path_to_files: /mnt/isilon/irods/home/rods/galaxy_in_progress/files
-      verification_timeout_in_s: 500
 
     pre_tasks:
     - playbook: setup_irods_server_with_davrods.yml
