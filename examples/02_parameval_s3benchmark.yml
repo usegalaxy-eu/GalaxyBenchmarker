@@ -11,12 +11,10 @@ benchmarks:
     destination:
       host: irods_server
     s3benchmark:
-      access_key_id: D1U2HMMF0WOK3B41ERFX
       base_url: https://s3.bwsfs.uni-freiburg.de/
       bucket_name: frct-smoe-bench-ec61-01
       filesize: 1M
       region: fr-repl
-      secret_access_key: G9q1Nr8W2CaAyF1iDsNyX5iK/m3JU2o/WlDQUIA7
       runtime_in_s: 60
 
     dim_key: threads
@@ -39,12 +37,10 @@ benchmarks:
     destination:
       host: irods_server
     s3benchmark:
-      access_key_id: D1U2HMMF0WOK3B41ERFX
       base_url: https://s3.bwsfs.uni-freiburg.de/
       bucket_name: frct-smoe-bench-ec61-01
       filesize: 1M
       region: fr-repl
-      secret_access_key: G9q1Nr8W2CaAyF1iDsNyX5iK/m3JU2o/WlDQUIA7
       threads: 8
 
     dim_key: runtime_in_s

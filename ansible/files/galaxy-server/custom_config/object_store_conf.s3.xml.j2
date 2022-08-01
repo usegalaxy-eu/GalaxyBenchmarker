@@ -9,9 +9,9 @@
         </object_store>
 
         <object_store type="swift" id="primary" order="0">
-            <auth access_key="D1U2HMMF0WOK3B41ERFX" secret_key="G9q1Nr8W2CaAyF1iDsNyX5iK/m3JU2o/WlDQUIA7" />
-            <bucket name="frct-smoe-bench-ec61-01" use_reduced_redundancy="False" max_chunk_size="250"/>
-            <connection host="s3.bwsfs.uni-freiburg.de" port="443" is_secure="True" conn_path="" multipart="True"/>
+            <auth access_key="{{ S3_ACCESS_KEY }}" secret_key="{{ S3_SECRET_KEY }}" />
+            <bucket name="{{ S3_BUCKET_NAME }}" use_reduced_redundancy="False" max_chunk_size="250"/>
+            <connection host="{{ S3_BASE_URL }}" port="443" is_secure="True" conn_path="" multipart="True"/>
             <cache path="database/object_store_cache" size="1000" />
             <extra_dir type="job_work" path="database/job_working_directory_swift"/>
             <extra_dir type="temp" path="database/tmp_swift"/>

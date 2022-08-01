@@ -6,6 +6,7 @@ from __future__ import annotations
 import dataclasses
 import json
 import logging
+import os
 import shlex
 import time
 from pathlib import Path
@@ -171,10 +172,11 @@ class GalaxyFileGenOnS3Config(GalaxyJobConfig):
     expected_num_files: int
     verification_timeout_in_s: int
 
-    access_key_id: str
+    ## Credentials are loaded from AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY
+    # access_key_id: str
     base_url: str
     bucket_name: str
-    secret_access_key: str
+    # secret_access_key: str
 
 
 @base.register_benchmark
@@ -186,11 +188,22 @@ class GalaxyFileGenOnS3(GalaxyJob):
     def __init__(self, name: str, config: dict, benchmarker: Benchmarker):
         super().__init__(name, config, benchmarker)
 
+        access_key = os.getenv("AWS_ACCESS_KEY_ID")
+        secret_key = os.getenv("AWS_SECRET_ACCESS_KEY")
+        if access_key is None or secret_key is None:
+            raise ValueError("Missing S3 credentials in env vars: AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY")
+
         self._pre_tasks.append(
             ansible.AnsibleTask(
                 playbook="setup_galaxy_server.yml",
                 host=self.destination.host,
-                extra_vars={"galaxy_use_s3": True},
+                extra_vars={
+                    "galaxy_use_s3": True,
+                    "S3_ACCESS_KEY": os.getenv("AWS_ACCESS_KEY_ID"),
+                    "S3_SECRET_KEY": os.getenv("AWS_SECRET_ACCESS_KEY"),
+                    "S3_BASE_URL": self.config.base_url,
+                    "S3_BUCKET_NAME": self.config.bucket_name,
+                },
             )
         )
         self._post_tasks.append(
@@ -232,8 +245,6 @@ class GalaxyFileGenOnS3(GalaxyJob):
         client = boto3.resource(
             "s3",
             endpoint_url=galaxy_job_config.base_url,
-            aws_access_key_id=galaxy_job_config.access_key_id,
-            aws_secret_access_key=galaxy_job_config.secret_access_key,
         )
         bucket = client.Bucket(galaxy_job_config.bucket_name)
         bucket.objects.all().delete()
@@ -245,8 +256,6 @@ class GalaxyFileGenOnS3(GalaxyJob):
         client = boto3.client(
             "s3",
             endpoint_url=galaxy_job_config.base_url,
-            aws_access_key_id=galaxy_job_config.access_key_id,
-            aws_secret_access_key=galaxy_job_config.secret_access_key,
         )
         result = client.list_objects_v2(
             Bucket=galaxy_job_config.bucket_name, Delimiter="/"

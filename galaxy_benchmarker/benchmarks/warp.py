@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import dataclasses
 import logging
+import os
 import re
 import shutil
 import time
@@ -24,13 +25,14 @@ log = logging.getLogger(__name__)
 @dataclasses.dataclass
 class WarpConfig(base.BenchmarkConfig):
     mode: str = ""
-    access_key_id: str = ""
+    ## Credentials are loaded from AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY
+    # access_key_id: str = ""
     base_url: str = ""
     bucket_name: str = ""
     filesize: str = ""
     region: str = ""
     runtime: str = ""
-    secret_access_key: str = ""
+    # secret_access_key: str = ""
     concurrent_ops: int = 1
 
 
@@ -118,6 +120,8 @@ class WarpFixedParams(base.Benchmark):
             {
                 "warp_result_file": result_file.name,
                 "controller_dir": result_file.parent,
+                "warp_access_key_id": os.getenv("AWS_ACCESS_KEY_ID"),
+                "warp_secret_access_key": os.getenv("AWS_SECRET_ACCESS_KEY"),
                 **{f"warp_{key}": value for key, value in warp_config.asdict().items()},
             },
         )

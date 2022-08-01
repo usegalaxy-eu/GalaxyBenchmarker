@@ -12,13 +12,11 @@ benchmarks:
       host: irods_server
     warp:
       mode: get
-      access_key_id: D1U2HMMF0WOK3B41ERFX
       base_url: s3.bwsfs.uni-freiburg.de
       bucket_name: frct-smoe-bench-ec61-01
       concurrent_ops: 20
       filesize: 10MiB
       region: fr-repl
-      secret_access_key: G9q1Nr8W2CaAyF1iDsNyX5iK/m3JU2o/WlDQUIA7
       runtime: 5m0s
 
   benchmark_s3_warp_put:
@@ -28,13 +26,11 @@ benchmarks:
       host: irods_server
     warp:
       mode: put
-      access_key_id: D1U2HMMF0WOK3B41ERFX
       base_url: s3.bwsfs.uni-freiburg.de
       bucket_name: frct-smoe-bench-ec61-01
       concurrent_ops: 20
       filesize: 10MiB
       region: fr-repl
-      secret_access_key: G9q1Nr8W2CaAyF1iDsNyX5iK/m3JU2o/WlDQUIA7
       runtime: 5m0s
 
   benchmark_s3_warp_delete:
@@ -44,11 +40,9 @@ benchmarks:
       host: irods_server
     warp:
       mode: delete
-      access_key_id: D1U2HMMF0WOK3B41ERFX
       base_url: s3.bwsfs.uni-freiburg.de
       bucket_name: frct-smoe-bench-ec61-01
       concurrent_ops: 20
       filesize: 1KiB
       region: fr-repl
-      secret_access_key: G9q1Nr8W2CaAyF1iDsNyX5iK/m3JU2o/WlDQUIA7
       runtime: 5m0s

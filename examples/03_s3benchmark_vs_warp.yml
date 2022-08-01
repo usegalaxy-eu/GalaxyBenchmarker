@@ -13,12 +13,10 @@ ConfigS3Benchmark: &conf_s3bench
   repetitions: 1
   type: S3BenchmarkFixedParams
   s3benchmark:
-    access_key_id: D1U2HMMF0WOK3B41ERFX
     base_url: https://s3.bwsfs.uni-freiburg.de/
     bucket_name: frct-smoe-bench-ec61-01
     filesize: 1M
     region: fr-repl
-    secret_access_key: G9q1Nr8W2CaAyF1iDsNyX5iK/m3JU2o/WlDQUIA7
     runtime_in_s: 60
     threads: 64
 
@@ -27,12 +25,10 @@ ConfigWarpGet: &conf_warp_get_put
   repetitions: 1
   warp: &conf_warp_defaults
     mode: get
-    access_key_id: D1U2HMMF0WOK3B41ERFX
     base_url: s3.bwsfs.uni-freiburg.de
     bucket_name: frct-smoe-bench-ec61-01
     filesize: 10MiB
     region: fr-repl
-    secret_access_key: G9q1Nr8W2CaAyF1iDsNyX5iK/m3JU2o/WlDQUIA7
     runtime: 60s
     concurrent_ops: 32
 

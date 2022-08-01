@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import dataclasses
 import logging
+import os
 import re
 import shutil
 import time
@@ -23,13 +24,14 @@ log = logging.getLogger(__name__)
 
 @dataclasses.dataclass
 class S3BenchmarkConfig(base.BenchmarkConfig):
-    access_key_id: str = ""
+    ## Credentials are loaded from AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY
+    # access_key_id: str = ""
     base_url: str = ""
     bucket_name: str = ""
     filesize: str = ""
     region: str = ""
     runtime_in_s: int = 60
-    secret_access_key: str = ""
+    # secret_access_key: str = ""
     threads: int = 1
 
 
@@ -110,6 +112,8 @@ class S3BenchmarkFixedParams(base.Benchmark):
             {
                 "s3b_result_file": result_file.name,
                 "controller_dir": result_file.parent,
+                "s3b_access_key_id": os.getenv("AWS_ACCESS_KEY_ID"),
+                "s3b_secret_access_key": os.getenv("AWS_SECRET_ACCESS_KEY"),
                 **{
                     f"s3b_{key}": value
                     for key, value in s3benchmark_config.asdict().items()
