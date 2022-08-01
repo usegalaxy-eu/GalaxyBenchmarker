@@ -5,8 +5,8 @@ from __future__ import annotations
 
 import dataclasses
 import logging
-import time
 import shutil
+import time
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -123,6 +123,7 @@ def parse_result_file(file: Path) -> dict[str, Any]:
             except ValueError:
                 return False
             return True
+
         floats = [float(item) for item in l if is_float(item)]
         assert len(floats) == 4
         metric = metrics[key]

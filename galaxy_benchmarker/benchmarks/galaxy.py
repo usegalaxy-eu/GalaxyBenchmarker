@@ -3,18 +3,22 @@ Definition of galaxyjob-based benchmarks
 """
 from __future__ import annotations
 
-import boto3
 import dataclasses
-import logging
 import json
-import time
+import logging
 import shlex
+import time
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+import boto3
+
 from galaxy_benchmarker.benchmarks import base
 from galaxy_benchmarker.bridge import ansible
-from galaxy_benchmarker.utils.destinations import BenchmarkDestination, PosixBenchmarkDestination
+from galaxy_benchmarker.utils.destinations import (
+    BenchmarkDestination,
+    PosixBenchmarkDestination,
+)
 
 if TYPE_CHECKING:
     from galaxy_benchmarker.benchmarker import Benchmarker
@@ -30,6 +34,7 @@ class GalaxyJobConfig(base.BenchmarkConfig):
 
 class GalaxyJob(base.Benchmark):
     """Benchmarking system with 'dd'"""
+
     galaxy_tool_id = ""
     galaxy_tool_input_class = None
     galaxy_job_config_class = GalaxyJobConfig
@@ -38,9 +43,13 @@ class GalaxyJob(base.Benchmark):
         super().__init__(name, config, benchmarker)
 
         if not self.galaxy_tool_id:
-            raise ValueError("Subclass of GalaxyJob has to specify class property 'galaxy_tool_id' (str)")
+            raise ValueError(
+                "Subclass of GalaxyJob has to specify class property 'galaxy_tool_id' (str)"
+            )
         if not self.galaxy_tool_input_class:
-            raise ValueError("Subclass of GalaxyJob has to specify class property 'galaxy_tool_input_class' (dataclass)")
+            raise ValueError(
+                "Subclass of GalaxyJob has to specify class property 'galaxy_tool_input_class' (dataclass)"
+            )
 
         if not "galaxy_job" in config:
             raise ValueError(
@@ -55,7 +64,7 @@ class GalaxyJob(base.Benchmark):
 
         self.config = self.galaxy_job_config_class(
             input=self.galaxy_tool_input_class(**glx_job_config.pop("input")),
-            **glx_job_config
+            **glx_job_config,
         )
 
         dest = config.get("destination", {})
@@ -67,29 +76,30 @@ class GalaxyJob(base.Benchmark):
 
         self._run_task = ansible.AnsibleTask(playbook="run_galaxy_job.yml")
 
-    def _run_at(self, result_file: Path, repetition: int, galaxy_job_config: GalaxyJobConfig) -> dict:
+    def _run_at(
+        self, result_file: Path, repetition: int, galaxy_job_config: GalaxyJobConfig
+    ) -> dict:
         """Perform a single run"""
 
         start_time = time.monotonic()
 
-        input_str = json.dumps(
-            dataclasses.asdict(galaxy_job_config.input)
-        )
+        input_str = json.dumps(dataclasses.asdict(galaxy_job_config.input))
 
         self._run_task.run_at(
             self.destination.host,
             {
                 "glx_tool_id": self.galaxy_tool_id,
                 "glx_tool_input": shlex.quote(input_str),
-                **{f"glx_{key}": value for key, value in galaxy_job_config.asdict().items()},
+                **{
+                    f"glx_{key}": value
+                    for key, value in galaxy_job_config.asdict().items()
+                },
             },
         )
 
         total_runtime = time.monotonic() - start_time
 
-        result = {
-            "total_runtime_in_s": total_runtime
-        }
+        result = {"total_runtime_in_s": total_runtime}
         log.info("Run took %d s", total_runtime)
 
         return result
@@ -98,7 +108,7 @@ class GalaxyJob(base.Benchmark):
         return {
             **super().get_tags(),
             "galaxy_tool_id": self.galaxy_tool_id,
-            "galaxy_tool_config": self.config.asdict()
+            "galaxy_tool_config": self.config.asdict(),
         }
 
 
@@ -108,6 +118,7 @@ class GalaxyFileGenOnMountVolumeConfig(GalaxyJobConfig):
     expected_num_files: int
     verification_timeout_in_s: int
     path_to_files: str
+
 
 @dataclasses.dataclass
 class GalaxyFileGenInput:
@@ -124,7 +135,7 @@ class GalaxyFileGenOnMountVolume(GalaxyJob):
     def __init__(self, name: str, config: dict, benchmarker: Benchmarker):
         # Store destination
         dest_conf = config.pop("destination", {})
-        config["destination"] = { "host": "dummy"}
+        config["destination"] = {"host": "dummy"}
 
         super().__init__(name, config, benchmarker)
 
@@ -137,19 +148,19 @@ class GalaxyFileGenOnMountVolume(GalaxyJob):
             ansible.AnsibleTask(
                 playbook="setup_galaxy_server.yml",
                 host=self.destination.host,
-                extra_vars= {
+                extra_vars={
                     "galaxy_use_mount": True,
                     "galaxy_host_volume": self.destination.target_folder,
-                }
+                },
             )
         )
         self._post_tasks.append(
             ansible.AnsibleTask(
                 playbook="cleanup_galaxy_server.yml",
                 host=self.destination.host,
-                extra_vars= {
+                extra_vars={
                     "galaxy_host_volume": self.destination.target_folder,
-                }
+                },
             )
         )
 
@@ -174,12 +185,21 @@ class GalaxyFileGenOnS3(GalaxyJob):
             ansible.AnsibleTask(
                 playbook="setup_galaxy_server.yml",
                 host=self.destination.host,
-                extra_vars= {"galaxy_use_s3": True }
+                extra_vars={"galaxy_use_s3": True},
             )
         )
-        self._post_tasks.append(ansible.AnsibleTask(playbook="cleanup_galaxy_server.yml", host=self.destination.host))
+        self._post_tasks.append(
+            ansible.AnsibleTask(
+                playbook="cleanup_galaxy_server.yml", host=self.destination.host
+            )
+        )
 
-    def _run_at(self, result_file: Path, repetition: int, galaxy_job_config: GalaxyFileGenOnS3Config) -> dict:
+    def _run_at(
+        self,
+        result_file: Path,
+        repetition: int,
+        galaxy_job_config: GalaxyFileGenOnS3Config,
+    ) -> dict:
         """Perform a single run"""
 
         start_time = time.monotonic()
@@ -200,13 +220,16 @@ class GalaxyFileGenOnS3(GalaxyJob):
             time.sleep(5)
 
         total_runtime = time.monotonic() - start_time
-        result = {
-            "total_runtime_in_s": total_runtime
-        }
+        result = {"total_runtime_in_s": total_runtime}
         log.info("Run took %d s", total_runtime)
 
         log.info("Empty s3 bucket")
-        client = boto3.resource("s3", endpoint_url="https://s3.bwsfs.uni-freiburg.de/", aws_access_key_id="D1U2HMMF0WOK3B41ERFX", aws_secret_access_key="G9q1Nr8W2CaAyF1iDsNyX5iK/m3JU2o/WlDQUIA7")
+        client = boto3.resource(
+            "s3",
+            endpoint_url="https://s3.bwsfs.uni-freiburg.de/",
+            aws_access_key_id="D1U2HMMF0WOK3B41ERFX",
+            aws_secret_access_key="G9q1Nr8W2CaAyF1iDsNyX5iK/m3JU2o/WlDQUIA7",
+        )
         bucket = client.Bucket("frct-smoe-bench-ec61-01")
         bucket.objects.all().delete()
         log.info("Empty s3 bucket done")
@@ -214,7 +237,12 @@ class GalaxyFileGenOnS3(GalaxyJob):
         return result
 
     def _get_current_num_files(self) -> int:
-        client = boto3.client("s3", endpoint_url="https://s3.bwsfs.uni-freiburg.de/", aws_access_key_id="D1U2HMMF0WOK3B41ERFX", aws_secret_access_key="G9q1Nr8W2CaAyF1iDsNyX5iK/m3JU2o/WlDQUIA7")
+        client = boto3.client(
+            "s3",
+            endpoint_url="https://s3.bwsfs.uni-freiburg.de/",
+            aws_access_key_id="D1U2HMMF0WOK3B41ERFX",
+            aws_secret_access_key="G9q1Nr8W2CaAyF1iDsNyX5iK/m3JU2o/WlDQUIA7",
+        )
         result = client.list_objects_v2(Bucket="frct-smoe-bench-ec61-01", Delimiter="/")
         if "CommonPrefixes" not in result:
             return 0
@@ -222,9 +250,11 @@ class GalaxyFileGenOnS3(GalaxyJob):
         # Each prefix contains 1000 files, except the last one
         num = (len(result["CommonPrefixes"][:-1])) * 1000
         # Subtract one because prefix 000 only has 999 files
-        num = max(0, num-1)
+        num = max(0, num - 1)
 
         last_prefix = result["CommonPrefixes"][-1]["Prefix"]
-        resp = client.list_objects_v2(Bucket="frct-smoe-bench-ec61-01", Prefix=last_prefix)
+        resp = client.list_objects_v2(
+            Bucket="frct-smoe-bench-ec61-01", Prefix=last_prefix
+        )
         num += len(resp["Contents"])
         return num

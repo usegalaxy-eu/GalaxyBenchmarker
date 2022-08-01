@@ -6,8 +6,8 @@ from __future__ import annotations
 import dataclasses
 import logging
 import re
-import time
 import shutil
+import time
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -83,6 +83,7 @@ def parse_result_file(file: Path) -> dict[str, Any]:
 
     return result
 
+
 @base.register_benchmark
 class WarpFixedParams(base.Benchmark):
     """Benchmarking system with 'warp'"""
@@ -117,10 +118,7 @@ class WarpFixedParams(base.Benchmark):
             {
                 "warp_result_file": result_file.name,
                 "controller_dir": result_file.parent,
-                **{
-                    f"warp_{key}": value
-                    for key, value in warp_config.asdict().items()
-                },
+                **{f"warp_{key}": value for key, value in warp_config.asdict().items()},
             },
         )
 
@@ -138,6 +136,7 @@ class WarpFixedParams(base.Benchmark):
 
     def get_tags(self) -> dict[str, str]:
         return {**super().get_tags(), "warp": self.config.asdict()}
+
 
 @base.register_benchmark
 class WarpOneDimParams(base.BenchmarkOneDimMixin, WarpFixedParams):

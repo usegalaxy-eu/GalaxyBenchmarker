@@ -24,7 +24,9 @@ def main() -> None:
     parser.set_defaults(
         verbose=False, only_pre_tasks=False, only_benchmark=False, only_post_tasks=False
     )
-    parser.add_argument("--benchmarks", nargs="+", default=[], help="List of benchmark(s)")
+    parser.add_argument(
+        "--benchmarks", nargs="+", default=[], help="List of benchmark(s)"
+    )
 
     args = parser.parse_args()
 
@@ -35,7 +37,9 @@ def main() -> None:
         if not cfg_path.is_file():
             raise ValueError(f"Path to config '{config_name}' is not a file")
 
-        log.debug("Loading Configuration from file {filename}".format(filename=config_name))
+        log.debug(
+            "Loading Configuration from file {filename}".format(filename=config_name)
+        )
 
         cfg = from_yaml(GlobalConfig, cfg_path.read_text())
 

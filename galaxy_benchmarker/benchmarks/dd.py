@@ -6,8 +6,8 @@ from __future__ import annotations
 import dataclasses
 import logging
 import re
-import time
 import shutil
+import time
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -44,9 +44,7 @@ def parse_result_file(file: Path) -> dict[str, Any]:
     # 536870912 bytes (537 MB, 512 MiB) copied, 2.32072 s, 231 MB/s
     # 536870912 bytes (537 MB, 512 MiB) copied, 2.3709 s, 226 MB/s
 
-    pattern = re.compile(
-        r"([0-9]+) bytes .* copied, ([0-9\.]+) s, ([0-9\.]+) MB/s$"
-    )
+    pattern = re.compile(r"([0-9]+) bytes .* copied, ([0-9\.]+) s, ([0-9\.]+) MB/s$")
 
     matches = []
     with file.open() as file_handle:
@@ -62,7 +60,7 @@ def parse_result_file(file: Path) -> dict[str, Any]:
         bw_in_MiB = (bytes / 1024**2) / time
         bw_in_MB_calulated = (bytes / 1000**2) / time
 
-        if bw_in_MB not in [round(bw_in_MB_calulated, 0),round(bw_in_MB_calulated, 1)]:
+        if bw_in_MB not in [round(bw_in_MB_calulated, 0), round(bw_in_MB_calulated, 1)]:
             log.warning(
                 "Missmatch between calculated and parsed bandwidth in MB: Parsed: %.2f, Calculated %.2f",
                 bw_in_MB,
@@ -74,7 +72,7 @@ def parse_result_file(file: Path) -> dict[str, Any]:
     return {
         "bw_in_MiB": total_bw_in_MiB,
         "bw_in_mb": total_bw_in_mb,
-        "detected_matches": len(matches)
+        "detected_matches": len(matches),
     }
 
 
@@ -86,9 +84,7 @@ class DdFixedParams(base.Benchmark):
         super().__init__(name, config, benchmarker)
 
         if not "dd" in config:
-            raise ValueError(
-                f"'dd' property (type: dict) is missing for '{self.name}'"
-            )
+            raise ValueError(f"'dd' property (type: dict) is missing for '{self.name}'")
         self.config = DdConfig(**config.get("dd", {}))
 
         dest = config.get("destination", {})

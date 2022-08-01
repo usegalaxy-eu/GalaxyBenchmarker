@@ -6,9 +6,9 @@ from __future__ import annotations
 import dataclasses
 import json
 import logging
+import shutil
 import tempfile
 import time
-import shutil
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -114,7 +114,7 @@ class FioFixedParams(base.Benchmark):
                 assert filesize.isnumeric(), "Unknown unit for filesize"
                 multiplier = 1024**0
                 number = filesize.strip()
-        return str(int(number)*multiplier)
+        return str(int(number) * multiplier)
 
 
 @base.register_benchmark

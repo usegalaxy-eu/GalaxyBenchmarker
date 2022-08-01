@@ -1,17 +1,19 @@
 from __future__ import annotations
 
-from galaxy_benchmarker.benchmarks import base
-from typing import TYPE_CHECKING
-import threading
-from pathlib import Path
 import json
-from functools import wraps
 import logging
+import threading
+from functools import wraps
+from pathlib import Path
+from typing import TYPE_CHECKING
+
+from galaxy_benchmarker.benchmarks import base
 
 if TYPE_CHECKING:
     from galaxy_benchmarker.benchmarker import Benchmarker
 
 log = logging.getLogger(__name__)
+
 
 @base.register_benchmark
 class BenchmarkCompare(base.Benchmark):
@@ -35,7 +37,6 @@ class BenchmarkCompare(base.Benchmark):
         self.bench_a = base.Benchmark.create(f"{name}_a", conf_a, benchmarker)
         self.bench_b = base.Benchmark.create(f"{name}_b", conf_b, benchmarker)
 
-
     def run_pre_tasks(self) -> None:
         """Run setup tasks"""
         self.bench_a.run_pre_tasks()
@@ -56,6 +57,7 @@ class BenchmarkCompare(base.Benchmark):
 
             Wait after each _run_at-call so the other benchmark can run
             """
+
             @wraps(method)
             def _impl(self, *method_args, **method_kwargs):
                 with sync_lock:
@@ -65,6 +67,7 @@ class BenchmarkCompare(base.Benchmark):
                     if sync_required:
                         sync_lock.wait()
                 return method_output
+
             return _impl
 
         def run_in_thread(method):
@@ -73,6 +76,7 @@ class BenchmarkCompare(base.Benchmark):
             After call to run() has finished notify the other thread so it can
             also finish
             """
+
             def _impl():
                 method_output = method()
                 global sync_required
@@ -80,6 +84,7 @@ class BenchmarkCompare(base.Benchmark):
                 with sync_lock:
                     sync_lock.notify()
                 return method_output
+
             return _impl
 
         _bench_a_run_at = self.bench_a._run_at
@@ -103,7 +108,6 @@ class BenchmarkCompare(base.Benchmark):
             # Restore original functions
             self.bench_a._run_at = _bench_a_run_at
             self.bench_b._run_at = _bench_b_run_at
-
 
     def save_results_to_file(self, directory: Path) -> str:
         """Write all metrics to a file."""
