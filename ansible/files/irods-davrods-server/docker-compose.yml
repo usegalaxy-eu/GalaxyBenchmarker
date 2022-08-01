@@ -1,7 +1,11 @@
 version: "3"
 services:
   davrods:
-    build: .
+    build:
+      context: .
+      args:
+        host_owner_uid: ${DAVRODS_VOLUME_OWNER}
+
     networks:
       - irods_default
     ports:

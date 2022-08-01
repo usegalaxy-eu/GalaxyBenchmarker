@@ -20,6 +20,9 @@ RUN a2enmod dav \
   && a2enmod davrods \
   && a2ensite davrods-vhost
 
+ARG host_owner_uid
+RUN adduser --disabled-password --gecos "" --uid "${host_owner_uid}" irods
+
 EXPOSE 80
 ENTRYPOINT ["apache2ctl"]
 CMD ["-DFOREGROUND"]

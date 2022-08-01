@@ -7,19 +7,17 @@
         dest: /irods
         recursive: yes
 
-    - name: Set irods host ip for client
-      lineinfile:
-        path: /irods/volumes/fstab
-        regexp: '^http://IP_SET_BY_ANSIBLE (.+)$'
-        line: "http://{{ irods_server_host }} \\1"
-        backrefs: yes
+    - name: Setup fstab
+      template:
+        src: ./files/irods-webdav-client/volumes/fstab.j2
+        dest: /irods/volumes/fstab
 
     - name: Create irods volume
       file:
         path: "{{ irods_host_volume }}/irods-webdav"
         state: directory
-        owner: "{{ irods_host_volume_owner_uid }}"
-        group: "{{ irods_host_volume_owner_uid }}"
+        owner: "{{ davrods_owner_uid }}"
+        group: "{{ davrods_owner_uid }}"
         mode: '0755'
 
     - name: Build and start container
@@ -29,7 +27,7 @@
         build: yes
       environment:
         IRODS_HOST_VOLUME: "{{ irods_host_volume }}"
-        IRODS_HOST_VOLUME_OWNER: "{{ irods_host_volume_owner_uid }}"
+        IRODS_HOST_VOLUME_OWNER: "{{ davrods_owner_uid }}"
       register: output
 
     # - name: Debug startup logs

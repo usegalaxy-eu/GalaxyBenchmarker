@@ -19,6 +19,34 @@ benchmarks:
       path_to_files: /mnt/isilon/galaxy_in_progress/files
       verification_timeout_in_s: 100
 
+  benchmark_galaxy_netapp_backend:
+    type: GalaxyFileGenOnMountVolume
+    repetitions: 1
+    destination:
+      host: irods_client
+      target_folder: /mnt/netapp
+    galaxy_job:
+      input:
+        num_files: 10
+        file_size_in_bytes: 1024
+      expected_num_files: 10
+      path_to_files: /mnt/netapp/galaxy_in_progress/files
+      verification_timeout_in_s: 100
+
+  benchmark_galaxy_ssd_tank_backend:
+    type: GalaxyFileGenOnMountVolume
+    repetitions: 1
+    destination:
+      host: irods_client
+      target_folder: /mnt/ssd_tank/test_moehrles
+    galaxy_job:
+      input:
+        num_files: 10
+        file_size_in_bytes: 1024
+      expected_num_files: 10
+      path_to_files: /mnt/ssd_tank/test_moehrles/galaxy_in_progress/files
+      verification_timeout_in_s: 100
+
   benchmark_galaxy_s3_backend:
     type: GalaxyFileGenOnS3
     repetitions: 1
@@ -32,3 +60,76 @@ benchmarks:
       verification_timeout_in_s: 500
       base_url: https://s3.bwsfs.uni-freiburg.de
       bucket_name: frct-smoe-bench-ec61-01
+
+  benchmark_galaxy_irods_fuse_on_isilon_backend:
+    type: GalaxyFileGenOnMountVolume
+    repetitions: 1
+    destination:
+      host: irods_client
+      target_folder: /mnt/volume_under_test/irods-fuse
+    galaxy_job:
+      input:
+        num_files: 1
+        file_size_in_bytes: 1024
+      expected_num_files: 1
+      path_to_files: /mnt/isilon/irods/home/rods/galaxy_in_progress/files
+      verification_timeout_in_s: 100
+
+    pre_tasks:
+      - playbook: setup_irods_server.yml
+        host: irods_server
+        extra_vars:
+          irods_host_volume: /mnt/isilon
+      - playbook: setup_irods_fuse_client.yml
+        host: irods_client
+        extra_vars:
+          irods_host_volume: /mnt/volume_under_test
+          irods_server_host: "132.230.223.139"
+          irods_host_volume_owner_uid: "1000"
+    post_tasks:
+      - playbook: cleanup_irods_server.yml
+        host: irods_server
+        extra_vars:
+          irods_host_volume: /mnt/isilon
+      - playbook: cleanup_irods_fuse_client.yml
+        host: irods_client
+        extra_vars:
+          irods_host_volume: /mnt/volume_under_test
+
+
+  benchmark_galaxy_irods_davrods_on_isilon_backend:
+    type: GalaxyFileGenOnMountVolume
+    repetitions: 1
+    destination:
+      host: irods_client
+      target_folder: /mnt/volume_under_test/irods-webdav
+    galaxy_job:
+      input:
+        num_files: 1000
+        file_size_in_bytes: 1024
+      expected_num_files: 1000
+      path_to_files: /mnt/isilon/irods/home/rods/galaxy_in_progress/files
+      verification_timeout_in_s: 500
+
+    pre_tasks:
+    - playbook: setup_irods_server_with_davrods.yml
+      host: irods_server
+      extra_vars:
+        irods_host_volume: /mnt/isilon
+        davrods_owner_uid: "1450"
+    - playbook: setup_irods_webdav_client.yml
+      host: irods_client
+      extra_vars:
+        irods_host_volume: /mnt/volume_under_test
+        irods_server_host: "132.230.223.139"
+        davrods_owner_uid: "1450"
+
+    post_tasks:
+      - playbook: cleanup_irods_webdav_client.yml
+        host: irods_client
+        extra_vars:
+          irods_host_volume: /mnt/volume_under_test
+      - playbook: cleanup_irods_server_with_davrods.yml
+        host: irods_server
+        extra_vars:
+          irods_host_volume: /mnt/isilon

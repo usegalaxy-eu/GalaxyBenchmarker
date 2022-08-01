@@ -5,16 +5,11 @@ services:
     hostname: galaxy
     domainname: local
     ports:
-    # FTP Upload
-    # - "8021:21"
-    # ??
-    # - "8022:22"
     # Webserver
     - "8080:80"
     # supvisord web app
     - "9002:9002"
     volumes:
-      # Stat is entirely in /export. Enable for debug purposes
       - ./export:/export
       - ./custom_tools:/custom_tools
       - ./custom_config:/custom_config

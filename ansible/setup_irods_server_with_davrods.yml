@@ -21,6 +21,8 @@
         project_src: /davrods
         state: present
         build: yes
+      environment:
+        DAVRODS_VOLUME_OWNER: "{{ davrods_owner_uid }}"
       register: output
 
     # - name: Debug startup logs

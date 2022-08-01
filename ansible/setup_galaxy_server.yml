@@ -16,8 +16,6 @@
           file:
             path: "{{ galaxy_host_volume }}/galaxy_in_progress"
             state: directory
-            owner: "1450"
-            group: "1450"
             mode: '0777'
 
         - name: Update docker-compose with object store config

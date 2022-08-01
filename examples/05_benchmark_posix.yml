@@ -98,7 +98,7 @@ benchmarks:
       extra_vars:
         irods_host_volume: /mnt/volume_under_test
         irods_server_host: "132.230.223.139"
-        irods_host_volume_owner_uid: "1000"
+        davrods_owner_uid: "1000"
 
     post_tasks:
       - playbook: cleanup_irods_webdav_client.yml
@@ -126,7 +126,7 @@ benchmarks:
       extra_vars:
         irods_host_volume: /mnt/volume_under_test
         irods_server_host: "132.230.223.139"
-        irods_host_volume_owner_uid: "1000"
+        davrods_owner_uid: "1000"
 
     post_tasks:
       - playbook: cleanup_irods_webdav_client.yml
@@ -181,7 +181,7 @@ benchmarks:
         extra_vars:
           irods_host_volume: /mnt/volume_under_test
           irods_server_host: "132.230.223.139"
-          irods_host_volume_owner_uid: "1000"
+          davrods_owner_uid: "1000"
     post_tasks:
       - playbook: cleanup_irods_server_with_davrods.yml
         host: irods_server

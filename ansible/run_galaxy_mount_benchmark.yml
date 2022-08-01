@@ -6,5 +6,5 @@
       shell: find {{glx_path_to_files}} -type f | wc -l
       register: result
       until: result.stdout.find("{{glx_expected_num_files}}") != -1
-      retries: "{{ glx_verification_timeout_in_s|int / 5 }}"
+      retries: "{{ glx_verification_timeout_in_s|int // 5 }}"
       delay: 5

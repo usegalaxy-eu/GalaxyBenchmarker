@@ -1,1 +1,0 @@
-http://IP_SET_BY_ANSIBLE /mnt/volume_under_test davfs rw,user,uid=1000,gid=1000,noauto,_netdev 0 0
