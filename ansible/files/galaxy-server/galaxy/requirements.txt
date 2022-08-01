@@ -1,0 +1,2 @@
+git+https://github.com/galaxyproject/bioblend.git@main#egg=bioblend
+python-irodsclient>1,<2

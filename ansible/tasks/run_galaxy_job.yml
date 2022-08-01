@@ -5,9 +5,9 @@
   register: stat_output
   failed_when: not stat_output.stat.isdir
 
-- name: Run script inside galaxy-script container
+- name: Run script inside galaxy-job-starter container
   community.docker.docker_container_exec:
-    container: galaxy_galaxy-script_1
+    container: galaxy_galaxy-job-starter_1
     command: python run_job.py
     env:
       GLX_TOOL_ID: "{{ glx_tool_id }}"

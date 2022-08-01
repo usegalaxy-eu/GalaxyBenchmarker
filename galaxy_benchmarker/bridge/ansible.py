@@ -148,7 +148,7 @@ class AnsibleTask:
         """Run AnsibleTask on hosts given during creation"""
         if not self.host:
             raise ValueError(
-                "'host' is required, when task is executed through 'run()'"
+                f"'host' is required, when task is executed through 'run()' ({self.name})"
             )
 
         self.run_at(self.host, self.extra_vars)
