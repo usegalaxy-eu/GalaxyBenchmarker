@@ -171,6 +171,11 @@ class GalaxyFileGenOnS3Config(GalaxyJobConfig):
     expected_num_files: int
     verification_timeout_in_s: int
 
+    access_key_id: str
+    base_url: str
+    bucket_name: str
+    secret_access_key: str
+
 
 @base.register_benchmark
 class GalaxyFileGenOnS3(GalaxyJob):
@@ -215,7 +220,7 @@ class GalaxyFileGenOnS3(GalaxyJob):
             if current_runtime >= galaxy_job_config.verification_timeout_in_s:
                 raise RuntimeError("Verification timed out")
 
-            num_files = self._get_current_num_files()
+            num_files = self._get_current_num_files(galaxy_job_config)
             log.info("Currently %d files present", num_files)
             time.sleep(5)
 
@@ -226,24 +231,26 @@ class GalaxyFileGenOnS3(GalaxyJob):
         log.info("Empty s3 bucket")
         client = boto3.resource(
             "s3",
-            endpoint_url="https://s3.bwsfs.uni-freiburg.de/",
-            aws_access_key_id="D1U2HMMF0WOK3B41ERFX",
-            aws_secret_access_key="G9q1Nr8W2CaAyF1iDsNyX5iK/m3JU2o/WlDQUIA7",
+            endpoint_url=galaxy_job_config.base_url,
+            aws_access_key_id=galaxy_job_config.access_key_id,
+            aws_secret_access_key=galaxy_job_config.secret_access_key,
         )
-        bucket = client.Bucket("frct-smoe-bench-ec61-01")
+        bucket = client.Bucket(galaxy_job_config.bucket_name)
         bucket.objects.all().delete()
         log.info("Empty s3 bucket done")
 
         return result
 
-    def _get_current_num_files(self) -> int:
+    def _get_current_num_files(self, galaxy_job_config: GalaxyFileGenOnS3Config) -> int:
         client = boto3.client(
             "s3",
-            endpoint_url="https://s3.bwsfs.uni-freiburg.de/",
-            aws_access_key_id="D1U2HMMF0WOK3B41ERFX",
-            aws_secret_access_key="G9q1Nr8W2CaAyF1iDsNyX5iK/m3JU2o/WlDQUIA7",
+            endpoint_url=galaxy_job_config.base_url,
+            aws_access_key_id=galaxy_job_config.access_key_id,
+            aws_secret_access_key=galaxy_job_config.secret_access_key,
         )
-        result = client.list_objects_v2(Bucket="frct-smoe-bench-ec61-01", Delimiter="/")
+        result = client.list_objects_v2(
+            Bucket=galaxy_job_config.bucket_name, Delimiter="/"
+        )
         if "CommonPrefixes" not in result:
             return 0
 
