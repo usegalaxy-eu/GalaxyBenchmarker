@@ -176,7 +176,7 @@ class GalaxyFileGenOnS3Job(GalaxyFileGenJob):
                     "galaxy_use_s3": True,
                     "S3_ACCESS_KEY": self.config.access_key_id,
                     "S3_SECRET_KEY": self.config.secret_access_key,
-                    "S3_BASE_URL": self.config.base_url,
+                    "S3_BASE_URL": self.config.base_url.split("://")[1],
                     "S3_BUCKET_NAME": self.config.bucket_name,
                 },
             )

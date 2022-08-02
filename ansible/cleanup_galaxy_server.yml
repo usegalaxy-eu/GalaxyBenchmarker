@@ -6,6 +6,7 @@
         path: "/galaxy"
 
     - name: Delete galaxy files
+      when: galaxy_host_volume is defined
       become: yes
       community.docker.docker_container:
         name: fix_filepermissions

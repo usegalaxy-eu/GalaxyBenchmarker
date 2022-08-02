@@ -16,12 +16,14 @@ class S3Config:
         access_key = os.getenv("AWS_ACCESS_KEY_ID")
         if access_key is None:
             raise ValueError("Missing S3 credentials in env vars: AWS_ACCESS_KEY_ID")
+        return access_key
 
     @property
     def secret_access_key(self):
         secret_key = os.getenv("AWS_SECRET_ACCESS_KEY")
         if secret_key is None:
             raise ValueError("Missing S3 credentials in env vars: AWS_SECRET_ACCESS_KEY")
+        return secret_key
 
 
 def empty_bucket(config: S3Config) -> None:
