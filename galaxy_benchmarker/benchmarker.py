@@ -11,7 +11,7 @@ from typing import Optional
 from serde import serde
 
 from galaxy_benchmarker.benchmarks.base import Benchmark
-from galaxy_benchmarker.bridge import ansible
+from galaxy_benchmarker.utils import ansible
 from galaxy_benchmarker.bridge.galaxy import Galaxy, GalaxyConfig
 from galaxy_benchmarker.bridge.openstack import OpenStackCompute, OpenStackComputeConfig
 from galaxy_benchmarker.typing import NamedConfigDicts

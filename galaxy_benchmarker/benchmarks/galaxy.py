@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from galaxy_benchmarker.benchmarks import base
-from galaxy_benchmarker.bridge import ansible
+from galaxy_benchmarker.utils import ansible
 from galaxy_benchmarker.utils.destinations import (
     BenchmarkDestination,
     PosixBenchmarkDestination,

@@ -9,7 +9,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Type, TypeVar
 
-from galaxy_benchmarker.bridge.ansible import AnsibleTask
+from galaxy_benchmarker.utils.ansible import AnsibleTask
 from galaxy_benchmarker.typing import BenchmarkResults
 
 if TYPE_CHECKING:
