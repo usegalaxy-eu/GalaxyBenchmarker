@@ -64,16 +64,31 @@ def _get_current_num_files(config: S3Config, expected_size: int) -> int:
         aws_secret_access_key=config.secret_access_key,
         endpoint_url=config.base_url,
     )
-    result = client.list_objects_v2(Bucket=config.bucket_name, Delimiter="/")
-    if "CommonPrefixes" not in result:
-        return 0
+
+    prefix = ""
+
+    # Search for the prefix where the fanout happens
+    ## i.e. /000,/001 -> "/"
+    ## /home/rods/000,/home/rods/000 -> "/home/rods"
+    while True:
+        result = client.list_objects_v2(
+            Bucket=config.bucket_name, Delimiter="/", Prefix=prefix
+        )
+        if "CommonPrefixes" not in result:
+            return 0
+
+        common = result["CommonPrefixes"]
+        if len(common) == 1:
+            prefix = common[0]["Prefix"]
+            continue
+        break
 
     # Each prefix contains 1000 files, except the last one
-    num = (len(result["CommonPrefixes"][:-1])) * 1000
+    num = (len(common[:-1])) * 1000
     # Subtract one because prefix 000 only has 999 files
     num = max(0, num - 1)
 
-    last_prefix = result["CommonPrefixes"][-1]["Prefix"]
+    last_prefix = common[-1]["Prefix"]
     resp = client.list_objects_v2(Bucket=config.bucket_name, Prefix=last_prefix)
     num += len(list(item for item in resp["Contents"] if item["Size"] == expected_size))
 
