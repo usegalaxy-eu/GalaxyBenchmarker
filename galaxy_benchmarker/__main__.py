@@ -37,7 +37,7 @@ def main() -> None:
         if not cfg_path.is_file():
             raise ValueError(f"Path to config '{config_name}' is not a file")
 
-        log.debug(
+        log.info(
             "Loading Configuration from file {filename}".format(filename=config_name)
         )
 

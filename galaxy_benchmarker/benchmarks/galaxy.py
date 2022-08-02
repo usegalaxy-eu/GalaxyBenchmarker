@@ -195,6 +195,11 @@ class GalaxyFileGenOnS3Job(GalaxyFileGenJob):
     ) -> dict:
         """Perform a single run"""
 
+        # Make sure bucket is empty
+        log.info("Empty s3 bucket")
+        s3.empty_bucket(galaxy_job_config)
+        log.info("Empty s3 bucket done")
+
         start_time = time.monotonic()
 
         # Trigger galaxy job
@@ -206,10 +211,6 @@ class GalaxyFileGenOnS3Job(GalaxyFileGenJob):
         total_runtime = time.monotonic() - start_time
         result = {"total_runtime_in_s": total_runtime}
         log.info("Run took %d s", total_runtime)
-
-        log.info("Empty s3 bucket")
-        s3.empty_bucket(galaxy_job_config)
-        log.info("Empty s3 bucket done")
 
         return result
 
@@ -282,6 +283,11 @@ class GalaxyFileGenOnIrodsOnS3Job(GalaxyFileGenJob):
     ) -> dict:
         """Perform a single run"""
 
+        # Make sure bucket is empty
+        log.info("Empty s3 bucket")
+        s3.empty_bucket(galaxy_job_config)
+        log.info("Empty s3 bucket done")
+
         start_time = time.monotonic()
 
         # Trigger galaxy job
@@ -293,9 +299,5 @@ class GalaxyFileGenOnIrodsOnS3Job(GalaxyFileGenJob):
         total_runtime = time.monotonic() - start_time
         result = {"total_runtime_in_s": total_runtime}
         log.info("Run took %d s", total_runtime)
-
-        log.info("Empty s3 bucket")
-        s3.empty_bucket(galaxy_job_config)
-        log.info("Empty s3 bucket done")
 
         return result
