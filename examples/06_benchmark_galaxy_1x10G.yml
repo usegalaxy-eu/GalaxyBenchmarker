@@ -8,7 +8,7 @@ Default: &default
   input:
     num_files: 1
     file_size_in_bytes: 10737418240  # 1 Gib
-  verification_timeout_in_s: 500
+  verification_timeout_in_s: 2500
 
 
 benchmarks:
