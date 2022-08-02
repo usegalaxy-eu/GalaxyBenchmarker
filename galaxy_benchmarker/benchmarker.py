@@ -12,8 +12,6 @@ from serde import serde
 
 from galaxy_benchmarker.benchmarks.base import Benchmark
 from galaxy_benchmarker.utils import ansible
-from galaxy_benchmarker.bridge.galaxy import Galaxy, GalaxyConfig
-from galaxy_benchmarker.bridge.openstack import OpenStackCompute, OpenStackComputeConfig
 from galaxy_benchmarker.typing import NamedConfigDicts
 
 log = logging.getLogger(__name__)
@@ -22,9 +20,6 @@ log = logging.getLogger(__name__)
 @serde
 @dataclass
 class BenchmarkerConfig:
-    openstack: Optional[OpenStackComputeConfig] = None
-    galaxy: Optional[GalaxyConfig] = None
-
     results_path: str = "results/"
     results_save_to_file: bool = True
     results_save_raw_results: bool = False
@@ -45,10 +40,6 @@ class GlobalConfig:
 class Benchmarker:
     def __init__(self, config: BenchmarkerConfig, benchmarks: NamedConfigDicts):
         self.config = config
-        self.glx = Galaxy(config.galaxy) if config.galaxy else None
-        self.openstack = (
-            OpenStackCompute(config.openstack) if config.openstack else None
-        )
         self.current_benchmark: Optional[Benchmark] = None
 
         self.benchmarks: list[Benchmark] = []
@@ -72,28 +63,6 @@ class Benchmarker:
             exit(0)
 
         signal.signal(signal.SIGINT, handle_signal)
-
-        # self.benchmarks = benchmarks.parse_from_dic(config)
-        # self.workflows = dict()
-        # for wf_config in config["workflows"]:
-        #     self.workflows[wf_config["name"]] = workflow.configure_workflow(wf_config)
-
-        # self.destinations = dict()
-        # for dest_config in config["destinations"]:
-        #     self.destinations[dest_config["name"]] = destination.configure_destination(dest_config, self.glx)
-
-        # self.benchmarks = dict()
-        # for bm_config in config["benchmarks"]:
-        #     self.benchmarks[bm_config["name"]] = benchmark.configure_benchmark(bm_config, self.destinations,
-        #                                                                        self.workflows, self.glx, self)
-
-        # if glx_conf.get("configure_job_destinations", False):
-        #     log.info("Creating job_conf for Galaxy and deploying it")
-        #     destination.create_galaxy_job_conf(self.glx, self.destinations)
-        #     self.glx.deploy_job_conf()
-
-        # if glx_conf["shed_install"]:
-        #     self.glx.install_tools_for_workflows(list(self.workflows.values()))
 
     def run(
         self,
