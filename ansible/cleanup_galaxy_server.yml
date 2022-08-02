@@ -5,14 +5,27 @@
       vars:
         path: "/galaxy"
 
+    - name: Delete galaxy files
+      become: yes
+      community.docker.docker_container:
+        name: fix_filepermissions
+        image: ubuntu
+        user: 1450
+        detach: false
+        cleanup: true
+        volumes:
+          - "{{ galaxy_host_volume }}/galaxy_in_progress:/mnt/volume_under_test"
+        command: [
+          "rm",
+          "-rf",
+          "/mnt/volume_under_test/files",
+        ]
 
     - name: Cleanup
       when: galaxy_host_volume is defined
       file:
-        path: "{{ item }}"
+        path: "{{ galaxy_host_volume }}/galaxy_in_progress"
         state: absent
-      loop:
-        - "{{ galaxy_host_volume }}/galaxy_in_progress"
       retries: 15
       delay: 5
       register: cleanup
