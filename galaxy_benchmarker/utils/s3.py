@@ -75,7 +75,7 @@ def _get_current_num_files(config: S3Config, expected_size: int) -> int:
             Bucket=config.bucket_name, Delimiter="/", Prefix=prefix
         )
         if "CommonPrefixes" not in result:
-            return 0
+            break
 
         common = result["CommonPrefixes"]
         if len(common) == 1:
