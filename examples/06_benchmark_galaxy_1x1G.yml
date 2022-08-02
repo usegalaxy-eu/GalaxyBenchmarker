@@ -42,15 +42,15 @@ benchmarks:
       <<: *default
       path_to_files: /mnt/ssd_tank/test_moehrles/galaxy_in_progress/files
 
-  benchmark_galaxy_s3_backend:
-    type: GalaxyFileGenOnS3Job
-    repetitions: 1
-    destination:
-      host: irods_client
-    galaxy_job:
-      <<: *default
-      base_url: https://s3.bwsfs.uni-freiburg.de
-      bucket_name: frct-smoe-bench-ec61-01
+  # benchmark_galaxy_s3_backend:
+  #   type: GalaxyFileGenOnS3Job
+  #   repetitions: 1
+  #   destination:
+  #     host: irods_client
+  #   galaxy_job:
+  #     <<: *default
+  #     base_url: https://s3.bwsfs.uni-freiburg.de
+  #     bucket_name: frct-smoe-bench-ec61-01
 
   # benchmark_galaxy_irods_via_fuse_on_isilon_backend:
   #   type: GalaxyFileGenOnMountVolumeJob
