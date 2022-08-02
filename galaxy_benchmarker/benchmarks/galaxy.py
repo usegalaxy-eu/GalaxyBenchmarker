@@ -12,12 +12,11 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from galaxy_benchmarker.benchmarks import base
-from galaxy_benchmarker.utils import ansible
+from galaxy_benchmarker.utils import ansible, s3
 from galaxy_benchmarker.utils.destinations import (
     BenchmarkDestination,
     PosixBenchmarkDestination,
 )
-from galaxy_benchmarker.utils import s3
 
 if TYPE_CHECKING:
     from galaxy_benchmarker.benchmarker import Benchmarker
@@ -30,10 +29,10 @@ class GalaxyFileGenInput:
     num_files: int
     file_size_in_bytes: int
 
+
 @dataclasses.dataclass
 class GalaxyFileGenConfig(base.BenchmarkConfig):
     input: GalaxyFileGenInput
-    expected_num_files: int
     verification_timeout_in_s: int
 
 
@@ -62,7 +61,7 @@ class GalaxyFileGenJob(base.Benchmark):
                 f"'galaxy_job'->'input' property (type: dict) is missing for '{self.name}'"
             )
 
-        self.config  = self.galaxy_job_config_class(
+        self.config = self.galaxy_job_config_class(
             input=GalaxyFileGenInput(**glx_job_config.pop("input")),
             **glx_job_config,
         )
@@ -90,6 +89,8 @@ class GalaxyFileGenJob(base.Benchmark):
             {
                 "glx_tool_id": self.galaxy_tool_id,
                 "glx_tool_input": shlex.quote(input_str),
+                "glx_expected_num_files": galaxy_job_config.input.num_files,
+                "glx_expected_size_in_bytes": galaxy_job_config.input.file_size_in_bytes,
                 **{
                     f"glx_{key}": value
                     for key, value in galaxy_job_config.asdict().items()
@@ -154,7 +155,6 @@ class GalaxyFileGenOnMountVolumeJob(GalaxyFileGenJob):
         )
 
 
-
 @dataclasses.dataclass
 class GalaxyFileGenOnS3Config(s3.S3Config, GalaxyFileGenConfig):
     pass
@@ -206,7 +206,12 @@ class GalaxyFileGenOnS3Job(GalaxyFileGenJob):
         super()._run_at(result_file, repetition, galaxy_job_config)
 
         # Check s3 bucket for files
-        s3.check_bucket_for_files(galaxy_job_config, galaxy_job_config.expected_num_files, galaxy_job_config.verification_timeout_in_s)
+        s3.check_bucket_for_files(
+            galaxy_job_config,
+            galaxy_job_config.input.num_files,
+            galaxy_job_config.input.file_size_in_bytes,
+            galaxy_job_config.verification_timeout_in_s,
+        )
 
         total_runtime = time.monotonic() - start_time
         result = {"total_runtime_in_s": total_runtime}
@@ -294,7 +299,12 @@ class GalaxyFileGenOnIrodsOnS3Job(GalaxyFileGenJob):
         super()._run_at(result_file, repetition, galaxy_job_config)
 
         # Check s3 bucket for files
-        s3.check_bucket_for_files(galaxy_job_config, galaxy_job_config.expected_num_files, galaxy_job_config.verification_timeout_in_s)
+        s3.check_bucket_for_files(
+            galaxy_job_config,
+            galaxy_job_config.input.num_files,
+            galaxy_job_config.input.file_size_in_bytes,
+            galaxy_job_config.verification_timeout_in_s,
+        )
 
         total_runtime = time.monotonic() - start_time
         result = {"total_runtime_in_s": total_runtime}

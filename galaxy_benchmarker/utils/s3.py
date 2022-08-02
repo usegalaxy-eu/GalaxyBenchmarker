@@ -1,10 +1,12 @@
-import os
 import dataclasses
-import time
 import logging
+import os
+import time
+
 import boto3
 
 log = logging.getLogger(__name__)
+
 
 @dataclasses.dataclass
 class S3Config:
@@ -22,7 +24,9 @@ class S3Config:
     def secret_access_key(self):
         secret_key = os.getenv("AWS_SECRET_ACCESS_KEY")
         if secret_key is None:
-            raise ValueError("Missing S3 credentials in env vars: AWS_SECRET_ACCESS_KEY")
+            raise ValueError(
+                "Missing S3 credentials in env vars: AWS_SECRET_ACCESS_KEY"
+            )
         return secret_key
 
 
@@ -37,9 +41,11 @@ def empty_bucket(config: S3Config) -> None:
     bucket.objects.all().delete()
 
 
-def check_bucket_for_files(config: S3Config, expected_num_files: int, timeout: int) -> None:
+def check_bucket_for_files(
+    config: S3Config, expected_num_files: int, expected_size_in_bytes: int, timeout: int
+) -> None:
     start_time = time.monotonic()
-    num_files = _get_current_num_files(config)
+    num_files = _get_current_num_files(config, expected_size_in_bytes)
 
     while num_files < expected_num_files:
         log.info("Currently %d files present", num_files)
@@ -48,19 +54,17 @@ def check_bucket_for_files(config: S3Config, expected_num_files: int, timeout: i
             raise RuntimeError("Verification timed out")
 
         time.sleep(5)
-        num_files = _get_current_num_files(config)
+        num_files = _get_current_num_files(config, expected_size_in_bytes)
 
 
-def _get_current_num_files(config: S3Config) -> int:
+def _get_current_num_files(config: S3Config, expected_size: int) -> int:
     client = boto3.client(
         "s3",
         aws_access_key_id=config.access_key_id,
         aws_secret_access_key=config.secret_access_key,
         endpoint_url=config.base_url,
     )
-    result = client.list_objects_v2(
-        Bucket=config.bucket_name, Delimiter="/"
-    )
+    result = client.list_objects_v2(Bucket=config.bucket_name, Delimiter="/")
     if "CommonPrefixes" not in result:
         return 0
 
@@ -70,8 +74,7 @@ def _get_current_num_files(config: S3Config) -> int:
     num = max(0, num - 1)
 
     last_prefix = result["CommonPrefixes"][-1]["Prefix"]
-    resp = client.list_objects_v2(
-        Bucket=config.bucket_name, Prefix=last_prefix
-    )
-    num += len(resp["Contents"])
+    resp = client.list_objects_v2(Bucket=config.bucket_name, Prefix=last_prefix)
+    num += len(item for item in resp["Contents"] if item["Size"] == expected_size)
+
     return num

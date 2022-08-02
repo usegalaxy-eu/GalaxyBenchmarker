@@ -13,8 +13,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from galaxy_benchmarker.benchmarks import base
-from galaxy_benchmarker.utils import ansible
 from galaxy_benchmarker.typing import RunResult
+from galaxy_benchmarker.utils import ansible
 from galaxy_benchmarker.utils.destinations import PosixBenchmarkDestination
 
 if TYPE_CHECKING:

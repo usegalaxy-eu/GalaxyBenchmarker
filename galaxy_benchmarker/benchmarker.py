@@ -11,8 +11,8 @@ from typing import Optional
 from serde import serde
 
 from galaxy_benchmarker.benchmarks.base import Benchmark
-from galaxy_benchmarker.utils import ansible
 from galaxy_benchmarker.typing import NamedConfigDicts
+from galaxy_benchmarker.utils import ansible
 
 log = logging.getLogger(__name__)
 

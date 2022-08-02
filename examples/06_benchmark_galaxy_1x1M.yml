@@ -8,7 +8,6 @@ Default: &default
   input:
     num_files: 1
     file_size_in_bytes: 1048576
-  expected_num_files: 1
   verification_timeout_in_s: 100
 
 
