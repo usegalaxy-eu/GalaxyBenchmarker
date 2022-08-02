@@ -8,7 +8,7 @@ Default: &default
   input:
     num_files: 10000
     file_size_in_bytes: 1024
-  verification_timeout_in_s: 1500
+  verification_timeout_in_s: 4000
 
 
 benchmarks:
