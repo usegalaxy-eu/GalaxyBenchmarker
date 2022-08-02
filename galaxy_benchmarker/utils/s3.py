@@ -75,6 +75,6 @@ def _get_current_num_files(config: S3Config, expected_size: int) -> int:
 
     last_prefix = result["CommonPrefixes"][-1]["Prefix"]
     resp = client.list_objects_v2(Bucket=config.bucket_name, Prefix=last_prefix)
-    num += len(item for item in resp["Contents"] if item["Size"] == expected_size)
+    num += len(list(item for item in resp["Contents"] if item["Size"] == expected_size))
 
     return num
