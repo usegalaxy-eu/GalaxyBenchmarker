@@ -27,4 +27,5 @@ services:
       "examples/06_benchmark_galaxy_10000x1K.yml",
       "examples/06_benchmark_galaxy_1x1M.yml",
       "examples/06_benchmark_galaxy_1x1G.yml",
+      "examples/06_benchmark_galaxy_1x10G.yml",
     ]
