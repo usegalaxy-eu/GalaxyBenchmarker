@@ -33,14 +33,14 @@ def main():
     output_dir = Path(sys.argv[3])
 
     output_dir.mkdir(parents=True, exist_ok=True)
-    print(output_dir.absolute())
 
     with io.BytesIO() as buffer:
-        # Create a buffer with random data of size
-        # BUFFER_BLOCK_SIZE*BUFFER_NUM_BLOCKS
-        for _ in range (BUFFER_NUM_BLOCKS):
-            buffer.write(os.urandom(BUFFER_BLOCK_SIZE))
-        buffer.seek(0)
+        if file_size_in_bytes > 0:
+            # Create a buffer with random data of size
+            # BUFFER_BLOCK_SIZE*BUFFER_NUM_BLOCKS
+            for _ in range (BUFFER_NUM_BLOCKS):
+                buffer.write(os.urandom(BUFFER_BLOCK_SIZE))
+            buffer.seek(0)
 
         for i in range(num_files):
             file = output_dir / f"data_{i}.data"
