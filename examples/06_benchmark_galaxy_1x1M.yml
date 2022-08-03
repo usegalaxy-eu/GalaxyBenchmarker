@@ -94,10 +94,11 @@ benchmarks:
       path_to_files: /mnt/isilon/irods/home/rods/galaxy_in_progress/files
 
     pre_tasks:
-    - playbook: setup_irods_server_with_davrods.yml
+    - playbook: setup_irods_server.yml
       host: irods_server
       extra_vars:
         irods_host_volume: /mnt/isilon
+        irods_use_davrods: true
         davrods_owner_uid: "1450"
     - playbook: setup_irods_webdav_client.yml
       host: irods_client
@@ -127,10 +128,11 @@ benchmarks:
     #   path_to_files: /mnt/isilon/irods/home/rods/galaxy_in_progress/files
 
     pre_tasks:
-    - playbook: setup_irods_server_with_davrods.yml
+    - playbook: setup_irods_server.yml
       host: irods_server
       extra_vars:
         irods_host_volume: /mnt/isilon
+        irods_use_davrods: true
         davrods_owner_uid: "1450"
     - playbook: setup_irods_webdav_client.yml
       host: irods_client

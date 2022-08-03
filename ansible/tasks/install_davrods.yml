@@ -1,0 +1,33 @@
+---
+- name: Copy container setup onto host (sychronize preserves file permissions)
+  ansible.posix.synchronize:
+    src: ../files/irods-davrods-server/
+    dest: /davrods
+    recursive: yes
+
+- name: Set host ip as server alias
+  lineinfile:
+    path: /davrods/volumes/davrods-vhost.conf
+    regexp: 'ServerAlias SET_TO_HOST_IP'
+    line: "    ServerAlias {{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
+
+- name: Build and start container
+  community.docker.docker_compose:
+    project_src: /davrods
+    state: present
+    build: yes
+  environment:
+    DAVRODS_VOLUME_OWNER: "{{ davrods_owner_uid }}"
+  register: output
+
+# - name: Debug startup logs
+#   command: docker logs irods_irods_1
+#   register: logoutput
+
+# - name: debug
+#   debug: var=logoutput
+
+- name: "Check 'Build and start container'"
+  ansible.builtin.assert:
+    that:
+      - "output.services.davrods.davrods_davrods_1.state.running"

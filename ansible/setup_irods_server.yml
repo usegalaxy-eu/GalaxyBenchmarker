@@ -14,3 +14,6 @@
         IRODS_S3_REGION: fr-repl
         IRODS_S3_ACCESS_ID: ...
         IRODS_S3_SECRET_KEY: ...
+
+    - include: tasks/install_davrods.yml
+      when: (irods_use_davrods is defined) and (irods_use_davrods|bool)
