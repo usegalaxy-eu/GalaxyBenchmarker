@@ -6,13 +6,13 @@ config:
 
 Default: &default
   input:
-    num_files: 1
+    num_files: 10
     file_size_in_bytes: 1073741824  # 1 Gib
   verification_timeout_in_s: 1000
 
 
 benchmarks:
-  benchmark_galaxy_1x1G_isilon_backend:
+  benchmark_galaxy_10x1G_isilon_backend:
     type: GalaxyFileGenOnMountVolumeJob
     repetitions: 1
     destination:
@@ -22,7 +22,7 @@ benchmarks:
       <<: *default
       path_to_files: /mnt/isilon/galaxy_in_progress/files
 
-  benchmark_galaxy_1x1G_netapp_backend:
+  benchmark_galaxy_10x1G_netapp_backend:
     type: GalaxyFileGenOnMountVolumeJob
     repetitions: 1
     destination:
@@ -32,7 +32,7 @@ benchmarks:
       <<: *default
       path_to_files: /mnt/netapp/galaxy_in_progress/files
 
-  benchmark_galaxy_1x1G_ssd_tank_backend:
+  benchmark_galaxy_10x1G_ssd_tank_backend:
     type: GalaxyFileGenOnMountVolumeJob
     repetitions: 1
     destination:
@@ -42,7 +42,7 @@ benchmarks:
       <<: *default
       path_to_files: /mnt/ssd_tank/test_moehrles/galaxy_in_progress/files
 
-  # benchmark_galaxy_1x1G_s3_backend:
+  # benchmark_galaxy_10x1G_s3_backend:
   #   type: GalaxyFileGenOnS3Job
   #   repetitions: 1
   #   destination:
@@ -52,7 +52,7 @@ benchmarks:
   #     base_url: https://s3.bwsfs.uni-freiburg.de
   #     bucket_name: frct-smoe-bench-ec61-01
 
-  # benchmark_galaxy_1x1G_irods_via_fuse_on_isilon_backend:
+  # benchmark_galaxy_10x1G_irods_via_fuse_on_isilon_backend:
   #   type: GalaxyFileGenOnMountVolumeJob
   #   repetitions: 1
   #   destination:
@@ -83,7 +83,7 @@ benchmarks:
   #       extra_vars:
   #         irods_host_volume: /mnt/volume_under_test
 
-  benchmark_galaxy_1x1G_irods_via_davrods_on_isilon_backend:
+  benchmark_galaxy_10x1G_irods_via_davrods_on_isilon_backend:
     type: GalaxyFileGenOnMountVolumeJob
     repetitions: 1
     destination:
@@ -116,7 +116,7 @@ benchmarks:
         extra_vars:
           irods_host_volume: /mnt/isilon
 
-  benchmark_galaxy_1x1G_irods_on_isilon_backend:
+  benchmark_galaxy_10x1G_irods_on_isilon_backend:
     type: GalaxyFileGenOnIrodsOnMountVolumeJob
     repetitions: 1
     destination:
@@ -137,7 +137,7 @@ benchmarks:
         extra_vars:
           irods_host_volume: /mnt/isilon
 
-  benchmark_galaxy_1x1G_irods_on_s3_backend:
+  benchmark_galaxy_10x1G_irods_on_s3_backend:
     type: GalaxyFileGenOnIrodsOnS3Job
     repetitions: 1
     destination:
