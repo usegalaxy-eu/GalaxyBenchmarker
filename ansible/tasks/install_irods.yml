@@ -5,21 +5,13 @@
     dest: /irods
     recursive: yes
 
-- name: Create irods volume
-  file:
-    path: "{{ irods_host_volume }}/irods"
-    state: directory
-    owner: "1000"
-    group: "1000"
-    mode: '0755'
-
 - name: Build and start container
   community.docker.docker_compose:
     project_src: /irods
     state: present
     build: yes
   environment:
-    IRODS_HOST_VOLUME: "{{ irods_host_volume }}"
+    IRODS_HOST_VOLUME: /tmp
   register: output
 
 # - name: Debug startup logs

@@ -182,12 +182,10 @@ benchmarks:
       bucket_name: frct-smoe-bench-ec61-01
 
     pre_tasks:
-      - playbook: setup_irods_server_s3.yml
+      - playbook: setup_irods_server.yml
         host: irods_server
         extra_vars:
-          irods_host_volume: /mnt/isilon
+          irods_use_s3: true
     post_tasks:
       - playbook: cleanup_irods_server.yml
         host: irods_server
-        extra_vars:
-          irods_host_volume: /mnt/isilon

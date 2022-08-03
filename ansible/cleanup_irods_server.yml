@@ -5,6 +5,7 @@
       vars:
         path: "/irods"
     - name: Remove irods volume
+      when: (irods_host_volume is defined)
       file:
         path: "{{ irods_host_volume }}/irods"
         state: absent

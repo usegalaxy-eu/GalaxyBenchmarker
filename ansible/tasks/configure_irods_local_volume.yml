@@ -1,4 +1,33 @@
 ---
+- name: Create irods volume
+  file:
+    path: "{{ irods_host_volume }}/irods"
+    state: directory
+    owner: "1000"
+    group: "1000"
+    mode: '0755'
+
+- name: Restart container with volume
+  community.docker.docker_compose:
+    project_src: /irods
+    state: present
+    build: yes
+  environment:
+    IRODS_HOST_VOLUME: "{{ irods_host_volume }}"
+  register: output
+
+- name: "Check 'Restart container with volume'"
+  ansible.builtin.assert:
+    that:
+      - "output.services.irods.irods_irods_1.state.running"
+      - "output.services.db.irods_db_1.state.running"
+
+- name: Wait for port 1247 to become open on the host
+  wait_for:
+    port: 1247
+    delay: 5
+    timeout: 30
+
 - name: Add rootResc resource
   community.docker.docker_container_exec:
     container: irods_irods_1
