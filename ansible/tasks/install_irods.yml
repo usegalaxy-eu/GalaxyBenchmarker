@@ -1,7 +1,7 @@
 ---
 - name: Create irods volume
   file:
-    path: "{{ irods_host_volume }}/irods"
+    path: "{{ irods_host_volume_internal }}/irods"
     state: directory
     owner: "1000"
     group: "1000"
@@ -19,7 +19,7 @@
     state: present
     build: yes
   environment:
-    IRODS_HOST_VOLUME: "{{ irods_host_volume }}"
+    IRODS_HOST_VOLUME: "{{ irods_host_volume_internal }}"
   register: output
 
 # - name: Debug startup logs

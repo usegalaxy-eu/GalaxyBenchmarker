@@ -119,6 +119,7 @@ benchmarks:
       extra_vars:
         irods_host_volume: /mnt/isilon
         irods_use_davrods: true
+        davrods_owner_uid: "1000"
     - playbook: setup_irods_webdav_client.yml
       host: irods_client
       extra_vars:
@@ -149,6 +150,7 @@ benchmarks:
       extra_vars:
         irods_host_volume: /mnt/netapp
         irods_use_davrods: true
+        davrods_owner_uid: "1000"
     - playbook: setup_irods_webdav_client.yml
       host: irods_client
       extra_vars:
@@ -179,6 +181,7 @@ benchmarks:
         extra_vars:
           irods_use_s3: true
           irods_use_davrods: true
+          davrods_owner_uid: "1000"
       - playbook: setup_irods_webdav_client.yml
         host: irods_client
         extra_vars:
@@ -188,7 +191,9 @@ benchmarks:
     post_tasks:
       - playbook: cleanup_irods_server.yml
         host: irods_server
+        extra_vars:
+          irods_use_davrods: true
       - playbook: cleanup_irods_webdav_client.yml
         host: irods_client
         extra_vars:
-          irods_use_davrods: true
+          irods_host_volume: /mnt/volume_under_test
