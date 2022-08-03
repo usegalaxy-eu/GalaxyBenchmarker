@@ -1,4 +1,12 @@
 ---
+- name: Create irods volume
+  file:
+    path: "{{ irods_host_volume }}/irods"
+    state: directory
+    owner: "1000"
+    group: "1000"
+    mode: '0755'
+
 - name: Copy container setup onto host (sychronize preserves file permissions)
   ansible.posix.synchronize:
     src: ../files/irods-server/
@@ -11,7 +19,7 @@
     state: present
     build: yes
   environment:
-    IRODS_HOST_VOLUME: /tmp
+    IRODS_HOST_VOLUME: "{{ irods_host_volume }}"
   register: output
 
 # - name: Debug startup logs

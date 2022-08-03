@@ -2,6 +2,8 @@
   become: true
   tasks:
     - include: tasks/install_irods.yml
+      vars:
+        irods_host_volume: "{{ irods_host_volume | default('/tmp') }}"
 
     - include: tasks/configure_irods_local_volume.yml
       when: (irods_host_volume is defined)

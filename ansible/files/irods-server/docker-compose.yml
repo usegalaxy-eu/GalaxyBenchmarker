@@ -4,12 +4,12 @@ services:
     build: .
     hostname: irods
     domainname: local
-    depends_on: 
+    depends_on:
       - db
-    ports: 
+    ports:
       # Zone Endpoint
       - 1247:1247
-      # Control plane 
+      # Control plane
       - 1248:1248
       # Server port range
       - "20000-20199:20000-20199"

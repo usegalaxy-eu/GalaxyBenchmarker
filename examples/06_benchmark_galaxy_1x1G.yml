@@ -112,10 +112,11 @@ benchmarks:
         host: irods_client
         extra_vars:
           irods_host_volume: /mnt/volume_under_test
-      - playbook: cleanup_irods_server_with_davrods.yml
+      - playbook: cleanup_irods_server.yml
         host: irods_server
         extra_vars:
           irods_host_volume: /mnt/isilon
+          irods_use_davrods: true
 
   benchmark_galaxy_1x1G_irods_on_isilon_backend:
     type: GalaxyFileGenOnIrodsOnMountVolumeJob
