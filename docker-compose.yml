@@ -19,13 +19,14 @@ services:
 
     command: [
       "--cfg",
-      "examples/06_benchmark_galaxy_1x0.yml",
-      "examples/06_benchmark_galaxy_1x1K.yml",
-      "examples/06_benchmark_galaxy_10x1K.yml",
-      "examples/06_benchmark_galaxy_100x1K.yml",
-      "examples/06_benchmark_galaxy_1000x1K.yml",
-      "examples/06_benchmark_galaxy_2000x1K.yml",
-      "examples/06_benchmark_galaxy_1x1M.yml",
-      "examples/06_benchmark_galaxy_1x1G.yml",
-      "examples/06_benchmark_galaxy_10x1G.yml",
+      "examples/04_daytime_evaluation.yml",
+      # "examples/06_benchmark_galaxy_1x0.yml",
+      # "examples/06_benchmark_galaxy_1x1K.yml",
+      # "examples/06_benchmark_galaxy_10x1K.yml",
+      # "examples/06_benchmark_galaxy_100x1K.yml",
+      # "examples/06_benchmark_galaxy_1000x1K.yml",
+      # "examples/06_benchmark_galaxy_2000x1K.yml",
+      # "examples/06_benchmark_galaxy_1x1M.yml",
+      # "examples/06_benchmark_galaxy_1x1G.yml",
+      # "examples/06_benchmark_galaxy_10x1G.yml",
     ]

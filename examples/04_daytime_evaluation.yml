@@ -37,6 +37,12 @@ benchmarks:
       host: irods_server
       target_folder: /mnt/netapp
 
+  daytime_evaluation_ssdtank_01:
+    <<: *conf_fio
+    destination:
+      host: irods_server
+      target_folder: /mnt/ssd_tank/test_moehrles
+
   daytime_evaluation_s3_01:
     <<: *conf_warp
     destination:
@@ -53,6 +59,12 @@ benchmarks:
     destination:
       host: irods_server
       target_folder: /mnt/netapp
+
+  daytime_evaluation_ssdtank_02:
+    <<: *conf_fio
+    destination:
+      host: irods_server
+      target_folder: /mnt/ssd_tank/test_moehrles
 
   daytime_evaluation_s3_02:
     <<: *conf_warp
