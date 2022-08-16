@@ -244,6 +244,8 @@ def parse_result_file(file: Path, jobname: str) -> dict[str, Any]:
 
 
 def _parse_job_result(result: dict, prefix: str) -> dict[str, Any]:
+    # Sometimes latency has some values even when the run crashes and all other metrics have 0.0
+    # -> Set latency also to 0 in that case
     return {
         f"{prefix}_bw_min_in_MiB": result["bw_min"] / 1024,
         f"{prefix}_bw_max_in_MiB": result["bw_max"] / 1024,
@@ -252,8 +254,8 @@ def _parse_job_result(result: dict, prefix: str) -> dict[str, Any]:
         f"{prefix}_iops_max": result["iops_max"],
         f"{prefix}_iops_mean": result["iops_mean"],
         f"{prefix}_iops_stddev": result["iops_stddev"],
-        f"{prefix}_lat_min_in_ms": result["lat_ns"]["min"] / 1_000_000,
-        f"{prefix}_lat_max_in_ms": result["lat_ns"]["max"] / 1_000_000,
-        f"{prefix}_lat_mean_in_ms": result["lat_ns"]["mean"] / 1_000_000,
-        f"{prefix}_lat_stddev_in_ms": result["lat_ns"]["stddev"] / 1_000_000,
+        f"{prefix}_lat_min_in_ms": result["lat_ns"]["min"] / 1_000_000 if result["bw_mean"] > 0 else 0.0,
+        f"{prefix}_lat_max_in_ms": result["lat_ns"]["max"] / 1_000_000 if result["bw_mean"] > 0 else 0.0,
+        f"{prefix}_lat_mean_in_ms": result["lat_ns"]["mean"] / 1_000_000 if result["bw_mean"] > 0 else 0.0,
+        f"{prefix}_lat_stddev_in_ms": result["lat_ns"]["stddev"] / 1_000_000 if result["bw_mean"] > 0 else 0.0,
     }

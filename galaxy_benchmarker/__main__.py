@@ -1,7 +1,7 @@
 import argparse
 import logging
 import os
-import time
+from datetime import datetime
 from pathlib import Path
 
 from serde.yaml import from_yaml
@@ -88,7 +88,7 @@ def configure_logger(verbose: bool) -> logging.Logger:
     log.addHandler(stream_handler)
 
     # Create file handler
-    log_filename = r"logs/{filename}.log".format(filename=time.time())
+    log_filename = f"logs/{datetime.now().replace(microsecond=0).isoformat()}.log"
     os.makedirs(os.path.dirname(log_filename), exist_ok=True)
     file_handler = logging.FileHandler(log_filename, mode="w")
     file_handler.setLevel(logging.DEBUG)
