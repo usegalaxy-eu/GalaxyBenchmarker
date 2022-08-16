@@ -28,6 +28,12 @@ benchmarks:
       host: irods_server
       target_folder: /mnt/ssd_tank/test_moehrles
 
+  benchmark_posix_local:
+    <<: *default
+    destination:
+      host: irods_server
+      target_folder: /mnt/local
+
   benchmark_posix_irods_fuse_on_isilon:
     <<: *default
     destination:
