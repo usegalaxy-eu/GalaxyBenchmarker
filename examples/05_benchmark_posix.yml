@@ -32,7 +32,7 @@ benchmarks:
     <<: *default
     destination:
       host: irods_server
-      target_folder: /mnt/local
+      target_folder: /mnt/local/ubuntu
 
   benchmark_posix_irods_fuse_on_isilon:
     <<: *default
