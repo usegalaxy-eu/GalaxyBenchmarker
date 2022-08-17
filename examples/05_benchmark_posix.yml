@@ -119,6 +119,10 @@ benchmarks:
       host: irods_client
       target_folder: /mnt/volume_under_test/irods-webdav
 
+    fio:
+      runtime_in_s: 60
+      prepare_read_benchmark_in_tmp: true
+
     pre_tasks:
     - playbook: setup_irods_server.yml
       host: irods_server
@@ -149,6 +153,10 @@ benchmarks:
     destination:
       host: irods_client
       target_folder: /mnt/volume_under_test/irods-webdav
+
+    fio:
+      runtime_in_s: 60
+      prepare_read_benchmark_in_tmp: true
 
     pre_tasks:
     - playbook: setup_irods_server.yml

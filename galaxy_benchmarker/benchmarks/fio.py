@@ -37,6 +37,7 @@ class FioConfig(base.BenchmarkConfig):
     refill_buffers: bool = True
     runtime_in_s: int = 60
     time_based: bool = True
+    prepare_read_benchmark_in_tmp: bool = False
 
 
 @base.register_benchmark
