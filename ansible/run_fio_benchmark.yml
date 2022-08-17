@@ -130,7 +130,7 @@
           register: ls_result
 
         - name: Wait for file
-          when: not ("ubuntu ubuntu {{ fio_filesize_in_bytes }}" in ls_result.stdout)
+          when: not ("{{ fio_filesize_in_bytes }}" in ls_result.stdout)
           block:
           - name: Pause for 10 seconds to wait for file
             pause:
@@ -141,7 +141,7 @@
             register: ls_result2
 
           - name: Wait for file looonger
-            when: not ("ubuntu ubuntu {{ fio_filesize_in_bytes }}" in ls_result2.stdout)
+            when: not ("{{ fio_filesize_in_bytes }}" in ls_result2.stdout)
             block:
 
             - name: Pause for 1 minute to wait for file
@@ -153,7 +153,7 @@
               register: ls_result3
 
             - name: Wait for file loooooonger
-              when: not ("ubuntu ubuntu {{ fio_filesize_in_bytes }}" in ls_result3.stdout)
+              when: not ("{{ fio_filesize_in_bytes }}" in ls_result3.stdout)
               block:
 
               - name: Pause for 1 more minute to wait for file
@@ -163,7 +163,7 @@
               - name: Check if file exists (4)
                 shell: ls -la {{ fio_dir }}/fio_in_progress/testfile.fio
                 register: ls_result4
-                failed_when: not ("ubuntu ubuntu {{ fio_filesize_in_bytes }}" in ls_result4.stdout)
+                failed_when: not ("{{ fio_filesize_in_bytes }}" in ls_result4.stdout)
 
       - include_tasks: tasks/run_fio_and_check_result.yml
 
