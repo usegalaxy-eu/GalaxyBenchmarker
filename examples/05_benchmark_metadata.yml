@@ -6,8 +6,6 @@ config:
 Default: &default
   type: MdtestFixedParams
   repetitions: 1
-  mdtest:
-    num_files: 100
 
 benchmarks:
   benchmark_metadata_isilon:
@@ -27,6 +25,12 @@ benchmarks:
     destination:
       host: irods_server
       target_folder: /mnt/ssd_tank/test_moehrles
+
+  benchmark_metadata_local:
+    <<: *default
+    destination:
+      host: irods_server
+      target_folder: /mnt/local/ubuntu
 
   benchmark_metadata_irods_fuse_on_isilon:
     <<: *default

@@ -25,7 +25,7 @@ log = logging.getLogger(__name__)
 class MdtestConfig(base.BenchmarkConfig):
     """Available parameters for mdtest"""
 
-    num_files: int = 1
+    num_files: int = 100
 
 
 @base.register_benchmark
