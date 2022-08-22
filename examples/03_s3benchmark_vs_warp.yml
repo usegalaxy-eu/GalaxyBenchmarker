@@ -12,13 +12,20 @@ Dest: &dest
 ConfigS3Benchmark: &conf_s3bench
   repetitions: 1
   type: S3BenchmarkFixedParams
-  s3benchmark:
+  s3benchmark: &conf_s3bench_defaults
     base_url: https://s3.bwsfs.uni-freiburg.de/
     bucket_name: frct-smoe-bench-ec61-01
-    filesize: 1M
+    filesize: 10M
     region: fr-repl
     runtime_in_s: 60
     threads: 64
+
+ConfigS3BenchmarkOps: &conf_s3bench_ops
+  repetitions: 1
+  type: S3BenchmarkFixedParams
+  s3benchmark:
+    <<: *conf_s3bench_defaults
+    filesize: 1K
 
 ConfigWarpGet: &conf_warp_get_put
   type: WarpFixedParams
@@ -32,12 +39,20 @@ ConfigWarpGet: &conf_warp_get_put
     runtime: 60s
     concurrent_ops: 32
 
-ConfigWarpDel: &conf_warp_del
+ConfigWarpDelOps: &conf_warp_del_ops
   type: WarpFixedParams
   repetitions: 1
   warp:
     <<: *conf_warp_defaults
     mode: delete
+    filesize: 1KiB
+
+ConfigWarpGetOps: &conf_warp_get_ops
+  type: WarpFixedParams
+  repetitions: 1
+  warp:
+    <<: *conf_warp_defaults
+    mode: get
     filesize: 1KiB
 
 benchmarks:
@@ -49,10 +64,18 @@ benchmarks:
     bench_b:
       <<: [*dest, *conf_warp_get_put]
 
+  s3benchmark_vs_warp_get_put_ops:
+    type: BenchmarkCompare
+    repetitions: 1
+    bench_a:
+      <<: [*dest, *conf_s3bench_ops]
+    bench_b:
+      <<: [*dest, *conf_warp_get_ops]
+
   s3benchmark_vs_warp_delete:
     type: BenchmarkCompare
     repetitions: 1
     bench_a:
-      <<: [*dest, *conf_s3bench]
+      <<: [*dest, *conf_s3bench_ops]
     bench_b:
-      <<: [*dest, *conf_warp_del]
+      <<: [*dest, *conf_warp_del_ops]

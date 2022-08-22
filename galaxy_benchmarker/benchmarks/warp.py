@@ -29,11 +29,11 @@ class WarpConfig(base.BenchmarkConfig):
     # access_key_id: str = ""
     base_url: str = ""
     bucket_name: str = ""
-    filesize: str = ""
+    filesize: str = "10MiB"
     region: str = ""
-    runtime: str = ""
+    runtime: str = "60s"
     # secret_access_key: str = ""
-    concurrent_ops: int = 1
+    concurrent_ops: int = 20
 
 
 def parse_result_file(file: Path) -> dict[str, Any]:

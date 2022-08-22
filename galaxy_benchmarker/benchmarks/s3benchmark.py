@@ -28,11 +28,11 @@ class S3BenchmarkConfig(base.BenchmarkConfig):
     # access_key_id: str = ""
     base_url: str = ""
     bucket_name: str = ""
-    filesize: str = ""
+    filesize: str = "1M"
     region: str = ""
     runtime_in_s: int = 60
     # secret_access_key: str = ""
-    threads: int = 1
+    threads: int = 8
 
 
 def parse_result_file(file: Path) -> dict[str, Any]:
