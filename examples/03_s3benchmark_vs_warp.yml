@@ -1,13 +1,12 @@
 config:
   log_ansible_output: false
   results_print: false
-  results_save_raw_results: false
+  results_save_raw_results: true
   results_save_to_file: true
 
 Dest: &dest
   destination:
     host: irods_server
-    target_folder: not-needed
 
 ConfigS3Benchmark: &conf_s3bench
   repetitions: 1

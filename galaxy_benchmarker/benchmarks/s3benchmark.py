@@ -61,11 +61,16 @@ def parse_result_file(file: Path) -> dict[str, Any]:
                 raise ValueError(f"Unknown linestart: {striped}")
 
     pattern = re.compile(
-        r", objects = ([0-9]+), speed = ([0-9\.]+)MB/sec, ([0-9\.]+) operations/sec"
+        r", objects = ([0-9]+), speed = ([0-9\.]+)([MK]B)/sec, ([0-9\.]+) operations/sec"
     )
-    get_num_obj, get_bw, get_ops = pattern.search(l_get).groups()
-    put_num_obj, put_bw, put_ops = pattern.search(l_put).groups()
+    get_num_obj, get_bw, get_bw_unit, get_ops = pattern.search(l_get).groups()
+    put_num_obj, put_bw, put_bw_unit, put_ops = pattern.search(l_put).groups()
     del_ops = re.search(r", ([0-9\.]+) deletes/sec", l_delete).groups()[0]
+
+    if get_bw_unit == "KB":
+        get_bw = str(float(get_bw) / 1024.0)
+    if put_bw_unit == "KB":
+        put_bw = str(float(put_bw) / 1024.0)
 
     return {
         "get_num_objects": get_num_obj,
