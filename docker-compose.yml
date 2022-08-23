@@ -19,7 +19,9 @@ services:
 
     command: [
       "--cfg",
+      "examples/02_parameval_mdtest.yml",
       "examples/03_s3benchmark_vs_warp.yml",
       "examples/05_benchmark_s3.yml",
       "examples/05_benchmark_metadata.yml",
+      "examples/05_benchmark_posix.yml",
     ]
