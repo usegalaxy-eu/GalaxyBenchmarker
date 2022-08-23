@@ -112,13 +112,23 @@ class S3BenchmarkFixedParams(base.Benchmark):
 
         start_time = time.monotonic()
 
+        access_key = os.getenv("AWS_ACCESS_KEY_ID")
+        if access_key is None:
+            raise ValueError("Missing S3 credentials in env vars: AWS_ACCESS_KEY_ID")
+
+        secret_key = os.getenv("AWS_SECRET_ACCESS_KEY")
+        if secret_key is None:
+            raise ValueError(
+                "Missing S3 credentials in env vars: AWS_SECRET_ACCESS_KEY"
+            )
+
         self._run_task.run_at(
             self.destination.host,
             {
                 "s3b_result_file": result_file.name,
                 "controller_dir": result_file.parent,
-                "s3b_access_key_id": os.getenv("AWS_ACCESS_KEY_ID"),
-                "s3b_secret_access_key": os.getenv("AWS_SECRET_ACCESS_KEY"),
+                "s3b_access_key_id": access_key,
+                "s3b_secret_access_key": secret_key,
                 **{
                     f"s3b_{key}": value
                     for key, value in s3benchmark_config.asdict().items()

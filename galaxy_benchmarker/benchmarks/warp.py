@@ -56,7 +56,7 @@ def parse_result_file(file: Path) -> dict[str, Any]:
     result = {}
     op = ""
     pattern_op = re.compile(r"Operation: ([A-Z]+),?")
-    pattern_throughput = re.compile(r"([0-9\.]+) MiB/s,")
+    pattern_throughput = re.compile(r"([0-9\.]+) ([KM]iB)/s,")
     pattern_ops = re.compile(r"([0-9\.]+) obj/s")
 
     with file.open() as file_handle:
@@ -71,11 +71,16 @@ def parse_result_file(file: Path) -> dict[str, Any]:
             throughput_match = pattern_throughput.search(line)
             ops_match = pattern_ops.search(line)
 
+            if throughput_match:
+                throughput_value, unit = throughput_match.groups()
+                if unit == "KiB":
+                    throughput_value = str(float(throughput_value) / 1024.0)
+
             if op == "GET":
-                result["get_bw_in_MiB"] = throughput_match.groups()[0]
+                result["get_bw_in_MiB"] = throughput_value
                 result["get_ops"] = ops_match.groups()[0]
             elif op == "PUT":
-                result["put_bw_in_MiB"] = throughput_match.groups()[0]
+                result["put_bw_in_MiB"] = throughput_value
                 result["put_ops"] = ops_match.groups()[0]
             elif op == "DELETE":
                 result["delete_ops"] = ops_match.groups()[0]
@@ -115,13 +120,23 @@ class WarpFixedParams(base.Benchmark):
 
         start_time = time.monotonic()
 
+        access_key = os.getenv("AWS_ACCESS_KEY_ID")
+        if access_key is None:
+            raise ValueError("Missing S3 credentials in env vars: AWS_ACCESS_KEY_ID")
+
+        secret_key = os.getenv("AWS_SECRET_ACCESS_KEY")
+        if secret_key is None:
+            raise ValueError(
+                "Missing S3 credentials in env vars: AWS_SECRET_ACCESS_KEY"
+            )
+
         self._run_task.run_at(
             self.destination.host,
             {
                 "warp_result_file": result_file.name,
                 "controller_dir": result_file.parent,
-                "warp_access_key_id": os.getenv("AWS_ACCESS_KEY_ID"),
-                "warp_secret_access_key": os.getenv("AWS_SECRET_ACCESS_KEY"),
+                "warp_access_key_id": access_key,
+                "warp_secret_access_key": secret_key,
                 **{f"warp_{key}": value for key, value in warp_config.asdict().items()},
             },
         )
