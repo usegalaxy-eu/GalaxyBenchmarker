@@ -3,38 +3,58 @@ config:
   results_print: false
   results_save_to_file: true
 
-Default: &default
-  type: MdtestFixedParams
+Default_100k: &default_100k
+  type: MdtestOneDimParams
   repetitions: 1
   mdtest:
 
+  dim_key: num_files
+  dim_values:
+    - 10
+    - 100
+    - 1000
+    - 10000
+    - 100000
+
+Default_1k: &default_1k
+  type: MdtestOneDimParams
+  repetitions: 1
+  mdtest:
+
+  dim_key: num_files
+  dim_values:
+    - 10
+    - 100
+    - 1000
+
+
 benchmarks:
   benchmark_metadata_isilon:
-    <<: *default
+    <<: *default_100k
     destination:
       host: irods_server
       target_folder: /mnt/isilon
 
   benchmark_metadata_netapp:
-    <<: *default
+    <<: *default_100k
     destination:
       host: irods_server
       target_folder: /mnt/netapp
 
   benchmark_metadata_ssd_tank:
-    <<: *default
+    <<: *default_100k
     destination:
       host: irods_server
       target_folder: /mnt/ssd_tank/test_moehrles
 
   benchmark_metadata_local:
-    <<: *default
+    <<: *default_100k
     destination:
       host: irods_server
       target_folder: /mnt/local/ubuntu
 
   benchmark_metadata_irods_fuse_on_isilon:
-    <<: *default
+    <<: *default_1k
     destination:
       host: irods_client
       target_folder: /mnt/volume_under_test/irods-fuse
@@ -61,7 +81,7 @@ benchmarks:
           irods_host_volume: /mnt/volume_under_test
 
   benchmark_metadata_irods_fuse_on_netapp:
-    <<: *default
+    <<: *default_1k
     destination:
       host: irods_client
       target_folder: /mnt/volume_under_test/irods-fuse
@@ -88,7 +108,7 @@ benchmarks:
           irods_host_volume: /mnt/volume_under_test
 
   benchmark_metadata_irods_fuse_on_s3:
-    <<: *default
+    <<: *default_1k
     destination:
       host: irods_client
       target_folder: /mnt/volume_under_test/irods-fuse
@@ -113,7 +133,7 @@ benchmarks:
           irods_host_volume: /mnt/volume_under_test
 
   benchmark_metadata_irods_davrods_on_isilon:
-    <<: *default
+    <<: *default_1k
     destination:
       host: irods_client
       target_folder: /mnt/volume_under_test/irods-webdav
@@ -144,7 +164,7 @@ benchmarks:
           irods_use_davrods: true
 
   benchmark_metadata_irods_davrods_on_netapp:
-    <<: *default
+    <<: *default_1k
     destination:
       host: irods_client
       target_folder: /mnt/volume_under_test/irods-webdav
@@ -175,7 +195,7 @@ benchmarks:
           irods_use_davrods: true
 
   benchmark_metadata_irods_davrods_on_s3:
-    <<: *default
+    <<: *default_1k
     destination:
       host: irods_client
       target_folder: /mnt/volume_under_test/irods-webdav
