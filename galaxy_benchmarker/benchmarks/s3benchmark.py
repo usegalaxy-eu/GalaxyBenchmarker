@@ -28,7 +28,7 @@ class S3BenchmarkConfig(base.BenchmarkConfig):
     # access_key_id: str = ""
     base_url: str = ""
     bucket_name: str = ""
-    filesize: str = "1M"
+    filesize: str = ""
     region: str = ""
     runtime_in_s: int = 60
     # secret_access_key: str = ""

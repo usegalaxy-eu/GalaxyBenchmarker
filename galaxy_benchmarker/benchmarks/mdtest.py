@@ -89,6 +89,11 @@ class MdtestFixedParams(base.Benchmark):
         return {**super().get_tags(), "mdtest": self.config.asdict()}
 
 
+@base.register_benchmark
+class MdtestOneDimParams(base.BenchmarkOneDimMixin, MdtestFixedParams):
+    """Run mdtest with multiple values for a singel dimension"""
+
+
 def parse_result_file(file: Path) -> dict[str, Any]:
     if not file.is_file():
         raise ValueError(f"{file} is not a mdtest result file.")

@@ -15,6 +15,7 @@ benchmarks:
       base_url: s3.bwsfs.uni-freiburg.de
       bucket_name: frct-smoe-bench-ec61-01
       region: fr-repl
+      filesize: 10MiB
 
     dim_key: concurrent_ops
     dim_values:
@@ -39,6 +40,7 @@ benchmarks:
       base_url: s3.bwsfs.uni-freiburg.de
       bucket_name: frct-smoe-bench-ec61-01
       region: fr-repl
+      filesize: 10MiB
 
     dim_key: runtime
     dim_values:

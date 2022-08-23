@@ -14,6 +14,7 @@ benchmarks:
       base_url: https://s3.bwsfs.uni-freiburg.de/
       bucket_name: frct-smoe-bench-ec61-01
       region: fr-repl
+      filesize: 10M
 
     dim_key: threads
     dim_values:
@@ -38,6 +39,7 @@ benchmarks:
       base_url: https://s3.bwsfs.uni-freiburg.de/
       bucket_name: frct-smoe-bench-ec61-01
       region: fr-repl
+      filesize: 10M
 
     dim_key: runtime_in_s
     dim_values:

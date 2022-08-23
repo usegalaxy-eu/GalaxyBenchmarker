@@ -1,0 +1,20 @@
+config:
+  log_ansible_output: false
+  results_print: false
+  results_save_to_file: true
+
+benchmarks:
+  benchmark_metadata_local:
+    type: MdtestOneDimParams
+    repetitions: 1
+    destination:
+      host: irods_server
+      target_folder: /mnt/local/ubuntu
+
+    dim_key: num_files
+    dim_values:
+      - 10
+      - 100
+      - 1000
+      - 10000
+      - 100000

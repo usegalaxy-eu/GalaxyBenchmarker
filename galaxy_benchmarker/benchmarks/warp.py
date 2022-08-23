@@ -29,7 +29,7 @@ class WarpConfig(base.BenchmarkConfig):
     # access_key_id: str = ""
     base_url: str = ""
     bucket_name: str = ""
-    filesize: str = "10MiB"
+    filesize: str = ""
     region: str = ""
     runtime: str = "60s"
     # secret_access_key: str = ""
