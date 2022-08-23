@@ -7,6 +7,7 @@ Default_100k: &default_100k
   type: MdtestOneDimParams
   repetitions: 1
   mdtest:
+    num_files: 1
 
   dim_key: num_files
   dim_values:
@@ -20,6 +21,7 @@ Default_1k: &default_1k
   type: MdtestOneDimParams
   repetitions: 1
   mdtest:
+    num_files: 1
 
   dim_key: num_files
   dim_values:

@@ -8,6 +8,7 @@ Default: &default
   type: MdtestOneDimParams
   repetitions: 1
   mdtest:
+    num_files: 1
 
   dim_key: num_files
   dim_values:

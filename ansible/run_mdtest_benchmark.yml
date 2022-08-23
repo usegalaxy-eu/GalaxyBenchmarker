@@ -40,6 +40,8 @@
           - "{{ mdtest_dir }}/mdtest_in_progress:/mnt/volume_under_test:rw"
         working_dir: /mnt/volume_under_test
         command: [
+          "-y",
+          "-Y",
           "-n",
           "{{ mdtest_num_files }}",
         ]
