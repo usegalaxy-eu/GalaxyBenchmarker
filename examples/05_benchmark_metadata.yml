@@ -87,7 +87,7 @@ benchmarks:
         extra_vars:
           irods_host_volume: /mnt/volume_under_test
 
-  benchmark_posix_irods_fuse_on_s3:
+  benchmark_metadata_irods_fuse_on_s3:
     <<: *default
     destination:
       host: irods_client
@@ -174,7 +174,7 @@ benchmarks:
           irods_host_volume: /mnt/netapp
           irods_use_davrods: true
 
-  benchmark_posix_irods_davrods_on_s3:
+  benchmark_metadata_irods_davrods_on_s3:
     <<: *default
     destination:
       host: irods_client
