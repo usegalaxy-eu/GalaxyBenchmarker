@@ -18,14 +18,20 @@ Default: &default
     - 100000
 
 benchmarks:
-  parameval_mdtest_local:
-    <<: *default
-    destination:
-      host: irods_server
-      target_folder: /mnt/local/ubuntu
+  # parameval_mdtest_local:
+  #   <<: *default
+  #   destination:
+  #     host: irods_server
+  #     target_folder: /mnt/local/ubuntu
 
   parameval_mdtest_isilon:
     <<: *default
     destination:
       host: irods_server
       target_folder: /mnt/isilon
+
+  parameval_mdtest_netapp:
+    <<: *default
+    destination:
+      host: irods_server
+      target_folder: /mnt/netapp
