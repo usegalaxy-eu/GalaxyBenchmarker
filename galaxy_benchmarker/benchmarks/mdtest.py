@@ -39,7 +39,10 @@ class MdtestFixedParams(base.Benchmark):
             raise ValueError(
                 f"'mdtest' property (type: dict) is missing for '{self.name}'"
             )
-        self.config = MdtestConfig(**config.get("mdtest"))
+        mdtest_conf = config.get("mdtest")
+        if mdtest_conf is None:
+            mdtest_conf = {}
+        self.config = MdtestConfig(**mdtest_conf)
 
         dest = config.get("destination", {})
         if not dest:
