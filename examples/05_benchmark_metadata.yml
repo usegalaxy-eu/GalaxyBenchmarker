@@ -6,6 +6,7 @@ config:
 Default: &default
   type: MdtestFixedParams
   repetitions: 1
+  mdtest:
 
 benchmarks:
   benchmark_metadata_isilon:
