@@ -32,16 +32,6 @@ benchmarks:
       <<: *default
       path_to_files: /mnt/netapp/galaxy_in_progress/files
 
-  benchmark_galaxy_1000x1K_ssd_tank_backend:
-    type: GalaxyFileGenOnMountVolumeJob
-    repetitions: 1
-    destination:
-      host: irods_client
-      target_folder: /mnt/ssd_tank/test_moehrles
-    galaxy_job:
-      <<: *default
-      path_to_files: /mnt/ssd_tank/test_moehrles/galaxy_in_progress/files
-
   benchmark_galaxy_1000x1K_s3_backend:
     type: GalaxyFileGenOnS3Job
     repetitions: 1
