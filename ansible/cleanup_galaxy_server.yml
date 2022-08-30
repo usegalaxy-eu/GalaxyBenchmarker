@@ -22,7 +22,7 @@
           "/mnt/volume_under_test/files",
         ]
 
-    - name: Cleanup
+    - name: Cleanup Host Volume
       when: galaxy_host_volume is defined
       file:
         path: "{{ galaxy_host_volume }}/galaxy_in_progress"
@@ -31,3 +31,8 @@
       delay: 5
       register: cleanup
       until: not cleanup["failed"]
+
+    - name: Cleanup Export Volume
+      file:
+        path: "{{ galaxy_export_volume }}/glx_export"
+        state: absent

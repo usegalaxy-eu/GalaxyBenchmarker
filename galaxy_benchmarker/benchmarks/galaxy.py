@@ -34,6 +34,7 @@ class GalaxyFileGenInput:
 class GalaxyFileGenConfig(base.BenchmarkConfig):
     input: GalaxyFileGenInput
     verification_timeout_in_s: int
+    export_volume: str
 
 
 class GalaxyFileGenJob(base.Benchmark):
@@ -141,6 +142,7 @@ class GalaxyFileGenOnMountVolumeJob(GalaxyFileGenJob):
                 extra_vars={
                     "galaxy_use_mount": True,
                     "galaxy_host_volume": self.destination.target_folder,
+                    "galaxy_export_volume": self.config.export_volume,
                 },
             )
         )
@@ -150,6 +152,7 @@ class GalaxyFileGenOnMountVolumeJob(GalaxyFileGenJob):
                 host=self.destination.host,
                 extra_vars={
                     "galaxy_host_volume": self.destination.target_folder,
+                    "galaxy_export_volume": self.config.export_volume,
                 },
             )
         )
@@ -174,6 +177,7 @@ class GalaxyFileGenOnS3Job(GalaxyFileGenJob):
                 host=self.destination.host,
                 extra_vars={
                     "galaxy_use_s3": True,
+                    "galaxy_export_volume": self.config.export_volume,
                     "S3_ACCESS_KEY": self.config.access_key_id,
                     "S3_SECRET_KEY": self.config.secret_access_key,
                     "S3_BASE_URL": self.config.base_url.split("://")[1],
@@ -183,7 +187,10 @@ class GalaxyFileGenOnS3Job(GalaxyFileGenJob):
         )
         self._post_tasks.append(
             ansible.AnsibleTask(
-                playbook="cleanup_galaxy_server.yml", host=self.destination.host
+                playbook="cleanup_galaxy_server.yml", host=self.destination.host,
+                extra_vars={
+                    "galaxy_export_volume": self.config.export_volume,
+                },
             )
         )
 
@@ -240,13 +247,17 @@ class GalaxyFileGenOnIrodsOnMountVolumeJob(GalaxyFileGenJob):
                 host=self.destination.host,
                 extra_vars={
                     "galaxy_use_irods": True,
+                    "galaxy_export_volume": self.config.export_volume,
                     "IRODS_HOST": self.config.irods_server_host,
                 },
             )
         )
         self._post_tasks.append(
             ansible.AnsibleTask(
-                playbook="cleanup_galaxy_server.yml", host=self.destination.host
+                playbook="cleanup_galaxy_server.yml", host=self.destination.host,
+                extra_vars={
+                    "galaxy_export_volume": self.config.export_volume,
+                },
             )
         )
 
@@ -270,13 +281,17 @@ class GalaxyFileGenOnIrodsOnS3Job(GalaxyFileGenJob):
                 host=self.destination.host,
                 extra_vars={
                     "galaxy_use_irods": True,
+                    "galaxy_export_volume": self.config.export_volume,
                     "IRODS_HOST": self.config.irods_server_host,
                 },
             )
         )
         self._post_tasks.append(
             ansible.AnsibleTask(
-                playbook="cleanup_galaxy_server.yml", host=self.destination.host
+                playbook="cleanup_galaxy_server.yml", host=self.destination.host,
+                extra_vars={
+                    "galaxy_export_volume": self.config.export_volume,
+                },
             )
         )
 

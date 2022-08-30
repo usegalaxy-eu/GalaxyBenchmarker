@@ -10,7 +10,7 @@ services:
     # supvisord web app
     - "9002:9002"
     volumes:
-      - ./export:/export
+      - ${GALAXY_EXPORT_VOLUME}:/export
       - ./galaxy/custom_tools:/custom_tools
       - ./galaxy/custom_config:/custom_config
       # PLACEHOLDER_VOLUMES

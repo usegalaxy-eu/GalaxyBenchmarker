@@ -10,6 +10,9 @@
       project_src: /galaxy
       state: present
       build: yes
+
+    environment:
+      GALAXY_EXPORT_VOLUME: "{{ galaxy_export_volume }}/glx_export"
     register: output
 
   - name: "Check 'Build and start galaxy'"
@@ -43,7 +46,7 @@
 
     - name: Cleanup galaxy volume
       file:
-        path: "/galaxy/export"
+        path: "{{ galaxy_export_volume }}/glx_export"
         state: absent
 
     - include_tasks: initial_start_galaxy.yml
