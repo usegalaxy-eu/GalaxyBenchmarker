@@ -9,6 +9,7 @@ Default: &default
     num_files: 1
     file_size_in_bytes: 1073741824  # 1 Gib
   verification_timeout_in_s: 1000
+  export_volume: /mnt/local
 
 
 benchmarks:

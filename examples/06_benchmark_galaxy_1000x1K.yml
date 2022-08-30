@@ -9,6 +9,7 @@ Default: &default
     num_files: 1000
     file_size_in_bytes: 1024
   verification_timeout_in_s: 1000
+  export_volume: /mnt/local
 
 
 benchmarks:
