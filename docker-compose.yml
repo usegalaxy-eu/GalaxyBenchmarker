@@ -19,9 +19,13 @@ services:
 
     command: [
       "--cfg",
-      "examples/02_parameval_mdtest.yml",
-      "examples/03_s3benchmark_vs_warp.yml",
-      "examples/05_benchmark_s3.yml",
-      "examples/05_benchmark_metadata.yml",
-      "examples/05_benchmark_posix.yml",
+      "examples/06_benchmark_galaxy_1x0.yml",
+      "examples/06_benchmark_galaxy_1x1K.yml",
+      "examples/06_benchmark_galaxy_10x1K.yml",
+      "examples/06_benchmark_galaxy_100x1K.yml",
+      "examples/06_benchmark_galaxy_1000x1K.yml",
+      "examples/06_benchmark_galaxy_2000x1K.yml",
+      "examples/06_benchmark_galaxy_1x1M.yml",
+      "examples/06_benchmark_galaxy_1x1G.yml",
+      "examples/06_benchmark_galaxy_10x1G.yml",
     ]
