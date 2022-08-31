@@ -1,6 +1,8 @@
 # Galaxy Benchmarker
 
-TODO...
+A tool for benchmarking different storage types individually or in more complex setups like Galaxy in combination with iRODS.
+
+Link to the [original version](https://github.com/usegalaxy-eu/GalaxyBenchmarker/tree/668b9a5125541f686d00950a0e862a260ca4b787) of the GalaxyBenchmarker.
 
 ## Basic architecture
 
@@ -14,6 +16,7 @@ state after benchmarking.
 ```
 .
 ├── ansible            -- Ansible playbooks and inventory
+├── evaluation         -- Example plot code in jupiter notebooks
 ├── examples           -- Example configurations
 ├── galaxy_benchmarker -- Source code
 ├── logs               -- Generated logs
@@ -28,7 +31,9 @@ environment or as a local project. For the container env it automatically maps
 SSH (config, agent, ...) inside the container. With this you can use your local
 SSH config and keys within the inventory.
 
-### Inside container
+[Example usage described here](#example-usage)
+
+### Run with container
 
 
 ```bash
@@ -52,7 +57,7 @@ make stop
 make stop_sudo
 ```
 
-### Local
+### Run locally
 
 This project requires [Poetry](https://python-poetry.org/docs/).
 
@@ -72,3 +77,25 @@ The targets/hosts are defined in [ansible/inventory/](./ansible/inventory/) as
 Here, you can also set host specific variables, if necessary.
 
 The defined hosts can then be used throughout the various benchmarker configs.
+
+## Example usage
+
+1. All examples use `irods_client` and `irods_server` as aliases for the hosts. These hosts have to be configured in [the inventory](./ansible/inventory/example.yml)
+1. Run the GalaxyBenchmarker with `--cfg examples/01_verify_setup.yml` to verify the setup.
+
+
+## Debugging
+
+1. Change the configuration for more detailed logging
+    ```
+    log_ansible_output: true
+    results_save_raw_results: true
+    ```
+
+1. Run GalaxyBenchmarker with the flags `--only-pre-task`, `--only-benchmark`, and `--only-post-task` to check the individual stages
+
+1. Have a look into the logs of the container:
+    ```
+    irods-fuse -> /tmp
+    irods -> /var/lib/irods/log/
+    ```

@@ -255,8 +255,16 @@ def _parse_job_result(result: dict, prefix: str) -> dict[str, Any]:
         f"{prefix}_iops_max": result["iops_max"],
         f"{prefix}_iops_mean": result["iops_mean"],
         f"{prefix}_iops_stddev": result["iops_stddev"],
-        f"{prefix}_lat_min_in_ms": result["lat_ns"]["min"] / 1_000_000 if result["bw_mean"] > 0 else 0.0,
-        f"{prefix}_lat_max_in_ms": result["lat_ns"]["max"] / 1_000_000 if result["bw_mean"] > 0 else 0.0,
-        f"{prefix}_lat_mean_in_ms": result["lat_ns"]["mean"] / 1_000_000 if result["bw_mean"] > 0 else 0.0,
-        f"{prefix}_lat_stddev_in_ms": result["lat_ns"]["stddev"] / 1_000_000 if result["bw_mean"] > 0 else 0.0,
+        f"{prefix}_lat_min_in_ms": result["lat_ns"]["min"] / 1_000_000
+        if result["bw_mean"] > 0
+        else 0.0,
+        f"{prefix}_lat_max_in_ms": result["lat_ns"]["max"] / 1_000_000
+        if result["bw_mean"] > 0
+        else 0.0,
+        f"{prefix}_lat_mean_in_ms": result["lat_ns"]["mean"] / 1_000_000
+        if result["bw_mean"] > 0
+        else 0.0,
+        f"{prefix}_lat_stddev_in_ms": result["lat_ns"]["stddev"] / 1_000_000
+        if result["bw_mean"] > 0
+        else 0.0,
     }
