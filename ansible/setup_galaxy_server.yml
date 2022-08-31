@@ -89,3 +89,45 @@
             restarted: yes
           environment:
             GALAXY_EXPORT_VOLUME: "{{ galaxy_export_volume }}/glx_export"
+
+    - name: Wait for galaxy to become available
+      uri:
+        url: "http://localhost:8080/api/histories"
+        status_code: 200
+        headers:
+          x-api-key: fakekey
+      register: result
+      until: result.status == 200
+      retries: 4
+      delay: 5
+      ignore_errors: yes
+
+    - name: Restart handler0
+      when: result.status != 200
+      uri:
+        url: "http://localhost:9002/index.html?processname=galaxy%3Ahandler0&action=restart"
+        timeout: 60
+
+    - name: Restart handler1
+      when: result.status != 200
+      uri:
+        url: "http://localhost:9002/index.html?processname=galaxy%3Ahandler1&action=restart"
+        timeout: 60
+
+    - name: Restart handler0
+      when: result.status != 200
+      uri:
+        url: "http://localhost:9002/index.html?processname=galaxy%3Agalaxy_web&action=restart"
+        timeout: 60
+
+    - name: Wait for galaxy to become available (2)
+      uri:
+        url: "http://localhost:8080/api/histories"
+        status_code: 200
+        headers:
+          x-api-key: fakekey
+      register: result
+      until: result.status == 200
+      retries: 4
+      delay: 5
+      ignore_errors: yes
