@@ -1,0 +1,70 @@
+- hosts: "{{ host }}"
+  tasks:
+    - name: Create test directory
+      file:
+        path: "{{ mdtest_dir }}/mdtest_in_progress"
+        state: directory
+        mode: '0777'
+
+    - name: Create temporary build directory
+      tempfile:
+        state: directory
+        suffix: .mdtest.build
+      register: tempdir
+
+    - name: Copy Dockerfile
+      ansible.posix.synchronize:
+        src: tool-mdtest/
+        dest: "{{ tempdir.path }}"
+        recursive: yes
+
+    - name: Build latest mdtest image
+      become: yes
+      community.docker.docker_image:
+        build:
+          path: "{{ tempdir.path }}"
+        name: galaxybenchmarker/tool-mdtest
+        tag: latest
+        force_source: yes
+        force_tag: yes
+        source: build
+
+    - name: Run mdtest container
+      become: yes
+      community.docker.docker_container:
+        name: mdtest
+        image: galaxybenchmarker/tool-mdtest
+        detach: false
+        cleanup: true
+        volumes:
+          - "{{ mdtest_dir }}/mdtest_in_progress:/mnt/volume_under_test:rw"
+        working_dir: /mnt/volume_under_test
+        command: [
+          "-y",
+          "-Y",
+          "-n",
+          "{{ mdtest_num_files }}",
+        ]
+      register: mdtest_results
+      ignore_errors: yes
+
+    - name: debug
+      debug: var=mdtest_results
+
+    - name: Save results
+      local_action:
+        module: copy
+        content: "{{ mdtest_results.container.Output }}"
+        dest: "{{ controller_dir }}/{{ mdtest_result_file }}"
+
+    - name: Cleanup
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "{{ mdtest_dir }}/mdtest_in_progress"
+        - "{{ tempdir.path }}"
+      retries: 15
+      delay: 5
+      register: cleanup
+      until: not cleanup["failed"]

@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='utf-8'?>
+<toolbox monitor="true">
+  <section id="custom" name="Custom Tools">
+    <tool file="/custom_tools/file_gen.xml" />
+  </section>
+</toolbox>

@@ -1,0 +1,15 @@
+- hosts: "{{ host }}"
+  become: true
+  tasks:
+    - import_tasks: tasks/remove_container.yml
+      vars:
+        path: "/irods"
+
+    - name: Unmount webdav mount
+      ansible.posix.mount:
+        path: "{{ irods_host_volume }}/irods-webdav"
+        state: unmounted
+    - name: Remove irods volume
+      file:
+        path: "{{ irods_host_volume }}/irods-webdav"
+        state: absent

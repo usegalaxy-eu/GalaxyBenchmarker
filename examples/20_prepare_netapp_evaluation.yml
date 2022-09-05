@@ -1,0 +1,22 @@
+config:
+  log_ansible_output: false
+  results_print: false
+  results_save_to_file: false
+
+benchmarks:
+  setup_directory_struture:
+    type: DdPrepareNetappRead
+    repetitions: 5
+    destination:
+      host: irods_server
+      target_folder: /mnt/netapp/read_benchmark
+    dd:
+      blocksize: 1024k
+
+    dim_key: blockcount
+    dim_values:
+      - 1024
+      - 2048
+      - 4096
+      - 8192
+      - 16384

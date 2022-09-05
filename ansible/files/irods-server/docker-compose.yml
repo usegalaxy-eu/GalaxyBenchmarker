@@ -1,0 +1,30 @@
+version: "3"
+services:
+  irods:
+    build: .
+    hostname: irods
+    domainname: local
+    depends_on:
+      - db
+    ports:
+      # Zone Endpoint
+      - 1247:1247
+      # Control plane
+      - 1248:1248
+      # Server port range
+      - "20000-20199:20000-20199"
+    volumes:
+      # Irods client config
+      - ./volumes/config_client/:/root/.irods/
+      # Irods server config
+      - ./volumes/config_server/:/etc/irods/
+      # Volume under test
+      - ${IRODS_HOST_VOLUME}/irods:/mnt/mountedVolumeResc
+  db:
+    image: postgres:11-alpine
+    # volumes:
+    #  - ./db:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: irods
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: ICAT

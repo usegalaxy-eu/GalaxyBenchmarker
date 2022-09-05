@@ -1,0 +1,4 @@
+- hosts: "{{ host }}"
+  tasks:
+    - name: "Get the hostname to see if host is reachable"
+      shell: hostname

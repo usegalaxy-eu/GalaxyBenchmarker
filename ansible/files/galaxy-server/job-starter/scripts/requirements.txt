@@ -1,0 +1,1 @@
+git+https://github.com/galaxyproject/bioblend.git@main#egg=bioblend

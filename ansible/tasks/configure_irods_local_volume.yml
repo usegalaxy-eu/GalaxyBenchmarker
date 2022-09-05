@@ -1,0 +1,30 @@
+---
+- name: Add rootResc resource
+  community.docker.docker_container_exec:
+    container: irods_irods_1
+    argv:
+      - /bin/bash
+      - "-c"
+      - iadmin mkresc rootResc passthru
+
+- name: Add mountedVolumeResc resource
+  community.docker.docker_container_exec:
+    container: irods_irods_1
+    argv:
+      - /bin/bash
+      - "-c"
+      - iadmin mkresc mountedVolumeResc unixfilesystem irods.local:/mnt/mountedVolumeResc
+
+- name: Connect rootResc with mountedVolumeResc
+  community.docker.docker_container_exec:
+    container: irods_irods_1
+    argv:
+      - /bin/bash
+      - "-c"
+      - iadmin addchildtoresc rootResc mountedVolumeResc
+
+- name: Set rootResc as default resource
+  ansible.builtin.lineinfile:
+    path: /irods/volumes/config_server/core.re
+    regexp: '^acSetRescSchemeForCreate'
+    line: acSetRescSchemeForCreate {msiSetDefaultResc("rootResc","null"); }

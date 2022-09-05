@@ -1,0 +1,38 @@
+- hosts: "{{ host }}"
+  become: true
+  tasks:
+    - import_tasks: tasks/remove_container.yml
+      vars:
+        path: "/galaxy"
+
+    - name: Delete galaxy files
+      when: galaxy_host_volume is defined
+      become: yes
+      community.docker.docker_container:
+        name: fix_filepermissions
+        image: ubuntu
+        user: 1450
+        detach: false
+        cleanup: true
+        volumes:
+          - "{{ galaxy_host_volume }}/galaxy_in_progress:/mnt/volume_under_test"
+        command: [
+          "rm",
+          "-rf",
+          "/mnt/volume_under_test/files",
+        ]
+
+    - name: Cleanup Host Volume
+      when: galaxy_host_volume is defined
+      file:
+        path: "{{ galaxy_host_volume }}/galaxy_in_progress"
+        state: absent
+      retries: 15
+      delay: 5
+      register: cleanup
+      until: not cleanup["failed"]
+
+    - name: Cleanup Export Volume
+      file:
+        path: "{{ galaxy_export_volume }}/glx_export"
+        state: absent

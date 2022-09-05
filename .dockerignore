@@ -1,0 +1,7 @@
+# GalaxyBenchmarker generated files
+logs/
+results/
+
+# Python stuff
+venv/
+.venv/

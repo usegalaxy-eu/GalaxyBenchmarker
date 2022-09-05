@@ -1,0 +1,54 @@
+---
+- name: Create irods volume
+  file:
+    path: "{{ irods_host_volume_internal }}/irods"
+    state: directory
+    owner: "1000"
+    group: "1000"
+    mode: '0755'
+
+- name: Copy container setup onto host (sychronize preserves file permissions)
+  ansible.posix.synchronize:
+    src: ../files/irods-server/
+    dest: /irods
+    recursive: yes
+
+- name: Build and start container
+  community.docker.docker_compose:
+    project_src: /irods
+    state: present
+    build: yes
+  environment:
+    IRODS_HOST_VOLUME: "{{ irods_host_volume_internal }}"
+  register: output
+
+# - name: Debug startup logs
+#   command: docker logs irods_irods_1
+#   register: logoutput
+
+# - name: debug
+#   debug: var=logoutput
+
+- name: "Check 'Build and start container'"
+  ansible.builtin.assert:
+    that:
+      - "output.services.irods.irods_irods_1.state.running"
+      - "output.services.db.irods_db_1.state.running"
+
+- name: Wait for port 1247 to become open on the host
+  wait_for:
+    port: 1247
+    delay: 5
+    timeout: 30
+
+- name: Configure rods user for i-Commands
+  community.docker.docker_container_exec:
+    container: irods_irods_1
+    argv:
+      - /bin/bash
+      - "-c"
+      - iinit adminpass
+  retries: 3
+  delay: 3
+  register: result
+  until: result.rc == 0

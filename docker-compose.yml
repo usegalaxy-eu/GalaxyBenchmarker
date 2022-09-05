@@ -2,31 +2,30 @@ version: "3"
 services:
   benchmarker:
     build: .
+    environment:
+      - SSH_AUTH_SOCK=/ssh-agent
     volumes:
-      - .:/src
+      - type: bind
+        source: .
+        target: /src
+      - type: bind
+        source: ${SSH_AUTH_SOCK}
+        target: /ssh-agent
+      - type: bind
+        source: ${HOME}/.ssh
+        target: /root/.ssh-host
+        read_only: true
     working_dir: /src
-    entrypoint: python3 galaxy_benchmarker
-    depends_on: 
-      - influxdb
-  influxdb:
-    image: influxdb:1.5
-    ports: 
-      - 8086:8086
-    environment: 
-      INFLUXDB_DATA_QUERY_LOG_ENABLED: "false"
-      INFLUXDB_HTTP_LOG_ENABLED: "false"
-      INFLUXDB_ADMIN_USER: admin
-      INFLUXDB_ADMIN_PASSWORD: admin
-      INFLUXDB_DB: glx_benchmarker
-      INFLUXDB_USER: glx_benchmarker
-      INFLUXDB_USER_PASSWORD: glx_benchmarker
-    volumes:
-      - .:/src
-  grafana:
-    image: grafana/grafana:6.5.0
-    ports: 
-      - 3000:3000
-    volumes: 
-      - ./grafana/config.ini:/etc/grafana/config.ini
-      - ./grafana/provisioning:/etc/grafana/provisioning
-      - ./grafana/dashboards:/var/lib/grafana/dashboards
+
+    command: [
+      "--cfg",
+      "examples/06_benchmark_galaxy_1x0.yml",
+      "examples/06_benchmark_galaxy_1x1K.yml",
+      "examples/06_benchmark_galaxy_10x1K.yml",
+      "examples/06_benchmark_galaxy_100x1K.yml",
+      "examples/06_benchmark_galaxy_1000x1K.yml",
+      "examples/06_benchmark_galaxy_2000x1K.yml",
+      "examples/06_benchmark_galaxy_1x1M.yml",
+      "examples/06_benchmark_galaxy_1x1G.yml",
+      "examples/06_benchmark_galaxy_10x1G.yml",
+    ]

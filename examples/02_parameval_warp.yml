@@ -1,0 +1,51 @@
+config:
+  log_ansible_output: false
+  results_print: false
+  results_save_raw_results: false
+  results_save_to_file: true
+
+benchmarks:
+  parameval_warp_concurrent:
+    type: WarpOneDimParams
+    repetitions: 1
+    destination:
+      host: irods_server
+    warp:
+      mode: put
+      base_url: s3.bwsfs.uni-freiburg.de
+      bucket_name: frct-smoe-bench-ec61-01
+      region: fr-repl
+      filesize: 10MiB
+
+    dim_key: concurrent_ops
+    dim_values:
+      - 1
+      - 2
+      - 4
+      - 8
+      - 16
+      - 32
+      - 33
+      - 34
+      - 35
+      - 64
+
+  parameval_warp_runtime:
+    type: WarpOneDimParams
+    repetitions: 1
+    destination:
+      host: irods_server
+    warp:
+      mode: put
+      base_url: s3.bwsfs.uni-freiburg.de
+      bucket_name: frct-smoe-bench-ec61-01
+      region: fr-repl
+      filesize: 10MiB
+
+    dim_key: runtime
+    dim_values:
+      - 10s
+      - 20s
+      - 1m0s
+      - 2m0s
+      - 5m0s

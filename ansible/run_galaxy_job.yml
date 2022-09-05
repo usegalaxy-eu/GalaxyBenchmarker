@@ -1,0 +1,3 @@
+- hosts: "{{ host }}"
+  tasks:
+    - include_tasks: tasks/run_galaxy_job.yml

@@ -1,0 +1,46 @@
+[tool.poetry]
+name = "galaxy_benchmarker"
+version = "0.1.0"
+description = ""
+authors = [
+    "Andreas Skorczyk <me@andreas-sk.de>",
+    "Stefan Möhrle <26185187+smoehrle@users.noreply.github.com>"
+]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+
+# Connectors/Bridges
+ansible = "^5"
+bioblend = { git = "https://github.com/galaxyproject/bioblend.git", branch = "main" }
+paramiko = "^2"
+planemo = "^0.74"
+python-openstackclient = "^5"
+
+# File operations
+## Templates
+Jinja2 = "^3"
+## Serialization/Deserialization
+pyserde = "^0.6"
+pyyaml = "^6"
+boto3 = "^1.24.38"
+
+[tool.poetry.dev-dependencies]
+isort = "^5"
+black = "*"
+types-requests = "^2"
+types-paramiko = "^2"
+
+[build-system]
+# Fix for editable installs
+requires = ["poetry-core@https://github.com/python-poetry/poetry-core/archive/325312c016d69189ac93c945ba0c1b69296c5e54.zip"]
+# requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.isort]
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+ensure_newline_before_comments = true
+line_length = 88

@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<object_store type="hierarchical">
+    <backends>
+
+        <object_store type="disk" id="primary" order="1">
+            <files_dir path="database/files1"/>
+            <extra_dir type="temp" path="database/tmp1"/>
+            <extra_dir type="job_work" path="database/job_working_directory1"/>
+        </object_store>
+
+        <object_store type="irods" id="primary" order="0">
+            <auth username="rods" password="adminpass" />
+            <resource name="rootResc" />
+            <zone name="zone_1" />
+            <connection host="{{ IRODS_HOST }}" port="1247" timeout="30" refresh_time="300"/>
+            <cache path="database/object_store_cache_irods" size="1000" />
+            <extra_dir type="job_work" path="database/job_working_directory_irods"/>
+            <extra_dir type="temp" path="database/tmp_irods"/>
+        </object_store>
+
+    </backends>
+</object_store>

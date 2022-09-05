@@ -1,0 +1,121 @@
+config:
+  log_ansible_output: false
+  results_print: false
+  results_save_to_file: true
+
+
+ThroughputWrite: &throughputWrite
+  repetitions: 1
+  fio:
+    mode: write
+    blocksize: 1024k
+    numjobs: 4
+    iodepth: 32
+  destination:
+    host: irods_server
+    target_folder: /mnt/isilon
+
+ThroughputRead: &throughputRead
+  repetitions: 1
+  fio:
+    mode: read
+    blocksize: 1024k
+    numjobs: 4
+    iodepth: 32
+  destination:
+    host: irods_server
+    target_folder: /mnt/isilon
+
+IopsWrite: &iopsWrite
+  repetitions: 1
+  fio:
+    mode: randwrite
+    blocksize: 4k
+    numjobs: 4
+    iodepth: 32
+  destination:
+    host: irods_server
+    target_folder: /mnt/isilon
+
+IopsRead: &iopsRead
+  repetitions: 1
+  fio:
+    mode: randread
+    blocksize: 4k
+    numjobs: 4
+    iodepth: 32
+  destination:
+    host: irods_server
+    target_folder: /mnt/isilon
+
+LatencyWrite: &latencyWrite
+  repetitions: 1
+  fio:
+    mode: randwrite
+    blocksize: 4k
+    numjobs: 1
+    iodepth: 1
+  destination:
+    host: irods_server
+    target_folder: /mnt/isilon
+
+LatencyRead: &latencyRead
+  repetitions: 1
+  fio:
+    mode: randread
+    blocksize: 4k
+    numjobs: 1
+    iodepth: 1
+  destination:
+    host: irods_server
+    target_folder: /mnt/isilon
+
+
+benchmarks:
+  con_vs_nativ_throughput_write_con:
+    <<: *throughputWrite
+    type: FioFixedParams
+
+  con_vs_nativ_throughput_write_nativ:
+    <<: *throughputWrite
+    type: FioNotContainerized
+
+  con_vs_nativ_throughput_read_con:
+    <<: *throughputRead
+    type: FioFixedParams
+
+  con_vs_nativ_throughput_read_nativ:
+    <<: *throughputRead
+    type: FioNotContainerized
+
+  con_vs_nativ_iops_write_con:
+    <<: *iopsWrite
+    type: FioFixedParams
+
+  con_vs_nativ_iops_write_nativ:
+    <<: *iopsWrite
+    type: FioNotContainerized
+
+  con_vs_nativ_iops_read_con:
+    <<: *iopsRead
+    type: FioFixedParams
+
+  con_vs_nativ_iops_read_nativ:
+    <<: *iopsRead
+    type: FioNotContainerized
+
+  con_vs_nativ_latency_write_con:
+    <<: *latencyWrite
+    type: FioFixedParams
+
+  con_vs_nativ_latency_write_nativ:
+    <<: *latencyWrite
+    type: FioNotContainerized
+
+  con_vs_nativ_latency_read_con:
+    <<: *latencyRead
+    type: FioFixedParams
+
+  con_vs_nativ_latency_read_nativ:
+    <<: *latencyRead
+    type: FioNotContainerized

@@ -1,0 +1,26 @@
+config:
+  log_ansible_output: false
+  results_print: false
+  results_save_to_file: true
+
+
+Default: &default
+  type: MdtestOneDimParams
+  repetitions: 1
+  mdtest:
+    num_files: 1
+
+  dim_key: num_files
+  dim_values:
+    - 10
+    - 100
+    - 1000
+    - 10000
+    - 100000
+
+benchmarks:
+  parameval_mdtest_isilon:
+    <<: *default
+    destination:
+      host: irods_server
+      target_folder: /mnt/isilon

@@ -1,68 +1,101 @@
-import yaml
 import argparse
-import sys
-import bioblend
-from time import sleep
-from benchmarker import Benchmarker
 import logging
-import time
-import requests
 import os
-from requests.adapters import HTTPAdapter
+from datetime import datetime
+from pathlib import Path
 
-logging.basicConfig()
-log = logging.getLogger("GalaxyBenchmarker")
-log.setLevel(logging.INFO)
-log_handler = logging.StreamHandler(sys.stdout)
-log_handler.setLevel(logging.DEBUG)
+from serde.yaml import from_yaml
 
-# Log to file
-log_filename = r'logs/{filename}.log'.format(filename=time.time())
-os.makedirs(os.path.dirname(log_filename), exist_ok=True)
-fh = logging.FileHandler(log_filename, mode='w')
-log.addHandler(fh)
-
-s = requests.Session()
-s.mount('http://', HTTPAdapter(max_retries=20))
+from galaxy_benchmarker.benchmarker import Benchmarker, BenchmarkerConfig, GlobalConfig
+from galaxy_benchmarker.utils import ansible
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config", type=str, default="benchmark_config.yml", help="Path to config file")
+    parser.add_argument(
+        "--cfgs", nargs="+", default=[], help="Path(s) to config file(s)"
+    )
+    parser.add_argument("--only-pre-tasks", dest="only_pre_tasks", action="store_true")
+    parser.add_argument("--only-benchmark", dest="only_benchmark", action="store_true")
+    parser.add_argument(
+        "--only-post-tasks", dest="only_post_tasks", action="store_true"
+    )
+    parser.add_argument("--verbose", dest="verbose", action="store_true")
+    parser.set_defaults(
+        verbose=False, only_pre_tasks=False, only_benchmark=False, only_post_tasks=False
+    )
+    parser.add_argument(
+        "--benchmarks", nargs="+", default=[], help="List of benchmark(s)"
+    )
+
     args = parser.parse_args()
 
-    log.debug("Loading Configuration from file {filename}".format(filename=args.config))
-    with open(args.config, "r") as stream:
-        try:
-            config = yaml.safe_load(stream)
+    log = configure_logger(args.verbose)
 
-            log.info("Initializing Benchmarker.")
-            benchmarker = Benchmarker(config)
+    for config_name in args.cfgs:
+        cfg_path = Path(config_name)
+        if not cfg_path.is_file():
+            raise ValueError(f"Path to config '{config_name}' is not a file")
 
-            benchmarker.run_pre_tasks()
+        log.info(
+            "Loading Configuration from file {filename}".format(filename=config_name)
+        )
 
-            log.info("Starting to run benchmarks.")
-            try:
-                benchmarker.run()
-            except bioblend.ConnectionError:
-                log.error("There was a problem with the connection. Benchmark canceled.")
+        cfg = from_yaml(GlobalConfig, cfg_path.read_text())
 
-            results_filename = "results/results_{time}".format(time=time.time())
-            log.info("Saving results to file: '{filename}.json'.".format(filename=results_filename))
-            os.makedirs(os.path.dirname(results_filename), exist_ok=True)
-            benchmarker.save_results(results_filename)
+        ansible.AnsibleTask.register(cfg.tasks or {})
 
-            if benchmarker.inflx_db is not None:
-                log.info("Sending results to influxDB.")
-                benchmarker.send_results_to_influxdb()
+        log.info("Initializing Benchmarker.")
+        benchmarker = Benchmarker(cfg.config or BenchmarkerConfig(), cfg.benchmarks)
 
-            benchmarker.run_post_tasks()
+        log.info("Start benchmarker.")
+        if args.only_pre_tasks:
+            flags = (True, False, False)
+        elif args.only_benchmark:
+            flags = (False, True, False)
+        elif args.only_post_tasks:
+            flags = (False, False, True)
+        else:
+            flags = (True, True, True)
 
-        except yaml.YAMLError as exc:
-            print(exc)
-        except IOError as err:
-            print(err)
+        pre, bench, post = flags
+        benchmarker.run(
+            run_pretasks=pre,
+            run_benchmarks=bench,
+            run_posttasks=post,
+            filter_benchmarks=args.benchmarks,
+        )
 
 
-if __name__ == '__main__':
+def configure_logger(verbose: bool) -> logging.Logger:
+    # Formatter
+    fmt_with_time = logging.Formatter(
+        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    )
+    fmt_no_time = logging.Formatter("%(name)s - %(levelname)s - %(message)s")
+
+    # Create logger
+    log = logging.getLogger("galaxy_benchmarker")
+    if verbose:
+        log.setLevel(logging.DEBUG)
+    else:
+        log.setLevel(logging.INFO)
+
+    # Create console handler
+    stream_handler = logging.StreamHandler()
+    stream_handler.setLevel(logging.DEBUG)
+    stream_handler.setFormatter(fmt_no_time)
+    log.addHandler(stream_handler)
+
+    # Create file handler
+    log_filename = f"logs/{datetime.now().replace(microsecond=0).isoformat()}.log"
+    os.makedirs(os.path.dirname(log_filename), exist_ok=True)
+    file_handler = logging.FileHandler(log_filename, mode="w")
+    file_handler.setLevel(logging.DEBUG)
+    file_handler.setFormatter(fmt_with_time)
+    log.addHandler(file_handler)
+    return log
+
+
+if __name__ == "__main__":
     main()

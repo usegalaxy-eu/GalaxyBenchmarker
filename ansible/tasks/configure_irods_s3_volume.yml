@@ -1,0 +1,43 @@
+---
+- name: Add rootResc resource
+  community.docker.docker_container_exec:
+    container: irods_irods_1
+    argv:
+      - /bin/bash
+      - "-c"
+      - iadmin mkresc rootResc passthru
+
+- name: Create S3 credential file
+  copy:
+    content: "{{ IRODS_S3_ACCESS_ID }}\n{{ IRODS_S3_SECRET_KEY }}"
+    dest: /s3_credentials
+
+- name: Copy S3 credential file into irods container
+  shell: docker cp /s3_credentials irods_irods_1:/s3_credentials
+
+- name: Remove S3 credential file from host
+  file:
+    path: "/s3_credentials"
+    state: absent
+
+- name: Add s3Resc resource
+  community.docker.docker_container_exec:
+    container: irods_irods_1
+    argv:
+      - /bin/bash
+      - "-c"
+      - iadmin mkresc s3Resc s3 irods.local:/{{IRODS_S3_BUCKET}}/irods "S3_DEFAULT_HOSTNAME={{IRODS_S3_DOMAIN}};S3_AUTH_FILE=/s3_credentials;S3_REGIONNAME={{IRODS_S3_REGION}};S3_RETRY_COUNT=1;S3_WAIT_TIME_SEC=3;S3_PROTO=HTTPS;ARCHIVE_NAMING_POLICY=consistent;HOST_MODE=cacheless_attached"
+
+- name: Connect rootResc with s3Resc
+  community.docker.docker_container_exec:
+    container: irods_irods_1
+    argv:
+      - /bin/bash
+      - "-c"
+      - iadmin addchildtoresc rootResc s3Resc
+
+- name: Set rootResc as default resource
+  ansible.builtin.lineinfile:
+    path: /irods/volumes/config_server/core.re
+    regexp: '^acSetRescSchemeForCreate'
+    line: acSetRescSchemeForCreate {msiSetDefaultResc("rootResc","null"); }

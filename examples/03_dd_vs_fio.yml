@@ -1,0 +1,66 @@
+config:
+  log_ansible_output: false
+  results_print: false
+  results_save_raw_results: false
+  results_save_to_file: true
+
+
+DestIsilon: &dest_isilon
+  destination:
+    host: irods_server
+    target_folder: /mnt/isilon
+
+DestNetapp: &dest_netapp
+  destination:
+    host: irods_server
+    target_folder: /mnt/netapp
+
+ConfigFio: &conf_fio
+  repetitions: 1
+  type: FioOneDimParams
+  fio:
+    mode: write
+    blocksize: 1024k
+    numjobs: 4
+    iodepth: 32
+    time_based: false
+
+  dim_key: filesize
+  dim_values:
+    - 1G
+    - 2G
+    - 4G
+    - 8G
+    - 16G
+
+ConfigDd: &conf_dd
+  repetitions: 1
+  type: DdOneDimParams
+  dd:
+    blocksize: 1024k
+    parallel: True
+
+  dim_key: blockcount
+  dim_values:
+    - 1024
+    - 2048
+    - 4096
+    - 8192
+    - 16384
+
+benchmarks:
+  dd_vs_fio_isilon:
+    type: BenchmarkCompare
+    repetitions: 1
+    bench_a:
+      <<: [*dest_isilon, *conf_fio]
+    bench_b:
+      <<: [*dest_isilon, *conf_dd]
+
+  dd_vs_fio_netapp:
+    type: BenchmarkCompare
+    repetitions: 1
+    bench_a:
+      <<: [*dest_netapp, *conf_fio]
+    bench_b:
+      <<: [*dest_netapp, *conf_dd]

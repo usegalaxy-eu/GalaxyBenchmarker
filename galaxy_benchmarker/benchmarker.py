@@ -1,94 +1,130 @@
-from typing import Dict
-import workflow
-import destination
-import benchmark
-from galaxy_bridge import Galaxy
-import logging
-import json
-from influxdb_bridge import InfluxDB
-from openstack_bridge import OpenStackCompute
+from __future__ import annotations
 
-log = logging.getLogger("GalaxyBenchmarker")
+import logging
+import signal
+from dataclasses import dataclass
+from datetime import datetime
+from pathlib import Path
+from types import FrameType
+from typing import Optional
+
+from serde import serde
+
+from galaxy_benchmarker.benchmarks.base import Benchmark
+from galaxy_benchmarker.typing import NamedConfigDicts
+from galaxy_benchmarker.utils import ansible
+
+log = logging.getLogger(__name__)
+
+
+@serde
+@dataclass
+class BenchmarkerConfig:
+    results_path: str = "results/"
+    results_save_to_file: bool = True
+    results_save_raw_results: bool = False
+    results_print: bool = True
+
+    log_ansible_output: bool = False
+
+
+@serde
+@dataclass
+class GlobalConfig:
+    config: Optional[BenchmarkerConfig]
+
+    tasks: Optional[NamedConfigDicts]
+    benchmarks: NamedConfigDicts
 
 
 class Benchmarker:
-    glx: Galaxy
-    inflx_db: InfluxDB
-    workflows: Dict[str, workflow.BaseWorkflow]
-    destinations: Dict[str, destination.BaseDestination]
-    benchmarks: Dict[str, benchmark.BaseBenchmark]
+    def __init__(self, config: BenchmarkerConfig, benchmarks: NamedConfigDicts):
+        self.config = config
+        self.current_benchmark: Optional[Benchmark] = None
 
-    def __init__(self, config):
-        glx_conf = config["galaxy"]
-        self.glx = Galaxy(glx_conf["url"], glx_conf["user_key"], glx_conf.get("shed_install", False),
-                          glx_conf.get("ssh_user", None), glx_conf.get("ssh_key", None),
-                          glx_conf.get("galaxy_root_path", None), glx_conf.get("galaxy_config_dir", None),
-                          glx_conf.get("galaxy_user", None))
+        self.benchmarks: list[Benchmark] = []
+        for name, b_config in benchmarks.items():
+            self.benchmarks.append(Benchmark.create(name, b_config, self))
 
-        if "influxdb" in config:
-            inf_conf = config["influxdb"]
-            self.inflx_db = InfluxDB(inf_conf["host"], inf_conf["port"], inf_conf["username"], inf_conf["password"],
-                                     inf_conf["db_name"])
+        self.results = Path(config.results_path)
+        if self.results.exists():
+            if not self.results.is_dir():
+                raise ValueError("'results_path' has to be a folder")
         else:
-            self.inflx_db = None
+            self.results.mkdir(parents=True)
 
-        if "openstack" in config:
-            os_conf = config["openstack"]
-            self.openstack = OpenStackCompute(os_conf["auth_url"], os_conf["compute_endpoint_version"],
-                                              os_conf["username"], os_conf["password"], os_conf["project_id"],
-                                              os_conf["region_name"], os_conf["user_domain_name"])
+        if config.log_ansible_output:
+            ansible.LOG_ANSIBLE_OUTPUT = True
 
-        self.workflows = dict()
-        for wf_config in config["workflows"]:
-            self.workflows[wf_config["name"]] = workflow.configure_workflow(wf_config)
+        # Safe results in case of interrupt
+        def handle_signal(signum: int, frame: Optional[FrameType]) -> None:
+            ansible.stop_playbook(signum)
+            self.save_results_of_current_benchmark()
+            exit(0)
 
-        self.destinations = dict()
-        for dest_config in config["destinations"]:
-            self.destinations[dest_config["name"]] = destination.configure_destination(dest_config, self.glx)
+        signal.signal(signal.SIGINT, handle_signal)
 
-        self.benchmarks = dict()
-        for bm_config in config["benchmarks"]:
-            self.benchmarks[bm_config["name"]] = benchmark.configure_benchmark(bm_config, self.destinations,
-                                                                               self.workflows, self.glx, self)
+    def run(
+        self,
+        run_pretasks: bool = True,
+        run_benchmarks: bool = True,
+        run_posttasks: bool = True,
+        filter_benchmarks: list[str] = [],
+    ) -> None:
+        """Run all benchmarks sequentially
 
-        if glx_conf.get("configure_job_destinations", False):
-            log.info("Creating job_conf for Galaxy and deploying it")
-            destination.create_galaxy_job_conf(self.glx, self.destinations)
-            self.glx.deploy_job_conf()
+        Steps:
+        - Run pre_tasks
+        - Run benchmark
+        - Print results (optional)
+        - Save results to file (optional)
+        - Run post_tasks
+        """
 
-        if glx_conf["shed_install"]:
-            self.glx.install_tools_for_workflows(list(self.workflows.values()))
+        for i, benchmark in enumerate(self.benchmarks):
+            self.current_benchmark = benchmark
+            current_run = f"({i+1}/{len(self.benchmarks)})"
 
-    def run_pre_tasks(self):
-        log.info("Running pre-tasks for benchmarks")
-        for bm in self.benchmarks.values():
-            bm.run_pre_task()
+            if filter_benchmarks and benchmark.name not in filter_benchmarks:
+                log.info("%s Skipping %s", current_run, benchmark.name)
+                continue
 
-    def run_post_tasks(self):
-        log.info("Running post-tasks for benchmarks")
-        for bm in self.benchmarks.values():
-            bm.run_post_task()
+            try:
+                if run_pretasks:
+                    log.info("%s Pre task for %s", current_run, benchmark.name)
+                    benchmark.run_pre_tasks()
 
-    def run(self):
-        for bm in self.benchmarks.values():
-            log.info("Running benchmark '{bm_name}'".format(bm_name=bm.name))
-            bm.run(self)
+                if run_benchmarks:
+                    log.info("%s Start run for %s", current_run, benchmark.name)
+                    benchmark.run()
+            except Exception as e:
+                log.exception(
+                    "Benchmark run failed with exception. Continuing with next benchmark"
+                )
 
-    def get_results(self):
-        for bm in self.benchmarks.values():
-            print(bm.benchmark_results)
+            if run_benchmarks:
+                # Save results only when actual benchmark ran
+                self.save_results_of_current_benchmark()
 
-    def save_results(self, filename="results"):
-        results = list()
-        for bm in self.benchmarks.values():
-            results.append(bm.benchmark_results)
+            if run_posttasks:
+                log.info("%s Post task for %s", current_run, benchmark.name)
+                benchmark.run_post_tasks()
 
-        json_results = json.dumps(results, indent=2)
-        with open(filename+".json", "w") as fh:
-            fh.write(json_results)
+            time = datetime.now().replace(microsecond=0).isoformat()
+            log.info("%s Finished benchmark run at %s", current_run, time)
 
-    def send_results_to_influxdb(self):
-        for bm in self.benchmarks.values():
-            bm.save_results_to_influxdb(self.inflx_db)
+    def save_results_of_current_benchmark(self) -> None:
+        """Save the result of the current benchmark
 
+        Extracted as function for SIGNAL-handling"""
+        if not self.current_benchmark:
+            log.warning("Nothing to save.")
+            return
 
+        if self.config.results_print:
+            print(f"#### Results for benchmark {self.current_benchmark}")
+            print(self.current_benchmark.benchmark_results)
+
+        if self.config.results_save_to_file:
+            file = self.current_benchmark.save_results_to_file(self.results)
+            log.info("Saving results to file: '%s'.", file)

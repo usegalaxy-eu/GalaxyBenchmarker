@@ -1,0 +1,48 @@
+config:
+  log_ansible_output: false
+  results_print: false
+  results_save_raw_results: false
+  results_save_to_file: true
+
+benchmarks:
+  benchmark_s3_warp_get_put:
+    type: WarpFixedParams
+    repetitions: 1
+    destination:
+      host: irods_server
+    warp:
+      mode: get
+      base_url: s3.bwsfs.uni-freiburg.de
+      bucket_name: frct-smoe-bench-ec61-01
+      concurrent_ops: 32
+      filesize: 10MiB
+      region: fr-repl
+      runtime: 5m0s
+
+  benchmark_s3_warp_get_put_ops:
+    type: WarpFixedParams
+    repetitions: 1
+    destination:
+      host: irods_server
+    warp:
+      mode: get
+      base_url: s3.bwsfs.uni-freiburg.de
+      bucket_name: frct-smoe-bench-ec61-01
+      concurrent_ops: 32
+      filesize: 1KiB
+      region: fr-repl
+      runtime: 5m0s
+
+  benchmark_s3_warp_delete:
+    type: WarpFixedParams
+    repetitions: 1
+    destination:
+      host: irods_server
+    warp:
+      mode: delete
+      base_url: s3.bwsfs.uni-freiburg.de
+      bucket_name: frct-smoe-bench-ec61-01
+      concurrent_ops: 32
+      filesize: 1KiB
+      region: fr-repl
+      runtime: 5m0s

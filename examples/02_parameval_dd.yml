@@ -1,0 +1,62 @@
+config:
+  log_ansible_output: false
+  results_print: false
+  results_save_raw_results: false
+  results_save_to_file: true
+
+
+DestIsilon: &dest_isilon
+  destination:
+    host: irods_server
+    target_folder: /mnt/isilon
+
+DestNetapp: &dest_netapp
+  destination:
+    host: irods_server
+    target_folder: /mnt/netapp
+
+ConfigDdSingle: &conf_dd_single
+  repetitions: 1
+  type: DdOneDimParams
+  dd:
+    blocksize: 1024k
+
+  dim_key: blockcount
+  dim_values:
+    - 1024
+    - 2048
+    - 4096
+    - 8192
+    - 16384
+
+ConfigDdParallel: &conf_dd_parallel
+  repetitions: 1
+  type: DdOneDimParams
+  dd:
+    blocksize: 1024k
+    parallel: True
+
+  dim_key: blockcount
+  dim_values:
+    - 1024
+    - 2048
+    - 4096
+    - 8192
+    - 16384
+
+benchmarks:
+  parameval_dd_isilon:
+    type: BenchmarkCompare
+    repetitions: 1
+    bench_a:
+      <<: [*dest_isilon, *conf_dd_single]
+    bench_b:
+      <<: [*dest_isilon, *conf_dd_parallel]
+
+  parameval_dd_netapp:
+    type: BenchmarkCompare
+    repetitions: 1
+    bench_a:
+      <<: [*dest_netapp, *conf_dd_single]
+    bench_b:
+      <<: [*dest_netapp, *conf_dd_parallel]

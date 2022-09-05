@@ -1,0 +1,133 @@
+- hosts: "{{ host }}"
+  become: true
+  tasks:
+    - name: Copy container setup onto host (sychronize preserves file permissions)
+      ansible.posix.synchronize:
+        src: ../files/galaxy-server/
+        dest: /galaxy
+        recursive: yes
+
+    - include_tasks: tasks/initial_start_galaxy.yml
+
+    - name: Setup mount backend
+      when: (galaxy_use_mount is defined) and (galaxy_use_mount|bool)
+      block:
+        - name: Create galaxy files directory
+          file:
+            path: "{{ galaxy_host_volume }}/galaxy_in_progress"
+            state: directory
+            mode: '0777'
+
+        - name: Update docker-compose with object store config
+          lineinfile:
+            path: /galaxy/docker-compose.yml
+            backrefs: yes
+            regexp: '^(.*)# PLACEHOLDER_ENV'
+            line: '\1- GALAXY_CONFIG_OBJECT_STORE_CONFIG_FILE=/custom_config/object_store_conf.local_mount.xml'
+
+        - name: Update docker-compose volume mounts
+          lineinfile:
+            path: /galaxy/docker-compose.yml
+            backrefs: yes
+            regexp: '^(.*)# PLACEHOLDER_VOLUMES'
+            line: '\1- ${GALAXY_HOST_VOLUME}/galaxy_in_progress:/mnt/volume_under_test'
+
+        - name: Restart galaxy
+          community.docker.docker_compose:
+            project_src: /galaxy
+            restarted: yes
+          environment:
+            GALAXY_HOST_VOLUME: "{{ galaxy_host_volume }}"
+            GALAXY_EXPORT_VOLUME: "{{ galaxy_export_volume }}/glx_export"
+
+    - name: Setup s3 backend
+      when: (galaxy_use_s3 is defined) and (galaxy_use_s3|bool)
+      block:
+        - name: Update object store config with credentials
+          template:
+            src: ./files/galaxy-server/galaxy/custom_config/object_store_conf.s3.xml.j2
+            dest: /galaxy/galaxy/custom_config/object_store_conf.s3.xml
+            owner: 1450
+            group: 1450
+            mode: '0664'
+
+        - name: Update docker-compose with object store config
+          lineinfile:
+            path: /galaxy/docker-compose.yml
+            backrefs: yes
+            regexp: '^(.*)# PLACEHOLDER_ENV'
+            line: '\1- GALAXY_CONFIG_OBJECT_STORE_CONFIG_FILE=/custom_config/object_store_conf.s3.xml'
+
+        - name: Restart galaxy
+          community.docker.docker_compose:
+            project_src: /galaxy
+            restarted: yes
+          environment:
+            GALAXY_EXPORT_VOLUME: "{{ galaxy_export_volume }}/glx_export"
+
+    - name: Setup irods backend
+      when: (galaxy_use_irods is defined) and (galaxy_use_irods|bool)
+      block:
+        - name: Update object store config with connection details
+          template:
+            src: ./files/galaxy-server/galaxy/custom_config/object_store_conf.irods.xml.j2
+            dest: /galaxy/galaxy/custom_config/object_store_conf.irods.xml
+            owner: 1450
+            group: 1450
+            mode: '0664'
+
+        - name: Update docker-compose with object store config
+          lineinfile:
+            path: /galaxy/docker-compose.yml
+            backrefs: yes
+            regexp: '^(.*)# PLACEHOLDER_ENV'
+            line: '\1- GALAXY_CONFIG_OBJECT_STORE_CONFIG_FILE=/custom_config/object_store_conf.irods.xml'
+
+        - name: Restart galaxy
+          community.docker.docker_compose:
+            project_src: /galaxy
+            restarted: yes
+          environment:
+            GALAXY_EXPORT_VOLUME: "{{ galaxy_export_volume }}/glx_export"
+
+    - name: Wait for galaxy to become available
+      uri:
+        url: "http://localhost:8080/api/histories"
+        status_code: 200
+        headers:
+          x-api-key: fakekey
+      register: result
+      until: result.status == 200
+      retries: 4
+      delay: 5
+      ignore_errors: yes
+
+    - name: Restart handler0
+      when: result.status != 200
+      uri:
+        url: "http://localhost:9002/index.html?processname=galaxy%3Ahandler0&action=restart"
+        timeout: 60
+
+    - name: Restart handler1
+      when: result.status != 200
+      uri:
+        url: "http://localhost:9002/index.html?processname=galaxy%3Ahandler1&action=restart"
+        timeout: 60
+
+    - name: Restart handler0
+      when: result.status != 200
+      uri:
+        url: "http://localhost:9002/index.html?processname=galaxy%3Agalaxy_web&action=restart"
+        timeout: 60
+
+    - name: Wait for galaxy to become available (2)
+      uri:
+        url: "http://localhost:8080/api/histories"
+        status_code: 200
+        headers:
+          x-api-key: fakekey
+      register: result
+      until: result.status == 200
+      retries: 4
+      delay: 5
+      ignore_errors: yes

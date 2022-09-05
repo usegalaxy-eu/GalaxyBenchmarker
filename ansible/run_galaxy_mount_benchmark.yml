@@ -1,0 +1,10 @@
+- hosts: "{{ host }}"
+  tasks:
+    - include_tasks: tasks/run_galaxy_job.yml
+
+    - name: Check number of files
+      shell: find {{glx_path_to_files}} -type f -size {{ glx_expected_size_in_bytes }}c | wc -l
+      register: result
+      until: result.stdout.find("{{glx_expected_num_files}}") != -1
+      retries: "{{ glx_verification_timeout_in_s|int // 5 }}"
+      delay: 5

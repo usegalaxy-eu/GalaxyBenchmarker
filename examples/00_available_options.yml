@@ -1,0 +1,38 @@
+config:
+
+  results_path: "optional str, default: results/"
+  results_save_to_file: "optional bool, default: True"
+  results_print: "optional bool, default True"
+
+  log_ansible_output: "optional bool, default False"
+
+  openstack: "optional obj, see OpenStackComputeConfig"
+  galaxy: "optional obj, see GalaxyConfig"
+
+# Preconfigure some ansible tasks, can be referenced by name
+tasks:
+  task1:
+    playbook: "required str"
+    playbook_folder: "optional str, default: ansible/"
+    # Extra vars used in the playbook
+    extra_vars:
+      key1: value1
+
+    host: "optional str, can also be a ansible host pattern"
+
+benchmarks:
+  benchmark1:
+    type: "required str, refers to Benchmark class"
+    repetitions: "required int"
+
+    # Ansible task(s) executed before the benchmark
+    pre_task: "str OR obj"
+    # OR
+    pre_tasks:
+      - "str OR obj"
+
+    # Ansible task(s) executed after the benchmark
+    post_task: "str OR obj"
+    # OR
+    post_tasks:
+      - "str OR obj"

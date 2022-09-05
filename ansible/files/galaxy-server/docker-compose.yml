@@ -1,0 +1,22 @@
+version: "3"
+services:
+  galaxy:
+    build: galaxy
+    hostname: galaxy
+    domainname: local
+    ports:
+    # Webserver
+    - "8080:80"
+    # supvisord web app
+    - "9002:9002"
+    volumes:
+      - ${GALAXY_EXPORT_VOLUME}:/export
+      - ./galaxy/custom_tools:/custom_tools
+      - ./galaxy/custom_config:/custom_config
+      # PLACEHOLDER_VOLUMES
+    environment:
+      - GALAXY_CONFIG_TOOL_CONFIG_FILE=/custom_tools/custom_tool_conf.xml
+      # PLACEHOLDER_ENV
+
+  galaxy-job-starter:
+    build: job-starter

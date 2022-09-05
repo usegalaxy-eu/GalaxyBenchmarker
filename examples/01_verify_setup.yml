@@ -1,0 +1,17 @@
+config:
+  log_ansible_output: true
+  results_print: false
+  results_save_to_file: false
+
+benchmarks:
+  verify_setup_benchmark:
+    type: SetupTimeBenchmark
+    repetitions: 1
+
+    pre_tasks:
+      - playbook: install_docker.yml
+        host: "irods_client,irods_server"
+
+    hosts:
+      - irods_client
+      - irods_server

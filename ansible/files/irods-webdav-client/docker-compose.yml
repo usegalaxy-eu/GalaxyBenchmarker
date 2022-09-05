@@ -1,0 +1,14 @@
+version: "3"
+services:
+  irods-webdav:
+    build:
+      context: .
+      args:
+        host_owner_uid: ${IRODS_HOST_VOLUME_OWNER}
+    privileged: true
+    volumes:
+      # Configure mount for non-root users
+      - ./volumes/fstab:/etc/fstab
+      - ./volumes/davfs2.conf:/etc/davfs2/davfs2.conf
+      # Volume under test
+      - "${IRODS_HOST_VOLUME}/irods-webdav:/mnt/volume_under_test:rshared"

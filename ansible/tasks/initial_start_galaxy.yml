@@ -1,0 +1,52 @@
+---
+- name: Initial start of galaxy (Dockerfile has a racecondition, maybe retry necessary)
+  block:
+  - name: Increment the retry count
+    set_fact:
+      retry_count: "{{ 0 if retry_count is undefined else retry_count | int + 1 }}"
+
+  - name: Build and start galaxy
+    community.docker.docker_compose:
+      project_src: /galaxy
+      state: present
+      build: yes
+
+    environment:
+      GALAXY_EXPORT_VOLUME: "{{ galaxy_export_volume }}/glx_export"
+    register: output
+
+  - name: "Check 'Build and start galaxy'"
+    assert:
+      that:
+        - "output.services.galaxy.galaxy_galaxy_1.state.running"
+
+  - name: Wait for galaxy to become available
+    uri:
+      url: "http://localhost:8080/api/histories"
+      status_code: 200
+      headers:
+        x-api-key: fakekey
+    register: result
+    until: result.status == 200
+    retries: 18
+    delay: 5
+
+  rescue:
+    - fail:
+        msg: Maximum retries of grouped tasks reached
+      when: retry_count | int == 3
+
+    - debug:
+        msg: "Initial start of galaxy failed, let's give it another shot"
+
+    - name: Stop galaxy
+      community.docker.docker_compose:
+        project_src: "/galaxy"
+        state: absent
+
+    - name: Cleanup galaxy volume
+      file:
+        path: "{{ galaxy_export_volume }}/glx_export"
+        state: absent
+
+    - include_tasks: initial_start_galaxy.yml

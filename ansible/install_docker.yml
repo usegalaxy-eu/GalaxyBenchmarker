@@ -1,0 +1,59 @@
+- hosts: "{{ host }}"
+  become: true
+  tasks:
+
+    - name: Check if Docker is installed
+      command: docker --version
+      register: docker_valid
+      ignore_errors: yes
+
+    # Install docker if not present
+    - name: Install docker dependencies
+      when: docker_valid.failed
+      apt: name={{ item }} state=latest update_cache=yes
+      loop:
+        - 'apt-transport-https'
+        - 'ca-certificates'
+        - 'curl'
+        - 'software-properties-common'
+        - 'python3-pip'
+        - 'virtualenv'
+        - 'python3-setuptools'
+    - name: Add Docker GPG key
+      when: docker_valid.failed
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+    - name: Add Docker repository
+      when: docker_valid.failed
+      apt_repository:
+        repo: deb https://download.docker.com/linux/ubuntu bionic stable
+        state: present
+    - name: Install Docker
+      when: docker_valid.failed
+      apt: update_cache=yes name=docker-ce state=latest
+
+    - name: Check if Docker-compose is installed
+      command: docker-compose --version
+      register: docker_compose_valid
+      ignore_errors: yes
+
+    # Install docker-compose if not present
+    - name: Install docker-compose dependencies
+      when: docker_compose_valid.failed
+      apt: name={{ item }} state=latest update_cache=yes
+      loop:
+        - python3-pip
+        - python3-dev
+        - libffi-dev
+        - librust-openssl-dev
+        - gcc
+        - libc-dev
+        - rustc
+        - cargo
+        - make
+    - name: Install docker-compose
+      when: docker_compose_valid.failed
+      pip:
+        name:
+            - docker-compose

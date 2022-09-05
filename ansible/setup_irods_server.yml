@@ -1,0 +1,21 @@
+- hosts: "{{ host }}"
+  become: true
+  tasks:
+    - include: tasks/install_irods.yml
+      vars:
+        irods_host_volume_internal: "{{ irods_host_volume | default('/tmp') }}"
+
+    - include: tasks/configure_irods_local_volume.yml
+      when: (irods_host_volume is defined)
+
+    - include: tasks/configure_irods_s3_volume.yml
+      when: (irods_use_s3 is defined) and (irods_use_s3|bool)
+      vars:
+        IRODS_S3_BUCKET: frct-smoe-bench-ec61-01
+        IRODS_S3_DOMAIN: s3.bwsfs.uni-freiburg.de
+        IRODS_S3_REGION: fr-repl
+        IRODS_S3_ACCESS_ID: ...
+        IRODS_S3_SECRET_KEY: ...
+
+    - include: tasks/install_davrods.yml
+      when: (irods_use_davrods is defined) and (irods_use_davrods|bool)

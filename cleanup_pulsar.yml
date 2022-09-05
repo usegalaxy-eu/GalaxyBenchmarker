@@ -1,6 +1,0 @@
-- hosts: all
-  tasks:
-    - name: Delete old-folder in tool_dependency_dir
-      file:
-        path: "{{tool_dependency_dir}}/old"
-        state: absent

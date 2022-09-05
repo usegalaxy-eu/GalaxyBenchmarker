@@ -1,0 +1,50 @@
+config:
+  log_ansible_output: false
+  results_print: false
+  results_save_raw_results: false
+  results_save_to_file: true
+
+benchmarks:
+  parameval_s3benchmark_threads:
+    type: S3BenchmarkOneDimParams
+    repetitions: 1
+    destination:
+      host: irods_server
+    s3benchmark:
+      base_url: https://s3.bwsfs.uni-freiburg.de/
+      bucket_name: frct-smoe-bench-ec61-01
+      region: fr-repl
+      filesize: 10M
+
+    dim_key: threads
+    dim_values:
+      - 1
+      - 2
+      - 4
+      - 8
+      - 16
+      - 32
+      - 64
+      - 65
+      - 66
+      - 67
+      - 128
+
+  parameval_s3benchmark_runtime:
+    type: S3BenchmarkOneDimParams
+    repetitions: 1
+    destination:
+      host: irods_server
+    s3benchmark:
+      base_url: https://s3.bwsfs.uni-freiburg.de/
+      bucket_name: frct-smoe-bench-ec61-01
+      region: fr-repl
+      filesize: 10M
+
+    dim_key: runtime_in_s
+    dim_values:
+      - 10
+      - 20
+      - 60
+      - 120
+      - 300

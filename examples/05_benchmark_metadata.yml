@@ -1,0 +1,226 @@
+config:
+  log_ansible_output: false
+  results_print: false
+  results_save_to_file: true
+
+Default_100k: &default_100k
+  type: MdtestOneDimParams
+  repetitions: 1
+  mdtest:
+    num_files: 1
+
+  dim_key: num_files
+  dim_values:
+    - 10
+    - 100
+    - 1000
+    - 10000
+    - 100000
+
+Default_1k: &default_1k
+  type: MdtestOneDimParams
+  repetitions: 1
+  mdtest:
+    num_files: 1
+
+  dim_key: num_files
+  dim_values:
+    - 10
+    - 100
+    - 1000
+
+
+benchmarks:
+  benchmark_metadata_isilon:
+    <<: *default_100k
+    destination:
+      host: irods_server
+      target_folder: /mnt/isilon
+
+  benchmark_metadata_netapp:
+    <<: *default_100k
+    destination:
+      host: irods_server
+      target_folder: /mnt/netapp
+
+  benchmark_metadata_ssd_tank:
+    <<: *default_100k
+    destination:
+      host: irods_server
+      target_folder: /mnt/ssd_tank/test_moehrles
+
+  benchmark_metadata_local:
+    <<: *default_100k
+    destination:
+      host: irods_server
+      target_folder: /mnt/local/ubuntu
+
+  benchmark_metadata_irods_fuse_on_isilon:
+    <<: *default_1k
+    destination:
+      host: irods_client
+      target_folder: /mnt/volume_under_test/irods-fuse
+
+    pre_tasks:
+      - playbook: setup_irods_server.yml
+        host: irods_server
+        extra_vars:
+          irods_host_volume: /mnt/isilon
+      - playbook: setup_irods_fuse_client.yml
+        host: irods_client
+        extra_vars:
+          irods_host_volume: /mnt/volume_under_test
+          irods_server_host: "132.230.223.139"
+          irods_host_volume_owner_uid: "1000"
+    post_tasks:
+      - playbook: cleanup_irods_server.yml
+        host: irods_server
+        extra_vars:
+          irods_host_volume: /mnt/isilon
+      - playbook: cleanup_irods_fuse_client.yml
+        host: irods_client
+        extra_vars:
+          irods_host_volume: /mnt/volume_under_test
+
+  benchmark_metadata_irods_fuse_on_netapp:
+    <<: *default_1k
+    destination:
+      host: irods_client
+      target_folder: /mnt/volume_under_test/irods-fuse
+
+    pre_tasks:
+      - playbook: setup_irods_server.yml
+        host: irods_server
+        extra_vars:
+          irods_host_volume: /mnt/netapp
+      - playbook: setup_irods_fuse_client.yml
+        host: irods_client
+        extra_vars:
+          irods_host_volume: /mnt/volume_under_test
+          irods_server_host: "132.230.223.139"
+          irods_host_volume_owner_uid: "1000"
+    post_tasks:
+      - playbook: cleanup_irods_server.yml
+        host: irods_server
+        extra_vars:
+          irods_host_volume: /mnt/netapp
+      - playbook: cleanup_irods_fuse_client.yml
+        host: irods_client
+        extra_vars:
+          irods_host_volume: /mnt/volume_under_test
+
+  benchmark_metadata_irods_fuse_on_s3:
+    <<: *default_1k
+    destination:
+      host: irods_client
+      target_folder: /mnt/volume_under_test/irods-fuse
+
+    pre_tasks:
+      - playbook: setup_irods_server.yml
+        host: irods_server
+        extra_vars:
+          irods_use_s3: true
+      - playbook: setup_irods_fuse_client.yml
+        host: irods_client
+        extra_vars:
+          irods_host_volume: /mnt/volume_under_test
+          irods_server_host: "132.230.223.139"
+          irods_host_volume_owner_uid: "1000"
+    post_tasks:
+      - playbook: cleanup_irods_server.yml
+        host: irods_server
+      - playbook: cleanup_irods_fuse_client.yml
+        host: irods_client
+        extra_vars:
+          irods_host_volume: /mnt/volume_under_test
+
+  benchmark_metadata_irods_davrods_on_isilon:
+    <<: *default_1k
+    destination:
+      host: irods_client
+      target_folder: /mnt/volume_under_test/irods-webdav
+
+    pre_tasks:
+    - playbook: setup_irods_server.yml
+      host: irods_server
+      extra_vars:
+        irods_host_volume: /mnt/isilon
+        irods_use_davrods: true
+        davrods_owner_uid: "1000"
+    - playbook: setup_irods_webdav_client.yml
+      host: irods_client
+      extra_vars:
+        irods_host_volume: /mnt/volume_under_test
+        irods_server_host: "132.230.223.139"
+        davrods_owner_uid: "1000"
+
+    post_tasks:
+      - playbook: cleanup_irods_webdav_client.yml
+        host: irods_client
+        extra_vars:
+          irods_host_volume: /mnt/volume_under_test
+      - playbook: cleanup_irods_server.yml
+        host: irods_server
+        extra_vars:
+          irods_host_volume: /mnt/isilon
+          irods_use_davrods: true
+
+  benchmark_metadata_irods_davrods_on_netapp:
+    <<: *default_1k
+    destination:
+      host: irods_client
+      target_folder: /mnt/volume_under_test/irods-webdav
+
+    pre_tasks:
+    - playbook: setup_irods_server.yml
+      host: irods_server
+      extra_vars:
+        irods_host_volume: /mnt/netapp
+        irods_use_davrods: true
+        davrods_owner_uid: "1000"
+    - playbook: setup_irods_webdav_client.yml
+      host: irods_client
+      extra_vars:
+        irods_host_volume: /mnt/volume_under_test
+        irods_server_host: "132.230.223.139"
+        davrods_owner_uid: "1000"
+
+    post_tasks:
+      - playbook: cleanup_irods_webdav_client.yml
+        host: irods_client
+        extra_vars:
+          irods_host_volume: /mnt/volume_under_test
+      - playbook: cleanup_irods_server.yml
+        host: irods_server
+        extra_vars:
+          irods_host_volume: /mnt/netapp
+          irods_use_davrods: true
+
+  benchmark_metadata_irods_davrods_on_s3:
+    <<: *default_1k
+    destination:
+      host: irods_client
+      target_folder: /mnt/volume_under_test/irods-webdav
+
+    pre_tasks:
+      - playbook: setup_irods_server.yml
+        host: irods_server
+        extra_vars:
+          irods_use_s3: true
+          irods_use_davrods: true
+          davrods_owner_uid: "1000"
+      - playbook: setup_irods_webdav_client.yml
+        host: irods_client
+        extra_vars:
+          irods_host_volume: /mnt/volume_under_test
+          irods_server_host: "132.230.223.139"
+          davrods_owner_uid: "1000"
+    post_tasks:
+      - playbook: cleanup_irods_server.yml
+        host: irods_server
+        extra_vars:
+          irods_use_davrods: true
+      - playbook: cleanup_irods_webdav_client.yml
+        host: irods_client
+        extra_vars:
+          irods_host_volume: /mnt/volume_under_test

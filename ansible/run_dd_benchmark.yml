@@ -1,0 +1,101 @@
+- hosts: "{{ host }}"
+  tasks:
+    - name: Create test directory
+      file:
+        path: "{{ dd_dir }}/dd_in_progress"
+        state: directory
+
+    - name: Copy Dockerfile
+      ansible.posix.synchronize:
+        src: tool-dd/
+        dest: "{{ dd_dir }}/dd_build"
+        recursive: yes
+
+    - name: Build latest dd image
+      become: yes
+      community.docker.docker_image:
+        build:
+          path: "{{ dd_dir }}/dd_build"
+        name: galaxybenchmarker/tool-dd
+        tag: latest
+        force_source: yes
+        force_tag: yes
+        source: build
+
+    - name: Clear in-ram caches
+      become: yes
+      copy:
+        content: 3
+        dest: /proc/sys/vm/drop_caches
+        unsafe_writes: yes
+
+    - name: Run dd container (single dd)
+      become: yes
+      when: not dd_parallel|bool
+      community.docker.docker_container:
+        name: dd
+        image: galaxybenchmarker/tool-dd
+        detach: false
+        cleanup: true
+        volumes:
+          - "{{ dd_dir }}/dd_in_progress:/mnt/volume_under_test:rw"
+        working_dir: /mnt/volume_under_test
+        entrypoint: "dd"
+        command: [
+          "bs={{ dd_blocksize }}",
+          "count={{ dd_blockcount }}",
+          "if={{ dd_input }}",
+          "of={{ dd_output }}",
+          "{% if dd_flush|bool %}conv=fsync{% endif %}",
+        ]
+      register: dd_single_results
+
+    - name: Save results (single dd)
+      when: not dd_parallel|bool
+      local_action:
+        module: copy
+        content: "{{ dd_single_results.container.Output }}"
+        dest: "{{ controller_dir }}/{{ dd_result_file }}"
+
+    - name: Run dd container (parallel dd)
+      become: yes
+      when: dd_parallel|bool
+      community.docker.docker_container:
+        name: dd
+        image: galaxybenchmarker/tool-dd
+        detach: false
+        cleanup: true
+        volumes:
+          - "{{ dd_dir }}/dd_in_progress:/mnt/volume_under_test:rw"
+        working_dir: /mnt/volume_under_test
+        env:
+          DD_BS: "{{ dd_blocksize }}"
+          DD_IF: "{{ dd_input }}"
+          DD_OF: "{{ dd_output }}"
+          DD_COUNT: "{{ dd_blockcount|int // 4 }}"
+          DD_SEEK_1: "{{ dd_blockcount|int // 4 * 1 }}"
+          DD_SKIP_1: "{{ dd_blockcount|int // 4 * 1 }}"
+          DD_SEEK_2: "{{ dd_blockcount|int // 4 * 2 }}"
+          DD_SKIP_2: "{{ dd_blockcount|int // 4 * 2 }}"
+          DD_SEEK_3: "{{ dd_blockcount|int // 4 * 3 }}"
+          DD_SKIP_3: "{{ dd_blockcount|int // 4 * 3 }}"
+      register: dd_parallel_results
+
+    # - name: debug
+    #   debug: var=dd_results
+
+    - name: Save results (parallel dd)
+      when: dd_parallel|bool
+      local_action:
+        module: copy
+        content: "{{ dd_parallel_results.container.Output }}"
+        dest: "{{ controller_dir }}/{{ dd_result_file }}"
+
+    - name: Cleanup
+      file:
+        path: "{{ dd_dir }}/{{ item }}"
+        state: absent
+      when: dd_cleanup|bool
+      loop:
+        - dd_in_progress
+        - dd_build

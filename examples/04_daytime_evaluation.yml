@@ -1,0 +1,72 @@
+config:
+  log_ansible_output: false
+  results_print: false
+  results_save_to_file: true
+
+ConfigFio: &conf_fio
+  repetitions: 1
+  type: FioFixedParams
+  fio:
+    mode: write
+    blocksize: 1024k
+    numjobs: 4
+    iodepth: 32
+
+ConfigWarp: &conf_warp
+  repetitions: 1
+  type: WarpFixedParams
+  warp:
+    mode: put
+    base_url: s3.bwsfs.uni-freiburg.de
+    bucket_name: frct-smoe-bench-ec61-01
+    concurrent_ops: 32
+    filesize: 10MiB
+    region: fr-repl
+    runtime: 60s
+
+benchmarks:
+  daytime_evaluation_isilon_01:
+    <<: *conf_fio
+    destination:
+      host: irods_server
+      target_folder: /mnt/isilon
+
+  daytime_evaluation_netapp_01:
+    <<: *conf_fio
+    destination:
+      host: irods_server
+      target_folder: /mnt/netapp
+
+  daytime_evaluation_ssdtank_01:
+    <<: *conf_fio
+    destination:
+      host: irods_server
+      target_folder: /mnt/ssd_tank/test_moehrles
+
+  daytime_evaluation_s3_01:
+    <<: *conf_warp
+    destination:
+      host: irods_server
+
+  daytime_evaluation_isilon_02:
+    <<: *conf_fio
+    destination:
+      host: irods_server
+      target_folder: /mnt/isilon
+
+  daytime_evaluation_netapp_02:
+    <<: *conf_fio
+    destination:
+      host: irods_server
+      target_folder: /mnt/netapp
+
+  daytime_evaluation_ssdtank_02:
+    <<: *conf_fio
+    destination:
+      host: irods_server
+      target_folder: /mnt/ssd_tank/test_moehrles
+
+  daytime_evaluation_s3_02:
+    <<: *conf_warp
+    destination:
+      host: irods_server

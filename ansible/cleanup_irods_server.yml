@@ -1,0 +1,17 @@
+- hosts: "{{ host }}"
+  become: true
+  tasks:
+    - import_tasks: tasks/remove_container.yml
+      when: (irods_use_davrods is defined) and (irods_use_davrods|bool)
+      vars:
+        path: "/davrods"
+
+    - import_tasks: tasks/remove_container.yml
+      vars:
+        path: "/irods"
+
+    - name: Remove irods volume
+      when: (irods_host_volume is defined)
+      file:
+        path: "{{ irods_host_volume }}/irods"
+        state: absent

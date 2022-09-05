@@ -1,0 +1,162 @@
+"""
+Definition of warp-based benchmarks
+"""
+from __future__ import annotations
+
+import dataclasses
+import logging
+import os
+import re
+import shutil
+import time
+from pathlib import Path
+from typing import TYPE_CHECKING, Any
+
+from galaxy_benchmarker.benchmarks import base
+from galaxy_benchmarker.utils import ansible
+from galaxy_benchmarker.utils.destinations import BenchmarkDestination
+
+if TYPE_CHECKING:
+    from galaxy_benchmarker.benchmarker import Benchmarker
+
+log = logging.getLogger(__name__)
+
+
+@dataclasses.dataclass
+class WarpConfig(base.BenchmarkConfig):
+    mode: str = ""
+    ## Credentials are loaded from AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY
+    # access_key_id: str = ""
+    base_url: str = ""
+    bucket_name: str = ""
+    filesize: str = ""
+    region: str = ""
+    runtime: str = "60s"
+    # secret_access_key: str = ""
+    concurrent_ops: int = 20
+
+
+def parse_result_file(file: Path) -> dict[str, Any]:
+
+    if not file.is_file():
+        raise ValueError(f"{file} is not a file.")
+
+    # Example output
+    # Operation: DELETE, 11%, Concurrency: 20, Ran 3m47s.
+    #  * Throughput: 0.28 obj/s
+
+    # Operation: GET, 38%, Concurrency: 20, Ran 4m15s.
+    #  * Throughput: 8.21 MiB/s, 0.82 obj/s
+
+    # Operation: PUT, 13%, Concurrency: 20, Ran 4m19s.
+    #  * Throughput: 2.85 MiB/s, 0.29 obj/s
+
+    # Operation: STAT, 33%, Concurrency: 20, Ran 4m2s.
+    #  * Throughput: 0.65 obj/s
+    result = {}
+    op = ""
+    pattern_op = re.compile(r"Operation: ([A-Z]+),?")
+    pattern_throughput = re.compile(r"([0-9\.]+) ([KM]iB)/s,")
+    pattern_ops = re.compile(r"([0-9\.]+) obj/s")
+
+    with file.open() as file_handle:
+        for line in file_handle:
+            if line.startswith("Operation: "):
+                # Get op to parse next line
+                op = pattern_op.match(line).groups()[0]
+                continue
+            if not op:
+                continue
+
+            throughput_match = pattern_throughput.search(line)
+            ops_match = pattern_ops.search(line)
+
+            if throughput_match:
+                throughput_value, unit = throughput_match.groups()
+                if unit == "KiB":
+                    throughput_value = str(float(throughput_value) / 1024.0)
+
+            if op == "GET":
+                result["get_bw_in_MiB"] = throughput_value
+                result["get_ops"] = ops_match.groups()[0]
+            elif op == "PUT":
+                result["put_bw_in_MiB"] = throughput_value
+                result["put_ops"] = ops_match.groups()[0]
+            elif op == "DELETE":
+                result["delete_ops"] = ops_match.groups()[0]
+            elif op == "STAT":
+                result["stat_ops"] = ops_match.groups()[0]
+            op = ""
+
+    return result
+
+
+@base.register_benchmark
+class WarpFixedParams(base.Benchmark):
+    """Benchmarking system with 'warp'"""
+
+    def __init__(self, name: str, config: dict, benchmarker: Benchmarker):
+        super().__init__(name, config, benchmarker)
+
+        if not "warp" in config:
+            raise ValueError(
+                f"'warp' property (type: dict) is missing for '{self.name}'"
+            )
+        self.config = WarpConfig(**config.get("warp"))
+
+        dest = config.get("destination", {})
+        if not dest:
+            raise ValueError(
+                f"'destination' property (type: dict) is missing for '{self.name}'"
+            )
+        self.destination = BenchmarkDestination(**dest)
+
+        self._run_task = ansible.AnsibleTask(playbook="run_warp_benchmark.yml")
+
+    def _run_at(
+        self, result_file: Path, repetition: int, warp_config: WarpConfig
+    ) -> dict:
+        """Perform a single run"""
+
+        start_time = time.monotonic()
+
+        access_key = os.getenv("AWS_ACCESS_KEY_ID")
+        if access_key is None:
+            raise ValueError("Missing S3 credentials in env vars: AWS_ACCESS_KEY_ID")
+
+        secret_key = os.getenv("AWS_SECRET_ACCESS_KEY")
+        if secret_key is None:
+            raise ValueError(
+                "Missing S3 credentials in env vars: AWS_SECRET_ACCESS_KEY"
+            )
+
+        self._run_task.run_at(
+            self.destination.host,
+            {
+                "warp_result_file": result_file.name,
+                "controller_dir": result_file.parent,
+                "warp_access_key_id": access_key,
+                "warp_secret_access_key": secret_key,
+                **{f"warp_{key}": value for key, value in warp_config.asdict().items()},
+            },
+        )
+
+        total_runtime = time.monotonic() - start_time
+
+        if self.benchmarker.config.results_save_raw_results:
+            new_path = self.benchmarker.results / self.result_file.stem
+            new_path.mkdir(exist_ok=True)
+            shutil.copy(result_file, new_path / result_file.name)
+
+        result = parse_result_file(result_file)
+        log.info("Run took %d s", total_runtime)
+
+        return result
+
+    def get_tags(self) -> dict[str, str]:
+        return {**super().get_tags(), "warp": self.config.asdict()}
+
+
+@base.register_benchmark
+class WarpOneDimParams(base.BenchmarkOneDimMixin, WarpFixedParams):
+    """Run warp with multiple values for a singel dimension"""
