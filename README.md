@@ -4,6 +4,8 @@ A tool for benchmarking different storage types individually or in more complex 
 
 Link to the [original version](https://github.com/usegalaxy-eu/GalaxyBenchmarker/tree/668b9a5125541f686d00950a0e862a260ca4b787) of the GalaxyBenchmarker.
 
+Link to the [results referenced](https://doi.org/10.5281/zenodo.7051186) in the `evaluation` section.
+
 ## Basic architecture
 
 You can run GalaxyBenchmarker locally on your maschine or inside a container. It
